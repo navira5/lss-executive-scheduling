@@ -6,15 +6,18 @@ import {
   exportPlanCsv,
   generateCalendarPlan,
 } from "@/lib/scheduling";
+import { buildMeetingTemplates } from "@/data/source-data";
 import type {
   DecisionItem,
   EventStatus,
   HolidayConstraint,
   LocalDecision,
   MeetingCategory,
+  MeetingTemplate,
   ProposedEvent,
   RuleStatus,
   ScenarioSettings,
+  WorkingRuleOverride,
 } from "@/lib/types";
 
 const MONTHS = [
@@ -94,11 +97,13 @@ function firstWeekday(monthIndex: number): number {
 }
 
 function eventTone(event: ProposedEvent): string {
-  if (event.status === "blocked") return "blocked";
-  if (event.status === "needs_decision") return "decision";
-  if (event.status === "exception_approved") return "exception";
-  if (event.status === "reviewed") return "reviewed";
-  return event.category;
+  return `${event.category} status-${event.status}`;
+}
+
+interface DiscoveryResponse {
+  disposition: "captured" | "follow_up";
+  note: string;
+  recordedAt: string;
 }
 
 function durationLabel(minutes: number): string {
@@ -396,58 +401,258 @@ function EventDetail({ event, assumptions, onClose, onDecision }: EventDetailPro
   );
 }
 
-interface DecisionDetailProps {
-  decision: DecisionItem;
-  relatedEvents: ProposedEvent[];
-  onClose: () => void;
-  onOpenEvent: (event: ProposedEvent) => void;
+interface DiscoveryWorkspaceProps {
+  decisions: DecisionItem[];
+  events: ProposedEvent[];
+  responses: Record<string, DiscoveryResponse>;
+  currentIndex: number;
+  settings: ScenarioSettings;
+  onIndexChange: (index: number) => void;
+  onRecord: (decisionId: string, response: DiscoveryResponse) => void;
+  onSettingsChange: (settings: ScenarioSettings) => void;
+  onOpenEvent: (eventId: string) => void;
+  onViewRule: (templateId: string) => void;
 }
 
-function DecisionDetail({ decision, relatedEvents, onClose, onOpenEvent }: DecisionDetailProps) {
+function DiscoveryWorkspace({
+  decisions,
+  events,
+  responses,
+  currentIndex,
+  settings,
+  onIndexChange,
+  onRecord,
+  onSettingsChange,
+  onOpenEvent,
+  onViewRule,
+}: DiscoveryWorkspaceProps) {
+  const decision = decisions[currentIndex];
+  const existing = decision ? responses[decision.id] : undefined;
+  const completed = decisions.filter((item) => responses[item.id]).length;
+  const [note, setNote] = useState(existing?.note ?? "");
+
+  if (!decision) {
+    return <p className="empty-state">No discovery topics remain in this scenario.</p>;
+  }
+
+  const relatedEvent = decision.relatedEventId
+    ? events.find((event) => event.id === decision.relatedEventId)
+    : undefined;
+  const record = (disposition: DiscoveryResponse["disposition"]) => {
+    onRecord(decision.id, {
+      disposition,
+      note: note.trim() || decision.summary,
+      recordedAt: new Date().toISOString(),
+    });
+    if (currentIndex < decisions.length - 1) onIndexChange(currentIndex + 1);
+  };
+
   return (
-    <div className="drawer-backdrop" role="presentation" onMouseDown={onClose}>
-      <aside
-        className="detail-drawer"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="decision-detail-title"
-        onMouseDown={(event_) => event_.stopPropagation()}
-      >
-        <div className="drawer-topline">
-          <span className={`status-pill ${decision.severity === "blocked" ? "blocked" : "needs_decision"}`}>
-            {decision.severity === "blocked" ? "Required input" : "Leadership decision"}
-          </span>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close decision details">×</button>
+    <div className="discovery-workspace">
+      <div className="discovery-progress">
+        <div>
+          <span>{completed} of {decisions.length} topics captured</span>
+          <strong>{Math.round((completed / Math.max(decisions.length, 1)) * 100)}%</strong>
         </div>
-        <p className="eyebrow">Decision Queue</p>
-        <h2 id="decision-detail-title">{decision.title}</h2>
-        <section className="detail-section callout">
-          <h3>What the draft currently does</h3>
-          <p>{decision.summary}</p>
-        </section>
-        <section className="detail-section">
-          <h3>Question for the team</h3>
-          <p className="decision-question">{decision.question}</p>
-        </section>
-        <section className="detail-section">
-          <h3>Authority</h3>
-          <p>{decision.source}</p>
-        </section>
-        {relatedEvents.length > 0 && (
-          <section className="detail-section">
-            <h3>Related proposed events</h3>
-            <div className="related-events">
-              {relatedEvents.slice(0, 8).map((event) => (
-                <button type="button" key={event.id} onClick={() => onOpenEvent(event)}>
-                  <span>{event.abbreviation}</span>
-                  <strong>{event.isPlaceholder ? `${MONTHS[dateParts(event.date).month - 1]} — TBD` : formatDate(event.date)}</strong>
-                </button>
-              ))}
-            </div>
-          </section>
+        <progress value={completed} max={Math.max(decisions.length, 1)} />
+      </div>
+
+      <label className="topic-jump">
+        <span>Discovery topic</span>
+        <select value={currentIndex} onChange={(event) => onIndexChange(Number(event.target.value))}>
+          {decisions.map((item, index) => (
+            <option key={item.id} value={index}>
+              {responses[item.id] ? "✓ " : ""}{index + 1}. {item.title}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <article className="discovery-card">
+        <div className="discovery-card-topline">
+          <span className={`discovery-kind ${decision.severity}`}>
+            {decision.severity === "blocked" ? "Input needed" : "Choice needed"}
+          </span>
+          {existing && (
+            <span className={`captured-state ${existing.disposition}`}>
+              {existing.disposition === "captured" ? "Captured" : "Follow-up"}
+            </span>
+          )}
+        </div>
+        <p className="topic-counter">Topic {currentIndex + 1}</p>
+        <h3>{decision.title}</h3>
+        <p className="discovery-question">{decision.question}</p>
+
+        {decision.id === "D-BOARD" && (
+          <label className="inline-rule-control">
+            <span>Working calendar choice</span>
+            <select
+              value={settings.boardScenario}
+              onChange={(event) =>
+                onSettingsChange({
+                  ...settings,
+                  boardScenario: event.target.value as ScenarioSettings["boardScenario"],
+                })
+              }
+            >
+              <option value="continuity">Continue the 2026 rhythm</option>
+              <option value="recent_direction">Four meetings + two retreats</option>
+            </select>
+          </label>
         )}
-        <p className="safety-note">A meeting decision remains separate from the underlying rule status. Only an authorized owner can confirm the organizational rule.</p>
-      </aside>
+
+        {decision.id === "D-ALL-STAFF" && (
+          <label className="inline-rule-control">
+            <span>Working calendar choice</span>
+            <select
+              value={settings.allStaffPattern}
+              onChange={(event) =>
+                onSettingsChange({
+                  ...settings,
+                  allStaffPattern: event.target.value as ScenarioSettings["allStaffPattern"],
+                })
+              }
+            >
+              <option value="detailed_calendar">Jan / Apr / Jul / Oct · 60 min</option>
+              <option value="meeting_matrix">Feb / May / Aug / Nov · 45 min</option>
+            </select>
+          </label>
+        )}
+
+        <label className="working-answer">
+          <span>Working answer or facilitator note</span>
+          <textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="Capture what Rachel, Kim, or the team decides…"
+            rows={3}
+          />
+        </label>
+
+        <details className="evidence-details">
+          <summary>Why this surfaced</summary>
+          <p>{decision.summary}</p>
+          <small>{decision.source}</small>
+        </details>
+
+        <div className="context-links">
+          {relatedEvent && (
+            <button type="button" onClick={() => onOpenEvent(relatedEvent.id)}>
+              Show proposed meeting
+            </button>
+          )}
+          {decision.relatedTemplateId && (
+            <button type="button" onClick={() => onViewRule(decision.relatedTemplateId!)}>
+              Open rule
+            </button>
+          )}
+        </div>
+
+        <div className="discovery-actions">
+          <button type="button" className="button primary" onClick={() => record("captured")}>
+            Capture & continue
+          </button>
+          <button type="button" className="button ghost" onClick={() => record("follow_up")}>
+            Needs follow-up
+          </button>
+        </div>
+      </article>
+
+      <div className="discovery-nav">
+        <button type="button" disabled={currentIndex === 0} onClick={() => onIndexChange(currentIndex - 1)}>← Previous</button>
+        <button type="button" disabled={currentIndex === decisions.length - 1} onClick={() => onIndexChange(currentIndex + 1)}>Next →</button>
+      </div>
+    </div>
+  );
+}
+
+interface RulebookWorkspaceProps {
+  templates: MeetingTemplate[];
+  overrides: Record<string, WorkingRuleOverride>;
+  selectedRuleId: string;
+  onSelectRule: (id: string) => void;
+  onUpdateOverride: (id: string, value: WorkingRuleOverride) => void;
+}
+
+function RulebookWorkspace({
+  templates,
+  overrides,
+  selectedRuleId,
+  onSelectRule,
+  onUpdateOverride,
+}: RulebookWorkspaceProps) {
+  const [search, setSearch] = useState("");
+  const selected = templates.find((template) => template.id === selectedRuleId) ?? templates[0];
+  const filtered = templates.filter((template) =>
+    `${template.name} ${template.abbreviation} ${template.category}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
+  if (!selected) return <p className="empty-state">No rules are loaded.</p>;
+  const override = overrides[selected.id] ?? {};
+  const update = (next: Partial<WorkingRuleOverride>) =>
+    onUpdateOverride(selected.id, { ...override, ...next });
+
+  return (
+    <div className="rulebook-workspace">
+      <label className="rule-search">
+        <span>Find a meeting rule</span>
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Board, retreat, finance…" />
+      </label>
+      <div className="rule-list" aria-label="Meeting rulebook">
+        {filtered.map((template) => (
+          <button
+            type="button"
+            key={template.id}
+            className={`${template.category}${template.id === selected.id ? " selected" : ""}`}
+            onClick={() => onSelectRule(template.id)}
+          >
+            <span className={`category-dot ${template.category}`} />
+            <span><strong>{template.name}</strong><small>{template.cadence}</small></span>
+            {overrides[template.id] && <i title="Working override applied">Edited</i>}
+          </button>
+        ))}
+      </div>
+
+      <article className="rule-editor">
+        <div className="rule-editor-heading">
+          <div>
+            <span className={`meeting-type-pill ${selected.category}`}>{CATEGORY_LABELS[selected.category]}</span>
+            <span className={`rule-pill ${selected.ruleStatus}`}>{RULE_STATUS_LABELS[selected.ruleStatus]}</span>
+          </div>
+          <h3>{selected.name}</h3>
+          <p>{selected.purpose}</p>
+        </div>
+
+        <div className="rule-summary-grid">
+          <div><span>Cadence</span><strong>{selected.cadence}</strong></div>
+          <div><span>Flexibility</span><strong>{selected.flexibility === "protected" ? "🛡 Protected" : selected.flexibility === "flexible" ? "↔ Flexible" : "◐ Conditional"}</strong></div>
+          <div><span>Attendees</span><strong>{selected.attendeeGroup}</strong></div>
+          <div><span>Attendance</span><strong>{selected.attendanceRequirement}</strong></div>
+        </div>
+
+        <div className="working-rule-editor">
+          <div>
+            <p className="eyebrow">Working POC update</p>
+            <small>These values regenerate this browser’s draft. They do not confirm the source rule.</small>
+          </div>
+          <label><span>Owner</span><input value={override.owner ?? selected.owner} onChange={(event) => update({ owner: event.target.value })} /></label>
+          <label><span>Start time</span><input type="time" value={override.startTime ?? selected.startTime ?? ""} onChange={(event) => update({ startTime: event.target.value || null })} /></label>
+          <label><span>Duration (minutes)</span><input type="number" min="15" step="15" value={override.durationMinutes ?? selected.durationMinutes} onChange={(event) => update({ durationMinutes: Number(event.target.value) })} /></label>
+          <label><span>Location</span><input value={override.location ?? selected.location} onChange={(event) => update({ location: event.target.value })} /></label>
+          <label className="wide"><span>Rule update note</span><textarea rows={2} value={override.note ?? ""} onChange={(event) => update({ note: event.target.value })} placeholder="Capture a cadence or dependency change for formal validation…" /></label>
+          {overrides[selected.id] && (
+            <button type="button" className="text-button reset-rule" onClick={() => onUpdateOverride(selected.id, {})}>Reset working update</button>
+          )}
+        </div>
+
+        <details className="evidence-details rule-evidence">
+          <summary>Source evidence ({selected.sourceReferences.length})</summary>
+          {selected.sourceReferences.map((source) => (
+            <p key={`${source.label}-${source.detail}`}><strong>{source.label}</strong><br />{source.detail}</p>
+          ))}
+        </details>
+      </article>
     </div>
   );
 }
@@ -456,7 +661,11 @@ export function CalendarPlanner() {
   const [settings, setSettings] = useState<ScenarioSettings>(DEFAULT_SETTINGS);
   const [localDecisions, setLocalDecisions] = useState<LocalDecision[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedDecisionId, setSelectedDecisionId] = useState<string | null>(null);
+  const [workspaceMode, setWorkspaceMode] = useState<"discovery" | "rulebook">("discovery");
+  const [discoveryIndex, setDiscoveryIndex] = useState(0);
+  const [discoveryResponses, setDiscoveryResponses] = useState<Record<string, DiscoveryResponse>>({});
+  const [ruleOverrides, setRuleOverrides] = useState<Record<string, WorkingRuleOverride>>({});
+  const [selectedRuleId, setSelectedRuleId] = useState("full-board");
   const [categories, setCategories] = useState<Set<MeetingCategory>>(
     new Set(["board", "committee", "executive", "organization"]),
   );
@@ -473,6 +682,24 @@ export function CalendarPlanner() {
         window.localStorage.removeItem("lss-2027-poc-decisions");
       }
     }
+    const savedDiscovery = window.localStorage.getItem("lss-2027-discovery-responses");
+    if (savedDiscovery) {
+      try {
+        const parsed = JSON.parse(savedDiscovery) as Record<string, DiscoveryResponse>;
+        queueMicrotask(() => setDiscoveryResponses(parsed));
+      } catch {
+        window.localStorage.removeItem("lss-2027-discovery-responses");
+      }
+    }
+    const savedOverrides = window.localStorage.getItem("lss-2027-rule-overrides");
+    if (savedOverrides) {
+      try {
+        const parsed = JSON.parse(savedOverrides) as Record<string, WorkingRuleOverride>;
+        queueMicrotask(() => setRuleOverrides(parsed));
+      } catch {
+        window.localStorage.removeItem("lss-2027-rule-overrides");
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -482,10 +709,25 @@ export function CalendarPlanner() {
     );
   }, [localDecisions]);
 
+  useEffect(() => {
+    window.localStorage.setItem(
+      "lss-2027-discovery-responses",
+      JSON.stringify(discoveryResponses),
+    );
+  }, [discoveryResponses]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      "lss-2027-rule-overrides",
+      JSON.stringify(ruleOverrides),
+    );
+  }, [ruleOverrides]);
+
   const plan = useMemo(
-    () => generateCalendarPlan(settings, localDecisions),
-    [settings, localDecisions],
+    () => generateCalendarPlan(settings, localDecisions, ruleOverrides),
+    [settings, localDecisions, ruleOverrides],
   );
+  const templates = useMemo(() => buildMeetingTemplates(settings), [settings]);
 
   const filteredEvents = useMemo(
     () =>
@@ -498,8 +740,10 @@ export function CalendarPlanner() {
   );
 
   const selectedEvent = plan.events.find((event) => event.id === selectedEventId) ?? null;
-  const selectedDecision =
-    plan.decisions.find((decision) => decision.id === selectedDecisionId) ?? null;
+  const safeDiscoveryIndex = Math.min(
+    discoveryIndex,
+    Math.max(plan.decisions.length - 1, 0),
+  );
 
   const stats = {
     ready: plan.events.filter((event) => event.status === "ready").length,
@@ -525,17 +769,30 @@ export function CalendarPlanner() {
   };
 
   const resetScenario = () => {
-    if (!window.confirm("Reset local POC reviews and alternatives? The source rules will not change.")) return;
+    if (!window.confirm("Reset local POC reviews, discovery notes, and working rule updates? The source rules will not change.")) return;
     setLocalDecisions([]);
+    setDiscoveryResponses({});
+    setRuleOverrides({});
+    setDiscoveryIndex(0);
     window.localStorage.removeItem("lss-2027-poc-decisions");
+    window.localStorage.removeItem("lss-2027-discovery-responses");
+    window.localStorage.removeItem("lss-2027-rule-overrides");
   };
 
-  const openDecision = (decision: DecisionItem) => {
-    if (decision.relatedEventId) {
-      setSelectedEventId(decision.relatedEventId);
-      return;
-    }
-    setSelectedDecisionId(decision.id);
+  const openRule = (templateId: string) => {
+    setSelectedRuleId(templateId);
+    setWorkspaceMode("rulebook");
+  };
+
+  const updateRuleOverride = (id: string, value: WorkingRuleOverride) => {
+    setRuleOverrides((current) => {
+      if (Object.keys(value).length === 0) {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      }
+      return { ...current, [id]: value };
+    });
   };
 
   return (
@@ -619,7 +876,7 @@ export function CalendarPlanner() {
             <button
               type="button"
               key={category}
-              className={categories.has(category) ? "active" : ""}
+              className={`${category}${categories.has(category) ? " active" : ""}`}
               onClick={() => toggleCategory(category)}
             >
               <span className={`category-dot ${category}`} />
@@ -652,10 +909,10 @@ export function CalendarPlanner() {
               <p className="eyebrow">Year at a glance</p>
               <h2 id="calendar-heading">January–December 2027</h2>
             </div>
-            <div className="status-legend" aria-label="Calendar status legend">
-              <span><i className="ready" />Ready</span>
-              <span><i className="decision" />Decision</span>
-              <span><i className="blocked" />Blocked</span>
+            <div className="status-legend" aria-label="Calendar state legend">
+              <span><i className="needs-input">•</i>Needs input</span>
+              <span><i className="blocked">×</i>Blocked</span>
+              <span><i className="reviewed">✓</i>Reviewed</span>
               <span><i className="holiday" />Holiday</span>
             </div>
           </div>
@@ -676,34 +933,61 @@ export function CalendarPlanner() {
           </div>
         </section>
 
-        <aside className="decision-queue" aria-labelledby="queue-heading">
-          <div className="queue-header">
-            <div>
-              <p className="eyebrow">Leadership worklist</p>
-              <h2 id="queue-heading">Decision Queue</h2>
-            </div>
-            <span>{plan.decisions.length}</span>
+        <aside className="planning-workspace" aria-label="Planning session and rulebook">
+          <div className="workspace-tabs" role="tablist" aria-label="Planning tools">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={workspaceMode === "discovery"}
+              className={workspaceMode === "discovery" ? "active" : ""}
+              onClick={() => setWorkspaceMode("discovery")}
+            >
+              Discovery session
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={workspaceMode === "rulebook"}
+              className={workspaceMode === "rulebook" ? "active" : ""}
+              onClick={() => setWorkspaceMode("rulebook")}
+            >
+              Rulebook
+            </button>
           </div>
-          <p className="queue-intro">Resolve these items before treating the draft as reliable or publishing it to Outlook.</p>
-          <div className="queue-list">
-            {plan.decisions.map((decision) => (
-              <button
-                type="button"
-                className={`queue-item ${decision.severity}`}
-                key={decision.id}
-                onClick={() => openDecision(decision)}
-              >
-                <span className="queue-severity">{decision.severity === "blocked" ? "Required input" : "Decision"}</span>
-                <strong>{decision.title}</strong>
-                <p>{decision.summary}</p>
-                <span className="queue-action">Review →</span>
-              </button>
-            ))}
-          </div>
-          <footer className="queue-footer">
-            <strong>Working-session rule</strong>
-            <p>A scenario choice changes this draft. It does not confirm the organization’s permanent scheduling rule.</p>
-            <button type="button" className="text-button" onClick={resetScenario}>Reset local POC decisions</button>
+
+          {workspaceMode === "discovery" ? (
+            <DiscoveryWorkspace
+              key={plan.decisions[safeDiscoveryIndex]?.id ?? "empty"}
+              decisions={plan.decisions}
+              events={plan.events}
+              responses={discoveryResponses}
+              currentIndex={safeDiscoveryIndex}
+              settings={settings}
+              onIndexChange={setDiscoveryIndex}
+              onRecord={(decisionId, response) =>
+                setDiscoveryResponses((current) => ({
+                  ...current,
+                  [decisionId]: response,
+                }))
+              }
+              onSettingsChange={setSettings}
+              onOpenEvent={setSelectedEventId}
+              onViewRule={openRule}
+            />
+          ) : (
+            <RulebookWorkspace
+              templates={templates}
+              overrides={ruleOverrides}
+              selectedRuleId={selectedRuleId}
+              onSelectRule={setSelectedRuleId}
+              onUpdateOverride={updateRuleOverride}
+            />
+          )}
+
+          <footer className="workspace-footer">
+            <strong>Working-session safety</strong>
+            <p>Captured answers and edits change only this browser’s draft. Source-rule authority remains unchanged.</p>
+            <button type="button" className="text-button" onClick={resetScenario}>Reset local session</button>
           </footer>
         </aside>
       </div>
@@ -719,19 +1003,6 @@ export function CalendarPlanner() {
           assumptions={plan.assumptions}
           onClose={() => setSelectedEventId(null)}
           onDecision={handleDecision}
-        />
-      )}
-      {selectedDecision && (
-        <DecisionDetail
-          decision={selectedDecision}
-          relatedEvents={plan.events.filter(
-            (event) => event.templateId === selectedDecision.relatedTemplateId,
-          )}
-          onClose={() => setSelectedDecisionId(null)}
-          onOpenEvent={(event) => {
-            setSelectedDecisionId(null);
-            setSelectedEventId(event.id);
-          }}
         />
       )}
     </main>

@@ -14,6 +14,7 @@ import type {
   MeetingTemplate,
   ProposedEvent,
   ScenarioSettings,
+  WorkingRuleOverride,
 } from "@/lib/types";
 
 const YEAR = 2027;
@@ -400,8 +401,12 @@ function applyDecisions(
 export function generateCalendarPlan(
   settings: ScenarioSettings,
   localDecisions: LocalDecision[] = [],
+  ruleOverrides: Record<string, WorkingRuleOverride> = {},
 ): CalendarPlan {
-  const templates = buildMeetingTemplates(settings);
+  const templates = buildMeetingTemplates(settings).map((template) => ({
+    ...template,
+    ...(ruleOverrides[template.id] ?? {}),
+  }));
   const collisionEvents: CollisionEvent[] = templates.flatMap((template) =>
     datesForRule(template.generation).map((date, index) => ({
       ...makeEvent(template, date, index),

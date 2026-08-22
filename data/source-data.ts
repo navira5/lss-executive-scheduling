@@ -92,7 +92,7 @@ export function buildAssumptions(
       title: "Source precedence",
       value: "Detailed calendar sheet overrides the Meeting Matrix",
       rationale:
-        "This follows the rulebook's source order for the POC and preserves conflicting evidence in the Decision Queue.",
+        "This follows the rulebook's source order for the POC and preserves conflicting evidence in the guided discovery session.",
       authority: "poc_only",
     },
     {

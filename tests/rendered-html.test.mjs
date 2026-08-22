@@ -30,7 +30,11 @@ test("server-renders the LSS annual planning workbench", async () => {
   const html = await response.text();
   assert.match(html, /<title>LSS 2027 Calendar Planning Workbench<\/title>/i);
   assert.match(html, /2027 Working Draft/);
-  assert.match(html, /Decision Queue/);
+  assert.match(html, /Discovery session/);
+  assert.match(html, /Rulebook/);
+  assert.match(html, /Capture &amp; continue/);
+  assert.match(html, /event-chip board status-needs_decision/);
+  assert.doesNotMatch(html, /event-chip decision/);
   assert.match(html, /POC scenario/);
   assert.match(html, /No Outlook connection/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);

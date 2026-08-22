@@ -7,7 +7,8 @@ A rules-first proof of concept for Lutheran Social Services of Central Ohio's 20
 The prototype generates a 2027 working scenario from historical 2026 evidence and explicit assumptions. It combines:
 
 - a 3 × 4 annual calendar;
-- a Decision Queue for contradictions, missing inputs, and calendar exceptions;
+- a guided discovery session for contradictions, missing inputs, and calendar exceptions;
+- a searchable rulebook with browser-local working updates;
 - source and rule-status provenance for each proposed item;
 - POC-only scenario controls and local review decisions; and
 - CSV export and a printable calendar view.
@@ -43,5 +44,5 @@ The fixture registry deliberately preserves unresolved items instead of inventin
 
 - `data/source-data.ts` — normalized meeting evidence and scenario assumptions
 - `lib/scheduling.ts` — deterministic date generation, constraint checks, alternatives, and export
-- `app/CalendarPlanner.tsx` — annual calendar and Decision Queue workflow
+- `app/CalendarPlanner.tsx` — annual calendar, guided discovery, and rulebook workflow
 - `tests/scheduling.test.ts` — golden rule and safety scenarios

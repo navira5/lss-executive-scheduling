@@ -254,3 +254,23 @@ test("books no real meeting on any verified federal observance", () => {
     [],
   );
 });
+
+test("working rulebook edits regenerate the POC without changing source-rule status", () => {
+  const plan = generateCalendarPlan(baseline, [], {
+    "leadership-team": {
+      owner: "Working owner",
+      durationMinutes: 75,
+      startTime: "13:30",
+      location: "Working location",
+      note: "POC discussion only",
+    },
+  });
+  const event = plan.events.find((item) => item.templateId === "leadership-team");
+
+  assert.ok(event);
+  assert.equal(event.owner, "Working owner");
+  assert.equal(event.durationMinutes, 75);
+  assert.equal(event.startTime, "13:30");
+  assert.equal(event.location, "Working location");
+  assert.equal(event.ruleStatus, "2026_baseline");
+});

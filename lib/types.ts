@@ -152,6 +152,14 @@ export interface LocalDecision {
   decidedAt: string;
 }
 
+export interface WorkingRuleOverride {
+  owner?: string;
+  durationMinutes?: number;
+  startTime?: string | null;
+  location?: string;
+  note?: string;
+}
+
 export interface CalendarPlan {
   year: number;
   label: string;
