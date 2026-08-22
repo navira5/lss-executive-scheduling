@@ -115,6 +115,12 @@ function nearestValidDate(date: string, direction: 1 | -1 = 1): string | null {
   return null;
 }
 
+function federalHardStopAlternative(date: string): string | null {
+  const after = nearestValidDate(date, 1);
+  if (after?.startsWith(`${YEAR}-`)) return after;
+  return nearestValidDate(date, -1);
+}
+
 function baseStatus(template: MeetingTemplate): EventStatus {
   if (template.ruleStatus === "open_question") return "blocked";
   if (template.ruleStatus === "needs_validation") return "needs_decision";
@@ -243,7 +249,29 @@ function explanationFor(
 
 function makeEvent(template: MeetingTemplate, date: string, index: number): ProposedEvent {
   const isPlaceholder = template.generation.type === "month_placeholder";
-  const { conflicts, alternatives } = initialConflicts(template, date, isPlaceholder);
+  const federalHoliday = !isPlaceholder
+    ? holidays2027.find(
+        (holiday) =>
+          holiday.date === date && holiday.status === "verified_federal",
+      )
+    : undefined;
+  const generatedDate = federalHoliday
+    ? federalHardStopAlternative(date) ?? date
+    : date;
+  const { conflicts, alternatives } = initialConflicts(
+    template,
+    generatedDate,
+    isPlaceholder,
+  );
+  if (federalHoliday && generatedDate !== date) {
+    conflicts.unshift({
+      id: `${template.id}-${date}-automatic-federal-move`,
+      type: "automatic_move",
+      severity: "warning",
+      summary: `Automatically moved off ${federalHoliday.name}.`,
+      detail: `The recurrence originally landed on ${date}. The confirmed federal hard stop moved this draft occurrence to ${generatedDate}.`,
+    });
+  }
   const status = conflictStatus(baseStatus(template), conflicts);
 
   return {
@@ -252,7 +280,7 @@ function makeEvent(template: MeetingTemplate, date: string, index: number): Prop
     abbreviation: template.abbreviation,
     name: template.name,
     category: template.category,
-    date,
+    date: generatedDate,
     originalDate: date,
     startTime: template.startTime,
     durationMinutes: template.durationMinutes,
@@ -267,7 +295,7 @@ function makeEvent(template: MeetingTemplate, date: string, index: number): Prop
     status,
     conflicts,
     alternatives,
-    explanation: explanationFor(template, date, conflicts),
+    explanation: explanationFor(template, generatedDate, conflicts),
     sourceReferences: template.sourceReferences,
     assumptionIds: template.assumptionIds ?? [],
     isPlaceholder,
@@ -462,7 +490,7 @@ export function exportPlanCsv(plan: CalendarPlan): string {
 
   const rows = plan.events.map((event) =>
     [
-      event.date,
+      event.isPlaceholder ? `${event.date.slice(0, 7)} (date TBD)` : event.date,
       event.startTime ?? "TBD",
       event.abbreviation,
       event.name,

@@ -79,7 +79,8 @@ export interface Conflict {
     | "dependency"
     | "workload"
     | "source_rule"
-    | "missing_rule";
+    | "missing_rule"
+    | "automatic_move";
   severity: ConflictSeverity;
   summary: string;
   detail: string;

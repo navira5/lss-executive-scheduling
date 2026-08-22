@@ -9,6 +9,7 @@ import {
 import type {
   DecisionItem,
   EventStatus,
+  HolidayConstraint,
   LocalDecision,
   MeetingCategory,
   ProposedEvent,
@@ -122,10 +123,11 @@ function downloadCsv(filename: string, contents: string) {
 interface MonthCardProps {
   monthIndex: number;
   events: ProposedEvent[];
+  holidays: HolidayConstraint[];
   onSelect: (event: ProposedEvent) => void;
 }
 
-function MonthCard({ monthIndex, events, onSelect }: MonthCardProps) {
+function MonthCard({ monthIndex, events, holidays, onSelect }: MonthCardProps) {
   const start = firstWeekday(monthIndex);
   const count = daysInMonth(monthIndex);
   const cells = Array.from({ length: 42 }, (_, index) => {
@@ -133,6 +135,11 @@ function MonthCard({ monthIndex, events, onSelect }: MonthCardProps) {
     return day >= 1 && day <= count ? day : null;
   });
   const eventsByDay = new Map<number, ProposedEvent[]>();
+  const holidaysByDay = new Map<number, HolidayConstraint>();
+  for (const holiday of holidays) {
+    const { month, day } = dateParts(holiday.date);
+    if (month === monthIndex + 1) holidaysByDay.set(day, holiday);
+  }
   const placeholders = events.filter((event) => event.isPlaceholder);
   for (const event of events.filter((item) => !item.isPlaceholder)) {
     const { month, day } = dateParts(event.date);
@@ -171,12 +178,21 @@ function MonthCard({ monthIndex, events, onSelect }: MonthCardProps) {
       <div className="month-grid">
         {cells.map((day, index) => {
           const dayEvents = day ? eventsByDay.get(day) ?? [] : [];
+          const holiday = day ? holidaysByDay.get(day) : undefined;
           return (
             <div
-              className={`day-cell${day ? "" : " outside"}`}
+              className={`day-cell${day ? "" : " outside"}${holiday ? " holiday" : ""}`}
               key={`${monthIndex}-${index}`}
             >
               {day && <span className="day-number">{day}</span>}
+              {holiday && (
+                <span
+                  className={`holiday-marker ${holiday.status}`}
+                  title={`${holiday.name} — no meetings`}
+                >
+                  Holiday
+                </span>
+              )}
               <div className="day-events">
                 {dayEvents.slice(0, 3).map((event) => (
                   <button
@@ -640,6 +656,7 @@ export function CalendarPlanner() {
               <span><i className="ready" />Ready</span>
               <span><i className="decision" />Decision</span>
               <span><i className="blocked" />Blocked</span>
+              <span><i className="holiday" />Holiday</span>
             </div>
           </div>
           <div className="year-grid">
@@ -649,6 +666,9 @@ export function CalendarPlanner() {
                 monthIndex={monthIndex}
                 events={filteredEvents.filter(
                   (event) => dateParts(event.date).month === monthIndex + 1,
+                )}
+                holidays={plan.holidays.filter(
+                  (holiday) => dateParts(holiday.date).month === monthIndex + 1,
                 )}
                 onSelect={(event) => setSelectedEventId(event.id)}
               />

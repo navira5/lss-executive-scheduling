@@ -46,31 +46,45 @@ test("loads every OPM federal holiday observed during calendar year 2027", () =>
   assert.deepEqual(verified, expected);
 });
 
-test("blocks recurring meetings that land on the newly completed federal holiday set", () => {
+test("moves recurring meetings off the completed federal holiday set", () => {
   const plan = generateCalendarPlan(baseline);
-  for (const date of ["2027-02-15", "2027-10-11"]) {
+  const expectedMoves = new Map([
+    ["2027-02-15", "2027-02-16"],
+    ["2027-10-11", "2027-10-12"],
+  ]);
+  for (const [originalDate, generatedDate] of expectedMoves) {
     const executiveTeam = plan.events.find(
-      (event) => event.templateId === "executive-team" && event.date === date,
+      (event) =>
+        event.templateId === "executive-team" &&
+        event.originalDate === originalDate,
     );
     assert.ok(executiveTeam);
-    assert.equal(executiveTeam.status, "needs_decision");
+    assert.equal(executiveTeam.date, generatedDate);
+    assert.equal(executiveTeam.status, "ready");
     assert.ok(
-      executiveTeam.conflicts.some((conflict) => conflict.type === "holiday"),
+      executiveTeam.conflicts.some(
+        (conflict) => conflict.type === "automatic_move",
+      ),
     );
   }
 });
 
-test("flags the Labor Day Executive Team occurrence and offers a business-day alternative", () => {
+test("keeps Labor Day empty and records the automatic Tuesday move", () => {
   const plan = generateCalendarPlan(baseline);
   const event = plan.events.find(
-    (item) => item.templateId === "executive-team" && item.date === "2027-09-06",
+    (item) =>
+      item.templateId === "executive-team" &&
+      item.originalDate === "2027-09-06",
   );
 
   assert.ok(event);
-  assert.equal(event.status, "needs_decision");
-  assert.ok(event.conflicts.some((conflict) => conflict.type === "holiday"));
-  assert.equal(event.alternatives[0]?.date, "2027-09-07");
-  assert.ok(plan.decisions.some((decision) => decision.relatedEventId === event.id));
+  assert.equal(event.date, "2027-09-07");
+  assert.equal(event.status, "ready");
+  assert.ok(
+    event.conflicts.some((conflict) => conflict.type === "automatic_move"),
+  );
+  assert.ok(!plan.events.some((item) => !item.isPlaceholder && item.date === "2027-09-06"));
+  assert.ok(!plan.decisions.some((decision) => decision.relatedEventId === event.id));
 });
 
 test("flags the projected Good Friday Executive Retreat without inventing approval", () => {
@@ -187,14 +201,15 @@ test("Board scenarios remain labeled assumptions and produce their distinct stru
 test("a local review decision never promotes the underlying rule authority", () => {
   const original = generateCalendarPlan(baseline);
   const event = original.events.find(
-    (item) => item.templateId === "executive-team" && item.date === "2027-09-06",
+    (item) =>
+      item.templateId === "executive-team" &&
+      item.originalDate === "2027-09-06",
   );
   assert.ok(event);
 
   const local = applyLocalDecision([], {
     eventId: event.id,
-    action: "use_alternative",
-    selectedDate: "2027-09-07",
+    action: "reviewed",
     rationale: "POC review choice",
     decidedAt: "2026-08-22T12:00:00.000Z",
   });
@@ -218,6 +233,24 @@ test("a local review decision never promotes the underlying rule authority", () 
 test("exports a reviewable CSV with provenance statuses", () => {
   const csv = exportPlanCsv(generateCalendarPlan(baseline));
   assert.match(csv, /^Date,Time,Abbreviation,Meeting,Category,Status,Rule Status,/);
-  assert.match(csv, /2027-09-06,09:00,ET,Executive Team Meeting/);
+  assert.match(csv, /2027-09-07,09:00,ET,Executive Team Meeting/);
+  assert.match(csv, /2027-01 \(date TBD\),TBD,BVR/);
+  assert.doesNotMatch(csv, /2027-01-01,TBD,BVR/);
   assert.match(csv, /needs_validation/);
+});
+
+test("books no real meeting on any verified federal observance", () => {
+  const plan = generateCalendarPlan(baseline);
+  const federalDates = new Set(
+    holidays2027
+      .filter((holiday) => holiday.status === "verified_federal")
+      .map((holiday) => holiday.date),
+  );
+
+  assert.deepEqual(
+    plan.events.filter(
+      (event) => !event.isPlaceholder && federalDates.has(event.date),
+    ),
+    [],
+  );
 });

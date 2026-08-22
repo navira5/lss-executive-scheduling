@@ -260,6 +260,7 @@ h1, h2, h3, p { margin-top: 0; }
 .status-legend i.ready { background: var(--green); }
 .status-legend i.decision { background: var(--amber); }
 .status-legend i.blocked { background: var(--red); }
+.status-legend i.holiday { background: repeating-linear-gradient(135deg, var(--red), var(--red) 2px, #f7b8ad 2px, #f7b8ad 4px); }
 
 .year-grid {
   display: grid;
@@ -281,6 +282,9 @@ h1, h2, h3, p { margin-top: 0; }
 .day-cell { position: relative; min-height: 48px; padding: 3px 2px; border-top: 1px solid #edf0ee; border-right: 1px solid #f0f2f1; overflow: hidden; }
 .day-cell:nth-child(7n) { border-right: 0; }
 .day-cell.outside { background: #fbfbf9; }
+.day-cell.holiday { background: repeating-linear-gradient(135deg, #fff3f1, #fff3f1 5px, #fce8e5 5px, #fce8e5 10px); }
+.holiday-marker { display: block; margin: 12px 1px 2px; overflow: hidden; color: var(--red); font-size: 6px; font-weight: 900; letter-spacing: 0.04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.holiday-marker.projected_lss { color: #92510b; }
 .day-number { display: block; color: #6d7a7e; font-size: 8px; line-height: 1; }
 .day-events { display: grid; gap: 2px; margin-top: 3px; }
 .event-chip {
