@@ -1,0 +1,477 @@
+﻿Table of Contents
+1. Executive Summary
+2. Core Business Problem Today
+Project Goal
+3. Key Findings on What’s Driving Pain and Recommendation
+4. Scheduling Workstreams
+4.1 Workstream A: Annual Calendar Planning
+4.2 Workstream B: Bulk Calendar Updates for Confidential Meetings
+4.3 Workstream C: Board Member Changes
+4.4 Worksteam D: Day to Day Executive Scheduling
+5. Primary MVP 1: Annual Calendar Planning
+Use-case statement
+Primary users
+6. User Experience: Calendar Planning
+Experience at a Glance
+7. Proposed MVP 1 Workflow
+Step 1: Gather the Information
+Step 2: Capture the Scheduling Rules
+Step 3: Generate the Draft 2027 Calendar
+Step 4: Check for Problems
+Step 5: Review Recommendations
+Step 6: Finalize the Calendar
+8. How AI Should be Used
+Rules handle predictable things.
+AI helps when judgment or explanation is useful.
+People make the final decisions.
+9 Scope Boundaries
+10. Consulting Deliverables
+Deliverable 1: Current-State Process & Requirements
+Deliverable 2: 2027 Meeting & Scheduling Rules
+Deliverable 3: MVP Prototype
+Deliverable 4: Draft 2027 Calendar & Conflict Review
+Deliverable 5: Final Workflow, SOP & Recommendations
+11. Success Measures
+12. Tentative Timeline
+Appendix
+Lutheran Social Services of Central Ohio Process Analysis Report
+
+
+1. Executive Summary
+Lutheran Social Services of Central Ohio is preparing its 2027 governance and organizational calendar while CEO Rachel is also preparing for maternity leave in October 2026.
+Today, Rachel, Kim, Felise, and other organizational leaders use a thoughtful but heavily manual process to build the annual calendar. They start with a physical 12-month planning board, identify holidays and unavailable periods, add Board and committee meetings, layer in organizational meetings, and then manually transfer the final schedule into Outlook.
+The process has improved because the team has started documenting more scheduling rules, but those rules are still spread across meeting matrices, calendars, documents, and team knowledge and must be manually interpreted and applied.
+This creates several challenges:
+* preventable scheduling conflicts
+* meetings scheduled on or around holidays
+* Board and committee meetings scheduled in the wrong order
+* unnecessary rescheduling
+* significant administrative work
+* onboarding/offboarding and role-change errors
+* uncertainty about who should attend which meetings
+* inconsistent handling of calendar changes
+* Rachel and Kim having to step in when rules or priorities are unclear
+* inefficient use of executive time
+The opportunity is to make these processes easier to manage by organizing the rules in one place, automating repeatable checks and updates, and using AI where judgment or recommendations are helpful.
+The work breaks into four areas:
+1. Annual Calendar Planning
+2. Bulk Calendar Updates for Confidential Meetings
+3. Role Changes & Onboarding/Offboarding
+4. Day-to-Day Executive Scheduling
+Rachel and Kim validated Annual Calendar Planning as the highest-priority starting point. Day-to-Day Executive Scheduling emerged as the next most valuable opportunity. The immediate goal is to prototype a better way to build and validate the 2027 calendar before introducing production automation or live Outlook changes.
+2. Core Business Problem Today
+The annual planning process itself has a formalized working process. The team starts with the Board calendar, adds committees that support Board decisions, layers in organizational meetings, assigns times, enters the schedule into Outlook, and checks executive availability and external commitments.
+The main challenge is not a lack of rules. Many rules already exist, but they are spread across:
+* meeting matrices
+* the compliance calendar
+* prior-year schedules
+* Board and committee documents
+* Outlook calendars
+* SharePoint
+* distribution lists
+* PayCom role/group structures
+* Felise’s working knowledge and notes
+* Rachel and Kim’s judgment
+* informal conversations
+However, the process is still:
+* manually completed
+* dependent on people knowing where the rules live
+* manually transferred between planning tools
+* difficult to keep current when rules or people change
+* dependent on executive review when exceptions arise
+The calendar also needs to account for more than holidays and meeting cadence. Organizational workload changes throughout the year, including:
+* budget cycles
+* financial close timing
+* program deadlines
+* performance evaluation periods
+* grant/reporting periods
+* common vacation periods and PTO
+* retreats or meetings where full attendance is more important
+This leads to preventable mistakes, rescheduling, additional administrative work, and unnecessary executive oversight.
+Project Goal
+Protect executive time while making sure important governance and organizational meetings happen at the right time, in the right order, with the right people.
+
+
+3. Key Findings on What’s Driving Pain and Recommendation
+Key Findings
+1. Preventable scheduling mistakes create unnecessary work
+Meetings can accidentally be scheduled during holidays, difficult volunteer periods, or at times that conflict with other important obligations.
+Because Board members often schedule far in advance, moving a meeting later can reduce attendance and create unnecessary burden for volunteers.
+2. Confidential meetings require extra administrative work
+Many confidential meetings are intentionally created as separate Outlook events rather than recurring meetings.
+This helps prevent meeting notes, recordings, or AI-generated summaries from being shared with someone who was invited to only one occurrence.
+However, the practice means every meeting must be created and maintained individually.
+3. Role changes affect more than Board members
+When someone joins, leaves, or changes committees, the team may need to update:
+* Outlook meetings
+* distribution lists
+* SharePoint access
+* Board or internal team groups
+* onboarding documentation and training
+This applies to Board members and internal roles such as Executive Team, Leadership, Supervisor Team, and other key groups.
+4. Scheduling rules are increasingly documented, but still fragmented
+Rachel has clear preferences about:
+* what meetings can move
+* what meetings should never move
+* which people or requests should receive priority
+* where meetings should happen
+* when travel is worthwhile
+* when she needs to personally attend
+* how much evening work she wants to take on
+The team has already begun documenting many meeting rules. Felise is also writing down additional rules and pre-populating the annual calendar. The remaining challenge is that those rules still live in multiple places and must be manually interpreted and applied.
+Rachel and Kim have different scheduling needs. Rachel’s schedule is more externally driven and dynamic, including donors, funders, elected officials, and other outside stakeholders. Kim’s schedule is more internally focused, including large organizational meetings, committees, attendance, cadence, and operational timing.
+A future scheduling advisor may need to apply different rules depending on the executive.
+Top recommendations (high ROI first):
+1. Start with Annual Calendar Planning by organizing the existing meeting rules and using them to generate and validate a draft 2027 calendar.
+2. Make scheduling rules easy to review and update so changes in roles, priorities, PTO, meeting cadence, or organizational workload can flow through the process.
+3. Use a lightweight Scheduling Advisor as the next step to help staff handle day-to-day changes using executive-specific priorities and calendar context.
+
+
+Business objectives linked to outcomes:
+* Reliable governance: Important meetings happen at the right time, in the right order, with the right people and access.
+* Protect executive time: Reduce unnecessary rework, calendar oversight, travel, and scheduling mistakes.
+* Keep operations running smoothly: Create clear, repeatable processes that still work during busy periods or when key leaders are unavailable.
+4. Scheduling Workstreams
+The discovery conversation revealed four related but distinct workstreams.
+Workstream
+	Business problem
+	1. Annual governance and organizational calendar planning
+	Building the future-year calendar requires many schedules, rules, dependencies, holidays, and exceptions to be considered manually.
+	2. Bulk Calendar Updates for Confidential Meetings
+
+
+	Confidential meetings are kept separate, which protects information but creates significant manual work.
+	3. Board-member Changes
+	When Board members or internal staff join, leave, or change roles, meetings, groups, access, and responsibilities may need to be updated across several systems.
+	4. Day-to-day Executive Scheduling
+	The EA and executives must apply judgment about meeting priority, flexibility, attendance, location, travel, and availability when new requests or changes arise.
+	These workstreams are connected, but they do not need to be solved at the same time.
+4.1 Workstream A: Annual Calendar Planning
+Today, the annual calendar is built manually.
+The process starts with a 12-month planning board. The team first marks holidays, organizational blackout periods, and dates that may be difficult for Board members.
+From there, the calendar is built in layers:
+1. Full Board meetings are scheduled first.
+2. Board committee meetings are added around them.
+3. Compliance deadlines and meeting dependencies are considered.
+4. Executive Team, Leadership, Supervisor Team, risk, operations, and other internal meetings are added.
+5. Known workload periods, PTO, vacation patterns, and attendance requirements are considered.
+6. Meeting times are decided once the overall structure works.
+7. Felise manually enters the meetings into the organizational Outlook calendar.
+8. The schedule is checked against executive calendars and external commitments.
+9. Conflicts are adjusted as needed.
+Many rules are already documented, but they are not maintained or applied through one consistent process. Rachel specifically prefers viewing the year as 3 months across × 4 months down because it makes quarterly patterns easier to see.
+Primary outputs: Draft 2027 calendar structure, Outlook-ready meeting schedule, and predictable meeting cadence.
+
+
+4.2 Workstream B: Bulk Calendar Updates for Confidential Meetings
+Today, many confidential meetings are intentionally created as separate Outlook events instead of recurring meetings.
+For example, six Finance Committee meetings may be created as six separate calendar events rather than one recurring meeting.
+This helps prevent meeting notes, recordings, or AI-generated summaries from accidentally being shared with someone who was only invited to one meeting.
+The downside is that every meeting has to be maintained separately.
+If someone joins or leaves a committee, Felise may have to open every future meeting and manually add or remove that person.
+Primary outputs: Confidential meetings remain separate and secure, but require significant manual maintenance.
+4.3 Workstream C: Board Member Changes
+Today, when a Board member joins, leaves, or changes committees, several updates may need to happen.
+The team must:
+1. Update the appropriate roster, role, or team assignment.
+2. Add or remove the person from future Outlook meetings.
+3. Add or remove them from the correct email distribution lists.
+4. Give or remove access to the correct SharePoint folders.
+5. Track required onboarding items, forms, orientation, or training.
+6. Confirm the person is included in the right internal groups, such as Executive Team, Leadership, Supervisor Team, or All Staff.
+These updates happen across several systems, and there is not currently one documented process that ensures every step is completed consistently.
+As a result, Rachel sometimes has to personally check whether everything was completed.
+Primary outputs: Correct meeting participation, role/group membership, communication access, system access, and onboarding/offboarding completion.
+
+
+4.4 Worksteam D: Day to Day Executive Scheduling
+Day-to-day scheduling differs by executive. 
+Rachel’s schedule is more externally driven and may need to flex for donors, funders, elected officials, or other important external stakeholders.
+
+
+Kim’s schedule is more internally focused and centers on major organizational meetings, committees, cadence, attendance, and operational timing.
+For example:
+* A Board meeting generally should not move.
+* A routine direct-report meeting may be flexible.
+* An executive may miss a regular Executive Team meeting, but full attendance may be preferred for a retreat.
+* Some external requests may justify moving another meeting.
+* Other requests should be scheduled at the next available time without displacing existing commitments.
+* Location and travel time may matter.
+* PTO and existing calendar blocks must be considered.
+* Some periods of the year may be especially difficult for specific teams because of budget, finance, reporting, or performance cycles.
+The goal is not for AI to independently move meetings. The goal is to help the EA or executive understand what can move, what should stay, and why.
+Primary outputs: Clearer scheduling recommendations, fewer unnecessary conflicts and schedule changes, and better use of executive and staff time.
+
+
+5. Primary MVP 1: Annual Calendar Planning
+Use-case statement
+Create a prototype that helps Rachel, Kim, Felise, and the team build the 2027 calendar using their existing meeting rules and constraints. The prototype proposes dates, identifies conflicts or exceptions, recommends alternatives, and explains why.
+The team reviews and approves recommendations before anything is changed in Outlook.
+Rachel and Kim validated Annual Calendar Planning as the first priority. The prototype will initially use existing 2026 information projected into 2027 so the team can test the experience before production integration.
+Primary users
+Rachel, CEO
+* Provides internal organizational cadence and event requirements
+* Identifies internal workload periods and scheduling constraints
+* Helps determine attendance and operational requirements
+Kim, COO
+* Supplies internal organizational cadence and event requirements
+* Validates operational impact and meeting density
+* Helps determine which internal commitments require Rachel
+Felise, Executive Assistant/Admin
+* Primary operational subject-matter expert and pilot user
+* Maintains and applies scheduling rules
+* Pre-populates the annual calendar
+* Reviews recommendations and identifies gaps
+* Helps validate what the workflow should look like in practice
+Chad, VP of IT
+Future Technical Partner. Helps validate technical feasibility, Microsoft environment, security, and Outlook integration approach
+
+
+6. User Experience: Calendar Planning
+The future experience should make annual calendar planning easier without removing human control. Instead of manually checking every rule across multiple documents, the team provides or connects the information needed to build the year.
+This could include:
+* Board and committee schedules
+* organizational meeting schedules
+* holidays and blackout dates
+* compliance deadlines
+* meeting dependencies
+* retreats and special meetings
+* workload periods such as budget or financial close
+* PTO and known availability
+* attendance requirements
+* rules about which meetings can or cannot move
+The system then creates a proposed 2027 calendar. For each meeting, it checks whether the proposed date follows the agreed rules.
+
+
+For example:
+Finance Committee — May 25
+✓ No conflict detected.
+
+
+Executive Team — September 6
+⚠ September 6 is Labor Day.
+Recommendation: Move the meeting to Tuesday, September 7.
+
+
+For more complicated situations, the system explains the tradeoff.
+Example:
+The Finance Committee normally meets on the fourth Tuesday, but financial reports are not available until the 20th. This date leaves little time for review. Moving the meeting later gives the committee more preparation time while still allowing the Board to make its required decision.
+Rachel, Kim, and Felise can:
+* accept the recommendation,
+* choose another date, or
+* keep the original date if there is a valid reason
+Once the team is satisfied, the final calendar is approved. Production Outlook integration should happen only after the sandbox experience has been tested and the technical approach is validated with IT.
+Experience at a Glance
+Today
+Planning board
+→ rules manually checked across documents and team knowledge
+→ conflicts manually resolved
+→ meetings manually entered into Outlook
+
+
+
+
+Future
+Meeting requirements + maintained scheduling rules
+→ system creates draft calendar
+→ conflicts and exceptions are identified
+→ recommendations are provided
+→ team reviews and approves
+→ approved schedule is prepared for Outlook
+
+
+7. Proposed MVP 1 Workflow
+Step 1: Gather the Information
+Collect the information needed to build the calendar, including:
+* 2026 calendar
+* 2027 Board and committee schedules
+* meeting matrix
+* compliance calendar
+* holidays and blackout periods
+* important meeting dependencies
+* organizational meeting schedules
+* workload periods such as budget, finance, reporting, and performance cycles
+* attendance requirements
+* known executive commitments and PTO
+Step 2: Capture the Scheduling Rules
+Use the existing meeting matrix, Felise’s documented rules, and additional input from Rachel and Kim.
+Examples:
+* Finance Committee must meet after financial information is available.
+* Finance Committee may need to meet before a related Board decision.
+* Monday Executive Team meetings need to account for Monday holidays.
+* Quarterly retreats should happen near the end of the quarter.
+* A regular Executive Team meeting can tolerate one executive absence, while retreats may require full attendance.
+* Certain workload periods should be protected from unnecessary large meetings.
+The team reviews the rules before they are used.
+Step 3: Generate the Draft 2027 Calendar
+Use the approved meeting schedules and rules to recommend dates for the year.
+The first prototype can use existing 2026 data projected into 2027 for testing.
+Step 4: Check for Problems
+The system checks for issues such as:
+* Holidays and blackout periods
+* meeting conflicts
+* meetings happening in the wrong order
+* insufficient preparation time
+* executive PTO or known unavailability
+* attendance requirements
+* heavy organizational workload periods
+* unusual exceptions
+Step 5: Review Recommendations
+Rachel, Kim, and Felise review the proposed calendar. Where there is a problem, the system explains why and recommends another option.
+The team decides whether to:
+* accept the recommendation
+* choose another date
+* approve an exception
+Step 6: Finalize the Calendar
+Once the important issues have been resolved, the team approves the final 2027 calendar.
+The production Outlook connection should be designed with Chad/IT after the prototype workflow has been validated.
+8. How AI Should be Used
+The solution does not need AI for everything. The simplest approach is:
+Rules handle predictable things.
+Examples:
+* Is this a holiday?
+* Is this a blackout date?
+* Does the Finance Committee happen before the Board meeting?
+* Is the meeting happening at the correct frequency?
+AI helps when judgment or explanation is useful.
+Examples:
+* Explain why a date is problematic.
+* Suggest alternative dates.
+* Compare competing scheduling priorities.
+* Pull scheduling rules from documents and meeting notes.
+* Explain tradeoffs when there is no perfect option.
+People make the final decisions.
+Rachel, Kim, Felise, the Board, or another authorized leader remain responsible for:
+* changing Board cadence
+* approving exceptions
+* interpreting compliance requirements
+* deciding which priority should win when there is a conflict
+* approving the final calendar
+The goal is decision support, not giving the system complete control over the calendar.
+
+
+9 Scope Boundaries
+MVP Scope
+Workstream
+	MVP Status
+	Focus
+	A. Annual Calendar Planning
+	Included in MVP
+	Build and validate the 2027 calendar, apply scheduling rules, flag conflicts, recommend changes, and get team approval.
+	B. Bulk Calendar Updates for Confidential Meetings
+	Future Phase
+	Create and update multiple separate Outlook meetings at once while preserving confidentiality.
+	C. Board Member Changes
+	Future Phase
+	Automate the updates required when Board members join, leave, or change committees.
+	D. Day-to-Day Executive Scheduling
+	Included in MVP
+	Help Felise prioritize new meeting requests, decide what can move, and better manage Rachel’s time and travel.
+	
+
+The first MVP focuses only on Workstream A and D: helping the team build a reliable 2027 calendar and manage though day to day scheduling needs. 
+10. Consulting Deliverables
+Deliverable 1: Current-State Process & Requirements
+Document and validate how annual calendar planning works today.
+This includes:
+* how the calendar is built
+* who is involved
+* what information is used
+* where mistakes occur
+* what rules currently live in people’s heads
+Deliverable 2: 2027 Meeting & Scheduling Rules
+Create a structured list of:
+* meetings
+* meeting cadence
+* preferred timing
+* dependencies
+* holidays and blackout periods
+* known exceptions
+* scheduling rules
+Deliverable 3: MVP Prototype
+Create a simple prototype showing how the future planning experience could work.
+The prototype should show:
+* proposed calendar
+* meeting details
+* conflicts
+* recommendations
+* explanations
+* approve/change decisions
+Deliverable 4: Draft 2027 Calendar & Conflict Review
+Use the agreed rules to create an initial 2027 calendar.
+Review:
+* recommended dates
+* conflicts
+* sequencing issues
+* exceptions
+* decisions that require leadership input
+Deliverable 5: Final Workflow, SOP & Recommendations
+At the end of the pilot, document:
+* final planning process
+* final scheduling rules
+* operating instructions
+* lessons learned
+* recommended next steps
+* future opportunities across Workstreams B, C, and D
+
+
+11. Success Measures
+Baseline measurements should be collected before the pilot so impact can be measured afterward.
+The primary measures should be:
+1. Time to Build the Annual Calendar
+How much time do Rachel, Kim, and Felise spend planning the calendar today compared with the new process?
+2. Conflicts Caught Before Publishing
+How many holiday, dependency, or scheduling conflicts does the system catch before meetings are sent?
+3. Avoidable Reschedules
+How many meetings have to be changed after the calendar is published because of preventable planning mistakes?
+4. Executive Oversight Time
+How often do Rachel or Kim  need to step in and correct scheduling decisions or remind the team of rules?
+5. Administrative Time
+How much time does Felise spend planning, checking, and correcting the annual calendar?
+6. User Feedback
+Do Rachel, Kim, and Felise feel that the process is:
+* easier
+* more reliable
+* less stressful
+* easier to manage without Rachel’s direct involvement
+Any public case study should report only measured results after the pilot.
+
+
+12. Tentative Timeline
+This timeline is an initial estimate and can change depending on the team’s availability and the information available.
+August 17–24: Discovery and Preparation
+* Review source documents
+* Review the 2026 calendar
+* Create initial meeting list
+* Begin documenting scheduling rules
+* Identify missing information
+* Prepare a simple prototype concept
+August 26: Calendar Planning Working Session
+Attend Rachel, Kim, Felise, and other relevant leaders.
+Goals:
+* validate how the process currently works
+* confirm the meetings included in the MVP
+* review 2027 cadence decisions
+* identify important scheduling rules
+* identify required meeting dependencies
+* review the prototype concept
+* confirm what a successful MVP should accomplish
+Late August–Early September
+* finalize meeting information
+* finalize the first set of scheduling rules
+* generate the first draft calendar
+* identify conflicts
+* review recommendations with Rachel, Kim, and Felise
+* Start working with Chad on tech requirements for integration and deployment
+September
+* improve the calendar based on feedback
+* test common scheduling exceptions
+* validate the workflow
+* measure time and errors
+* prepare the final calendar process
+Early October: Pilot Completion -> Production
+* finalize the approved workflow
+* finalize operating instructions
+* document remaining issues
+* hand off scheduling information and rules
+* If greenlighted -> move to production

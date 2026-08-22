@@ -1,0 +1,993 @@
+﻿MVP 1 Calendar Planning and Executive Scheduling Rulebook
+A.1 Purpose of This Appendix
+This appendix is the operating rulebook for the MVP 1 proof of concept.
+It is intended to give a human or software agent enough structured information to:
+* understand how LSS builds its annual calendar;
+* identify the meetings that belong on the central organizational calendar;
+* understand each meeting’s purpose, cadence, timing, dependencies, and flexibility;
+* generate a proposed 2027 calendar from approved rules;
+* identify conflicts, missing information, and decisions requiring human input;
+* support limited day-to-day executive scheduling recommendations; and
+* explain why a meeting date or scheduling recommendation was proposed.
+The appendix is not a final production configuration, legal interpretation, or approved 2027 calendar. The 2026 materials establish a baseline, but 2026 dates must not automatically be treated as permanent rules.
+The MVP 1 agent may generate recommendations, but it must not create, move, cancel, or publish Outlook events without human approval.
+________________
+
+
+A.2 MVP 1 Scope
+MVP 1 includes two connected capabilities.
+1. Annual Calendar Planning
+The agent should use approved meeting rules, holidays, dependencies, attendance needs, workload periods, and executive constraints to generate a proposed 2027 calendar.
+2. Lightweight Executive Scheduling Advisor
+The agent should help an Executive Assistant or executive evaluate a new meeting request by recommending:
+* whether the meeting should be accepted;
+* where it could fit;
+* what existing meeting could move, if any;
+* how a displaced meeting could be rescheduled; and
+* why the recommendation follows the agreed scheduling rules.
+The following are not part of MVP 1:
+* autonomous calendar changes;
+* email-based scheduling negotiation;
+* bulk maintenance of confidential meeting instances;
+* automated onboarding or offboarding;
+* automated SharePoint or distribution-list updates; and
+* production Outlook integration before the prototype is validated.
+________________
+
+
+A.3 How the Agent Must Interpret the Rules
+Rule Status Labels
+Every scheduling rule should carry one of the following statuses.
+Confirmed
+The rule was explicitly stated in the recent discovery conversations or is consistently supported by current documents.
+2026 Baseline
+The rule or pattern was used in 2026 and may be used to create a POC draft, but it has not yet been approved for 2027.
+Needs Validation
+The rule appears likely or is supported by one source, but the team must confirm it before it is treated as authoritative.
+Open Question
+Required information is missing or conflicting. The agent must not invent an answer.
+Source Precedence
+When two sources differ, use this order:
+1. Approved 2027 decisions from Rachel, Kim, the Executive Committee, or another authorized owner.
+2. The most recent discovery-session statements.
+3. The detailed meeting-specific calendar sheet.
+4. The Meeting Matrix.
+5. The observed 2026 calendar pattern.
+6. Agent inference.
+Agent inference must never be converted into an approved rule. It must be presented as a recommendation or open question.
+Constraint Strength
+Rules should also be classified by strength.
+Hard Stop
+The proposed date cannot be used without an explicit override.
+Examples:
+* an approved organizational holiday;
+* an approved blackout period;
+* an unavailable required attendee;
+* a compliance deadline that would be missed; or
+* an approved Board meeting that cannot be moved.
+Required Sequence
+One activity must happen before or after another.
+Example:
+* Finance Committee review must occur before the related Board approval.
+Default Rule
+Use the rule unless a valid conflict or approved exception exists.
+Example:
+* Leadership Team normally meets on the second Thursday.
+Preference
+Optimize for the rule when possible, but it may be overridden.
+Examples:
+* group downtown meetings together;
+* avoid unnecessary executive travel; or
+* limit evening commitments.
+________________
+
+
+A.4 Required Rule Fields
+Each meeting type should eventually be represented with the following fields:
+* Meeting ID or abbreviation
+* Meeting name
+* Meeting category
+* Purpose
+* Meeting owner or leader
+* Attendee group
+* Cadence
+* Default month or quarter
+* Default day-of-week rule
+* Preferred time
+* Duration
+* Modality
+* Preferred location
+* Attendance requirement
+* Flexibility classification
+* Upstream dependency
+* Downstream dependency
+* Preparation-time requirement
+* Holiday or blackout handling
+* Exception authority
+* Source
+* Rule status
+* Open questions
+The agent should use role-based attendee groups, such as Executive Team, Leadership Team, Supervisory Team, or Board Committee, rather than permanently hard-coding individual names.
+The existing Meeting Matrix RACI values describe the organizational role of a team in strategy, values, and operations. They must not be interpreted as individual attendance requirements. Attendance must be captured separately as required, preferred, or optional.
+________________
+
+
+Appendix B — Annual Calendar Construction Rules
+B.1 Required Build Order
+The agent must build the calendar in the same order that LSS leadership thinks about the year.
+Step 1 — Load the Calendar Constraints
+Before proposing meetings, load:
+* the official 2027 calendar;
+* approved national holidays;
+* approved LSS holidays;
+* approved blackout periods;
+* the Christmas-through-New-Year closure or no-meeting period;
+* known Board-member availability constraints;
+* executive PTO and calendar blocks;
+* compliance deadlines;
+* budget and financial-close periods;
+* performance-evaluation periods;
+* grant or reporting periods, when provided; and
+* other high-workload periods identified by Kim, Felise, Lauren, or another process owner.
+The agent must not copy holiday labels from the 2026 master sheet into 2027. A verified 2027 holiday and LSS closure list is required.
+Step 2 — Build the Board Skeleton
+Place the annual Board structure first:
+1. Full Board meetings
+2. Board retreats
+3. Board Critical Issue Check-ins
+4. Executive Committee meetings
+5. Administration & Finance Committee meetings
+6. Other Board committees
+7. Board orientation or special Board events, when confirmed
+Once approved, Board dates become protected anchors around which the rest of the organizational calendar is built.
+Step 3 — Apply Board and Compliance Dependencies
+Before adding organizational meetings, validate:
+* committee-before-Board sequencing;
+* financial-report availability;
+* budget-review and Board-approval deadlines;
+* succession-planning requirements;
+* other compliance-calendar obligations; and
+* whether an authoritative Board or Executive Committee body is available when decisions may be required.
+Step 4 — Add Executive and Organizational Meetings
+Add meetings in this order:
+1. Executive Team meetings and retreats
+2. Leadership Team meetings and retreats
+3. Supervisory Team meetings
+4. All Staff meetings
+5. Quarterly Program Briefings
+6. Operations meetings
+7. BVR meetings
+8. Internal Risk meetings
+9. Other validated organizational or committee meetings
+Step 5 — Apply Workload and Attendance Constraints
+Check:
+* budget and financial-close periods;
+* performance-evaluation periods;
+* reporting and program deadlines;
+* common vacation periods;
+* executive and required-attendee PTO;
+* whether full attendance is required;
+* whether representation by another leader is sufficient; and
+* whether too many major meetings burden the same audience in one week.
+Step 6 — Cross-Check Executive Calendars
+Cross-check the proposed structure against:
+* Rachel’s external Board commitments;
+* major donor, funder, elected-official, and community obligations;
+* Kim’s major internal organizational commitments;
+* other known executive constraints; and
+* approved PTO blocks.
+Step 7 — Assign Times
+Assign meeting times only after the annual date structure is coherent.
+Step 8 — Generate the Draft and Decision Queue
+The agent should produce:
+* a proposed year-at-a-glance calendar;
+* a meeting-level schedule;
+* warnings and conflicts;
+* proposed alternatives;
+* an explanation for each exception;
+* unresolved open questions; and
+* a list of items requiring human approval.
+Rachel, Kim, Felise, or another authorized leader must approve the proposed calendar before any Outlook action is taken.
+The annual view should support Rachel’s preferred layout of three months across and four months down so quarterly patterns are easy to see.
+________________
+
+
+B.2 Cross-Cutting Calendar Rules
+Holidays and Blackout Periods
+* Do not schedule meetings on approved national or LSS holidays.
+* Do not schedule routine governance or organizational meetings during approved blackout periods.
+* Treat the period between Christmas and New Year as unavailable unless leadership explicitly approves an exception.
+* When a recurring Monday meeting lands on a Monday holiday, propose a replacement date rather than silently skipping or retaining the holiday date.
+* A recurring cadence rule does not override a holiday or blackout rule.
+Required Attendance
+Every meeting should be assigned one of these attendance rules:
+Full attendance required
+The meeting should move if a required participant is unavailable.
+Core attendance required
+The meeting may proceed if the required role or leadership coverage is present, even if one individual is absent.
+Attendance preferred
+The meeting can proceed with partial attendance.
+Informational
+The event does not require every invited participant to attend.
+Known example:
+* A regular Executive Team meeting may proceed if one executive is absent.
+* An Executive Team retreat should generally be planned for full attendance.
+Workload Protection
+The agent should identify and flag major meetings scheduled during known high-workload periods.
+Known or emerging periods include:
+* the period immediately before financial information is finalized;
+* annual budget development and approval;
+* July/August performance evaluations;
+* grant or regulatory reporting periods, once provided;
+* significant program deadlines; and
+* common vacation periods.
+Workload periods should initially be treated as preferences or warnings unless leadership identifies them as hard blackouts.
+Rule Maintenance
+Rules must be easy for authorized staff to update.
+A rule may need:
+* an effective start date;
+* an effective end date;
+* a temporary exception;
+* a different rule for a specific executive;
+* a change in cadence;
+* an updated attendee group; or
+* an updated flexibility level.
+The agent should use the current rule version applicable to the proposed meeting date.
+Exceptions
+When a standard cadence produces an invalid date:
+1. Preserve the meeting’s purpose and dependency.
+2. Search for the nearest valid alternative.
+3. Prefer changing the time before changing the date when that resolves the conflict.
+4. Explain which rule caused the exception.
+5. Record the approved alternative and rationale.
+6. Do not convert a one-time exception into a permanent rule.
+________________
+
+
+Appendix C — Board and Governance Meeting Rules
+C.1 Full Board Meetings and Critical Issue Check-ins
+Purpose
+Provide the recurring governance structure for Board discussion, decisions, and critical organizational issues.
+Calendar role
+The Board calendar is the primary skeleton for the year. It must be placed before committee and organizational meetings.
+2026 baseline
+The 2026 schedule included:
+* six Full Board meetings;
+* six Board Critical Issue Check-ins;
+* a Board touchpoint in every month;
+* Full Board meetings generally on the second Tuesday;
+* Critical Issue Check-ins generally in the alternating months;
+* Full Board meetings from 5:00–7:00 p.m. in person;
+* Critical Issue Check-ins from 5:00–5:30 p.m. virtually;
+* one Full Board meeting converted into a retreat; and
+* selected Critical Issue Check-ins that included an in-person service opportunity.
+Recent 2027 direction — Needs Validation
+Rachel described a possible 2027 structure of:
+* two longer Full Board retreats, approximately 8:00 a.m.–1:00 p.m.;
+* four regular Full Board meetings, approximately 5:00–7:00 p.m.; and
+* six short virtual Critical Issue Check-ins.
+This structure must be confirmed after the Board or Executive Committee cadence discussion.
+Flexibility
+* Approved Full Board dates are highly protected.
+* Rescheduling should be avoided because Board members plan far in advance.
+* A major external request should normally work around an approved Full Board meeting.
+* Any move requires explicit executive approval.
+Agent rule
+Do not generate the final Board skeleton until the 2027 cadence, retreat months, and default day pattern are confirmed.
+________________
+
+
+C.2 Executive Committee
+Purpose
+Provide a decision-making or authoritative governance body during months when the Full Board is not holding its regular meeting.
+Attendee rule
+The Executive Committee consists of the Board chair and the chairs of the Board committees.
+2026 baseline
+* Every other month
+* Generally the fourth Tuesday
+* 5:00–6:30 p.m.
+* Scheduled in the months between regular Full Board meetings
+* One December 2026 exception occurred on a Thursday rather than the fourth Tuesday
+Sequence rule
+The Executive Committee cadence should be designed together with the Full Board cadence so an appropriate governance body is available throughout the year.
+Needs Validation
+* Confirm whether the 2027 Executive Committee will remain every other month.
+* Confirm whether it should continue in the months without regular Full Board meetings.
+* Confirm the default day and treatment of holiday-month exceptions.
+________________
+
+
+C.3 Administration & Finance Committee
+Purpose
+Review financial matters and prepare financial or budget recommendations that may require Full Board action.
+2026 baseline
+* Every other month
+* Generally the fourth Tuesday
+* 5:00–6:30 p.m.
+* Scheduled in January, March, May, July, September, and November
+* The November meeting was moved earlier than the standard fourth-Tuesday pattern
+Required dependencies
+* Financial information is generally not complete until approximately the 20th of the month.
+* The committee should meet after the required financial information is available.
+* When the Full Board must act on a financial or budget item, the committee review should occur first.
+* If the financials cannot be completed, reviewed, and approved by the Board in the same month, the Board meeting may need to occur early in the following month.
+* The LSS fiscal year begins July 1.
+* Annual budget planning may require a late-May Finance Committee review followed by a June Full Board decision.
+Rule priority
+The financial-data dependency and required Board-approval deadline take priority over the normal fourth-Tuesday cadence.
+Open Questions
+* What is the formal 2027 budget approval deadline?
+* Which monthly or quarterly financial items require Board action?
+* How much review time is required between Finance Committee and Full Board?
+* Is the 20th a fixed data-availability date or an approximate operating assumption?
+* Which requirements come from the compliance calendar?
+________________
+
+
+C.4 Health Center & Programs Committee
+2026 baseline
+* Quarterly
+* Third Tuesday of the third month of each quarter
+* 5:00–6:30 p.m.
+* March, June, September, and December
+Needs Validation
+* Confirm the committee’s current name.
+* Confirm its purpose and required outputs.
+* Confirm whether its work feeds a subsequent Full Board decision.
+* Confirm required attendees.
+* Confirm whether the 2026 pattern should continue in 2027.
+The agent may create provisional dates from the 2026 pattern but must mark them as awaiting validation.
+________________
+
+
+C.5 Talent & Risk Management Committee
+2026 baseline
+* Quarterly
+* Intended default: first Tuesday of the second month of each quarter
+* 5:00–6:30 p.m.
+* February, May, August, and November
+* The May 2026 date did not follow the stated first-Tuesday rule and should be treated as an exception rather than a permanent pattern.
+Needs Validation
+* Confirm the committee’s current purpose.
+* Confirm whether talent and risk remain one combined committee.
+* Confirm the required outputs and any Board dependencies.
+* Confirm the 2027 cadence and default day.
+* Identify the reason for the May 2026 exception.
+________________
+
+
+C.6 Nominations Committee
+The recent discovery discussion identified Nominations as an existing Board committee, but the available 2026 Board calendar does not provide a recurring Nominations meeting rule.
+Open Questions
+* Does Nominations meet on a recurring cadence or only when needed?
+* What months are required for Board recruitment, nomination, officer selection, or succession planning?
+* What decisions must reach the Full Board, and by when?
+* Is there an annual succession-planning requirement in the compliance calendar?
+The agent must not independently schedule Nominations meetings until these rules are provided.
+________________
+
+
+C.7 Board Orientation
+Purpose
+Help new Board members understand the organization and prepare for Board service.
+2026 baseline
+* Two orientation windows
+* April and October
+* 10:00–11:30 a.m.
+MVP 1 treatment
+The annual planning agent may reserve orientation windows if leadership wants them planned in advance. It should not automate the underlying onboarding process.
+Needs Validation
+* Confirm whether two standing orientation windows are needed in 2027.
+* Confirm whether orientation is scheduled only when new members are expected.
+* Confirm the preferred months and modality.
+________________
+
+
+C.8 Board Social and Service Opportunities
+The 2026 Board calendar included a Board social and selected service opportunities. These appear to be special events rather than confirmed annual recurrence rules.
+The agent should not automatically carry them into 2027.
+Open Questions
+* Should a Board social be included in the 2027 calendar?
+* How many Board service opportunities are desired?
+* Do service opportunities replace a virtual Critical Issue Check-in or occur in addition to it?
+________________
+
+
+Appendix D — Executive and Organizational Meeting Rules
+D.1 Executive Team Meeting
+Purpose
+Define and manage LSS strategy and values and make key organization-wide decisions.
+Leader
+CEO
+Attendees
+Executive Team
+Meeting style
+L-10
+Default cadence
+* Weekly
+* Monday
+* 1.5 hours
+The Meeting Matrix confirms a weekly 1.5-hour Executive Team meeting, while the discovery discussions established Monday as the normal day.
+Holiday rule
+When the Monday meeting falls on an approved holiday, propose an alternative date. Do not leave the event on the holiday.
+Attendance rule
+* One Executive Team member may miss a regular meeting if the team still has adequate representation.
+* This does not automatically apply to retreats.
+Flexibility
+* More protected than a routine one-on-one.
+* Less protected than an approved Full Board meeting.
+* May be adjusted for a high-priority external commitment if appropriate leadership coverage remains.
+Open Questions
+* What is the preferred replacement day for a Monday holiday?
+* Is the 1.5-hour duration still current?
+* Which Executive Team roles are required for the meeting to proceed?
+________________
+
+
+D.2 Executive Team Quarterly Retreat
+Purpose
+Review the prior quarter, set the next quarter’s Rocks or priorities, and complete annual review and planning activities when appropriate.
+Default cadence
+* Quarterly
+* Four hours
+* Typically Friday
+* Replaces or extends the normal Executive Team meeting for that period
+The Meeting Matrix places the retreat near the quarter boundary and identifies a June session for annual review, annual goal setting, and Q1 Rocks. The recent discovery discussion described retreats as generally occurring on Fridays near quarter-end. The exact timing rule therefore requires validation.
+Attendance rule
+Full Executive Team attendance is strongly preferred.
+Needs Validation
+* Should the retreat occur near the end of the current quarter or during the first week of the next quarter?
+* Which Friday is preferred?
+* Does the June retreat replace one of the standard quarterly retreats or serve as a separate annual-planning session?
+* What preparation time is required?
+* Which retreats overlap with Leadership Team retreats?
+________________
+
+
+D.3 Leadership Team Meeting
+Purpose
+Align program and functional leadership on LSS strategy and values, share organizational priorities, collaborate across the organization, and support problem-solving and professional development.
+Leader
+CEO
+Attendees
+* Executive Team
+* Program Directors
+* Functional Leaders
+Default cadence
+* Monthly
+* Second Thursday
+* One hour
+* Virtual
+The detailed 2026 sheet uses the second-Thursday rule for February through December. The January 2026 date was a Friday and should be treated as an exception or possible data issue rather than part of the permanent rule.
+Flexibility
+Leadership Team meetings should be planned around Board and Executive Team anchors. They may be moved when necessary, but changes should consider the number of leaders affected.
+Open Questions
+* Why was January 2026 scheduled on a Friday?
+* Does a Leadership Team retreat replace the monthly meeting in the retreat month?
+* Is the virtual format still preferred for every regular meeting?
+* Which participants are required versus preferred?
+________________
+
+
+D.4 Leadership Team Retreat
+Purpose
+Fine-tune strategy and priorities.
+Default cadence
+* Twice per year
+* Four hours
+* In person
+The 2026 detailed sheet used January and September dates and states that a Leadership Team retreat overlaps with one Executive Team retreat.
+Attendance rule
+Full or near-full participation by the intended Leadership Team audience should be prioritized.
+Open Questions
+* Does “overlap” mean the Leadership Team joins part of an Executive Team retreat, or that both retreats happen on the same date?
+* Which two months should be used in 2027?
+* Does the retreat replace that month’s normal Leadership Team meeting?
+* The detailed retreat sheet and the master calendar do not appear to use the same September date; confirm the correct source before projecting the rule.
+________________
+
+
+D.5 All Staff Meeting
+Purpose
+Inform staff about organizational status, provide two-way communication, and reinforce the LSS mission and values.
+Default cadence from the detailed 2026 sheet
+* Quarterly
+* Third Wednesday
+* One hour
+* Virtual
+* January, April, July, and October in 2026
+Known source difference
+The Meeting Matrix identifies a different quarterly month pattern and a 45-minute duration. The detailed meeting sheet should be used as the POC baseline, but the 2027 rule must be validated.
+Scheduling considerations
+* Avoid major organizational reporting or operational deadlines.
+* Consider whether the meeting should occur before or after related Quarterly Program Briefings.
+* Avoid placing another large organization-wide meeting too close to it unless intentionally coordinated.
+Open Questions
+* Should 2027 use January/April/July/October or February/May/August/November?
+* Is the approved duration 60 minutes or 45 minutes?
+* Is the third-Wednesday pattern expected to continue?
+* Is executive attendance required?
+________________
+
+
+D.6 Quarterly Program Briefing
+Purpose
+Provide organizational and program updates and results, recognize and encourage staff, and reinforce the LSS mission, strategies, and values.
+Leader
+Program Directors, with support from Internal Communications
+Attendees
+Program staff
+Detailed 2026 cadence
+* Quarterly
+* Second month of each quarter
+* February, May, August, and November
+* Program Directors select the exact date within the month
+Duration
+The Meeting Matrix lists one hour, but the duration should be validated.
+Potential dependency — Open Question
+The Meeting Matrix asks whether quarter-end service and financial results should be available before the briefing. That dependency has not been confirmed.
+Agent rule
+The agent may reserve the correct month but should not assign a final date until the responsible Program Director or designated owner provides the date-selection rule.
+Additional Open Questions
+* Is there one organization-wide briefing or a separate briefing for each program?
+* How many total events must be created each quarter?
+* Which attendees are shared across programs?
+* Must the briefing follow All Staff or Operations meetings?
+________________
+
+
+D.7 Supervisory Team Meeting
+Purpose
+Cascade organizational information, strategy, updated laws or regulations, and organizational initiatives to LSS supervisors.
+Leader
+Executive Team
+Attendees
+LSS supervisors
+Detailed 2026 cadence
+* Three times per year
+* Last Thursday of the selected month
+* 3.5 hours
+* In person
+* February, May, and October in 2026
+Known source difference
+The Meeting Matrix describes the meeting as quarterly but does not provide the same timing and duration details. Use the detailed 2026 sheet as the POC baseline and validate the 2027 frequency.
+Open Questions
+* Should the meeting remain three times per year or become quarterly?
+* Why were February, May, and October selected?
+* Is 3.5 hours still the correct duration?
+* Does it need to follow a Leadership or All Staff communication?
+* Is full supervisor attendance required?
+________________
+
+
+D.8 Operations Meeting
+Purpose
+Review financial results, service-delivery results, KPIs, and quality.
+Leader
+CEO
+Attendees
+Executive Team and Program Director, according to the Meeting Matrix.
+Detailed 2026 cadence
+* Quarterly
+* Third Wednesday and Thursday of the third month of the quarter
+* 45 minutes
+* In person
+* March, June, September, and December
+* Two scheduled dates or slots per quarter
+Known source difference
+The Meeting Matrix describes a bi-monthly or quarterly cadence, a fourth-Wednesday pattern, and a different duration. The detailed 2026 sheet should be the POC baseline until Kim or Felise confirms the current rule.
+Open Questions
+* Why are there two dates each quarter?
+* Does each program attend one assigned slot?
+* How many separate meetings must be created on each date?
+* Which financial or service data must be available beforehand?
+* Does the meeting need to occur before a Board or committee meeting?
+* Is the correct duration 45 or 30 minutes?
+________________
+
+
+D.9 BVR Meetings
+Purpose
+Conduct a financial deep dive for each program.
+Detailed 2026 cadence
+* Monthly
+* Second Tuesday and/or Wednesday
+* 30 minutes
+* Virtual
+The master calendar shows multiple BVR dates in many months, which suggests separate program-level sessions rather than one organization-wide event. That interpretation must be validated.
+Open Questions
+* What does BVR stand for?
+* How many BVR meetings occur each month?
+* Which program is assigned to each slot?
+* Who leads and attends each meeting?
+* Are the Tuesday and Wednesday dates alternatives or both required?
+* What financial data must be available before the meeting?
+* Can BVR meetings be moved when an executive conflict occurs?
+The agent should not create the complete monthly BVR set until the program-to-slot mapping is provided.
+________________
+
+
+D.10 Internal Risk Committee
+Purpose
+Not documented in the available calendar sheet.
+2026 cadence
+* Quarterly
+* Third Thursday
+* First month of each quarter
+* 1.5 hours
+* In person
+* January, April, July, and October
+Open Questions
+* What is the committee’s purpose?
+* Who leads it?
+* Who attends?
+* Is Rachel required?
+* Can another Executive Team member provide sufficient representation?
+* Does it feed a Board or Talent & Risk Committee decision?
+* Is the first-month/third-Thursday rule approved for 2027?
+The agent may hold provisional dates but must mark this meeting type as incomplete.
+________________
+
+
+D.11 Public Policy Directors Roundtable
+The Meeting Matrix identifies a quarterly Public Policy Directors Roundtable led by the CEO and Bill Byers, with selected executives, Program Directors, and Communications participation. It does not provide a purpose, default month, day, duration, or modality.
+The agent must not schedule this meeting until the missing rules are supplied.
+________________
+
+
+D.12 Emerging Risk Meetings
+The Meeting Matrix includes placeholders for:
+* Risk Management: Administration
+* Risk Management: Healthcare
+* Risk Management: Housing and EA
+These are not complete meeting definitions.
+They should not be included in the POC-generated calendar until purpose, ownership, attendees, cadence, duration, and timing are confirmed.
+________________
+
+
+D.13 Observed Quarterly Organizational Rhythm
+The detailed 2026 sheets suggest this quarterly pattern:
+First month of the quarter
+* All Staff Meeting
+* Internal Risk Committee
+Second month of the quarter
+* Quarterly Program Briefing
+Third month of the quarter
+* Operations Meetings
+This appears to create a logical communication and review rhythm, but it is an observed 2026 pattern rather than a confirmed 2027 rule. It should be presented to Kim and Felise for validation.
+________________
+
+
+Appendix E — Decentralized and Individual Meeting Constraints
+These meetings may not belong on the central annual organizational calendar, but they affect executive availability and organizational workload.
+E.1 Department Leader Meetings
+Purpose
+Set department strategy, reinforce values, review scorecards and Rocks, resolve issues, and support accountability.
+Default cadence
+* At least monthly
+* L-10 style
+* 1–1.5 hours
+* Led by VPs
+* Attended by Program Directors or Functional Leaders
+The annual planning agent should not create all Department Leader meetings unless asked. The Scheduling Advisor should recognize them as existing calendar commitments.
+E.2 Program Leader Meetings
+Purpose
+Set program strategy, reinforce values, review scorecards and Rocks, resolve issues, and support accountability.
+Default cadence
+* At least monthly
+* L-10 style
+* One hour
+* Led by Program Directors
+* Attended by Managers or Leaders
+* May include staff who own specific Rocks
+These should generally be treated as program-owned commitments rather than centrally generated organizational events.
+E.3 Supervisor/Staff One-on-Ones
+Purpose
+Discuss progress, issues, KPIs, goals, and Rocks.
+Default cadence
+* Weekly, bi-weekly, or monthly depending on role
+* Approximately one hour
+Rachel identified her recurring direct-report meetings as generally flexible and movable when a higher-priority request arises.
+The Scheduling Advisor may consider these meetings for rescheduling, but it should preserve the routine and propose a replacement date rather than simply canceling them.
+E.4 Performance Check-ins
+Default cadence
+* Quarterly
+* Approximately 30 minutes
+* Timing selected by the supervisor
+These create decentralized calendar load but do not need to be centrally generated in MVP 1.
+E.5 Performance Evaluations
+Default cadence
+* Annual
+* Approximately one hour
+* July/August
+The annual calendar should treat July and August as a potential workload period for supervisors and leaders. This is initially a warning or preference rather than a hard blackout.
+________________
+
+
+Appendix F — Day-to-Day Executive Scheduling Advisor Rules
+F.1 Required Inputs
+Before making a recommendation, the Scheduling Advisor should receive:
+* executive name;
+* meeting requester;
+* requester category or priority;
+* meeting purpose;
+* required attendees;
+* preferred timing;
+* deadline, if any;
+* expected duration;
+* modality;
+* preferred location;
+* flexibility of the request;
+* current executive calendar;
+* PTO and out-of-office calendar blocks;
+* applicable meeting rules; and
+* any existing event that may need to move.
+The advisor should retrieve the most current calendar view each time it evaluates a request.
+Outlook PTO or calendar blocks are more reliable advance indicators than an automatic out-of-office message, which may not be activated until the leave begins.
+________________
+
+
+F.2 Executive-Specific Profiles
+The advisor should not apply one universal priority model to every executive.
+Rachel’s Scheduling Profile
+Rachel’s calendar is more externally driven and dynamic.
+Common high-impact requests may include:
+* major donors;
+* funders;
+* the mayor;
+* elected officials;
+* strategic partners;
+* community leaders; and
+* other stakeholders whose availability may be difficult to control.
+Relevant priorities include:
+* protecting Board and governance commitments;
+* creating room for high-impact external relationships;
+* minimizing unnecessary travel;
+* using the downtown shelter location strategically;
+* protecting morning energy and family time;
+* limiting evening commitments; and
+* identifying internal meetings that can proceed without her.
+Kim’s Scheduling Profile
+Kim’s calendar is more internally focused.
+Relevant priorities include:
+* large organizational meetings;
+* committee cadence;
+* attendance and leadership availability;
+* internal communication;
+* budget and operational cycles;
+* program deadlines;
+* avoiding heavy workload periods; and
+* ensuring the right internal audiences are present.
+The advisor should use a separate maintained rule profile for each executive.
+________________
+
+
+F.3 Proposed Priority Framework — Needs Validation
+The following framework was discussed as a possible way to classify requests. It has not yet been formally approved.
+Tier 1 — Protected
+Examples:
+* Full Board meeting
+* Board retreat
+* compliance-critical meeting
+* retreat requiring full executive attendance
+* other specifically protected governance event
+Rule
+Do not move unless the authorized executive explicitly approves the override.
+Tier 2 — High-Priority External
+Examples:
+* mayor or elected official;
+* major donor;
+* critical funder;
+* high-impact strategic partner.
+Rule
+Find the earliest appropriate option. A flexible internal meeting may be moved if necessary, but the advisor must show the impact and proposed reschedule before approval.
+Tier 3 — Important
+Rule
+Find the earliest available time without displacing a protected or other important commitment.
+Tier 4 — Flexible or Schedule When Convenient
+Examples may include:
+* mentorship requests;
+* lower-priority volunteer requests;
+* exploratory conversations without a deadline.
+Rule
+Use an open slot that protects higher-priority commitments. When appropriate, ask the requester to meet at Rachel’s location rather than requiring executive travel.
+Open Question
+Rachel, Kim, and Felise must validate the tier names, definitions, and examples before they are encoded.
+________________
+
+
+F.4 Known Flexibility Rules
+* Full Board meetings are generally protected.
+* Routine direct-report meetings are generally flexible.
+* A regular Executive Team meeting may proceed with one executive absent if leadership coverage is sufficient.
+* Executive Team retreats should be planned for full attendance.
+* Some Risk or Operations meetings may proceed without Rachel when the organization is adequately represented.
+* High-impact external requests may justify moving a flexible internal meeting.
+* Lower-priority requests should work around executive availability.
+* A moved meeting should be rescheduled, not silently canceled.
+________________
+
+
+F.5 Time and Energy Rules
+For Rachel:
+* The normal meeting day generally begins around 9:00 a.m.
+* Morning time before approximately 9:00 should be protected when possible.
+* Evening commitments should be limited.
+* Evenings should primarily be used for Board meetings, strategic events, or other high-value commitments.
+* The exact maximum number of evening commitments per week needs validation.
+These are scheduling preferences rather than absolute hard stops unless Rachel marks a specific block as unavailable.
+________________
+
+
+F.6 Location and Travel Rules
+The advisor should consider:
+* where the executive is already scheduled to be that day;
+* travel time between LSS headquarters, the downtown shelter, and external locations;
+* whether meetings can be grouped geographically;
+* whether the stakeholder should travel to LSS;
+* whether Rachel should travel to the stakeholder;
+* whether the downtown shelter provides mission exposure or strategic value; and
+* whether virtual participation is acceptable.
+Known examples:
+* Rachel may travel for the mayor, an elected official, a major donor, or a strategically important partner.
+* A mentorship or lower-priority request should generally come to Rachel.
+* The downtown shelter may be useful for external stakeholders because it is centrally located and connects the meeting to the LSS mission.
+* Avoid unnecessary back-and-forth travel between headquarters and downtown.
+________________
+
+
+F.7 Scheduling Recommendation Process
+For each new request, the advisor should:
+1. Validate the request details.
+2. Retrieve the current executive calendar and PTO blocks.
+3. Apply the executive-specific rule profile.
+4. Classify the request’s priority.
+5. Identify protected commitments.
+6. Search for available options that do not require displacement.
+7. If displacement is necessary, consider only eligible flexible meetings.
+8. Propose a replacement date for every displaced meeting.
+9. Consider attendance, travel, location, workload, and evening limits.
+10. Present the recommendation and at least one alternative when possible.
+11. Explain which rules were applied.
+12. Wait for human approval.
+13. Make no Outlook change during the sandbox POC.
+________________
+
+
+F.8 Required Recommendation Output
+Each recommendation should show:
+* New request
+* Proposed date and time
+* Proposed location or modality
+* Request priority
+* Existing event affected, if any
+* Why the existing event is eligible or ineligible to move
+* Proposed reschedule for the affected event
+* Required attendees and availability
+* Travel impact
+* Workload or energy impact
+* Rules applied
+* Alternative option
+* Human decision required
+* Approval status
+________________
+
+
+Appendix G — POC Output Requirements
+G.1 Annual Calendar Output
+The POC should produce:
+* a three-month-by-four-month year view;
+* a detailed meeting list;
+* meeting category and abbreviation;
+* proposed date and time;
+* owner;
+* attendee group;
+* modality and location;
+* meeting flexibility;
+* attendance requirement;
+* dependencies;
+* rule status;
+* conflict status;
+* recommendation explanation; and
+* approval status.
+G.2 Event Statuses
+Use the following statuses:
+Ready for Review
+The proposed event follows all known rules.
+Needs Decision
+More than one valid option exists or an executive preference is required.
+Blocked
+A required rule, input, dependency, or attendee is missing.
+Approved
+An authorized user has accepted the event.
+Exception Approved
+The event violates a normal rule, but an authorized owner approved the exception and rationale.
+G.3 Conflict Types
+The POC should detect and label:
+* Holiday conflict
+* LSS blackout conflict
+* Required-attendee conflict
+* Board or governance conflict
+* Dependency conflict
+* Compliance-timing conflict
+* Workload-period warning
+* PTO conflict
+* Excessive meeting-density warning
+* Travel or location concern
+* Evening-load warning
+* Source-rule conflict
+* Missing rule
+* Unvalidated exception
+G.4 Explainability Requirement
+Every conflict or recommendation must include a plain-language explanation.
+Example:
+The standard fourth-Tuesday date falls before the financial information is expected to be ready. Moving the Finance Committee meeting later gives the committee time to review the financials but may require moving the Full Board decision to the following month.
+The POC should never return only “invalid date” or “conflict detected” without explaining the applicable rule.
+________________
+
+
+Appendix H — Priority Validation Queue
+H.1 Required Before a Reliable 2027 Draft
+1. Final approved 2027 Full Board, Critical Issue Check-in, and retreat cadence
+2. Final 2027 Executive Committee cadence
+3. Official 2027 national and LSS holiday list
+4. Approved blackout periods
+5. Compliance calendar
+6. Final Administration & Finance-to-Board sequencing rules
+7. 2027 budget review and approval deadlines
+8. Felise’s current scheduling-rule notes
+9. Updated Meeting Matrix
+10. Known executive PTO and major standing commitments
+H.2 Meeting Rules Requiring Validation
+1. All Staff months and duration
+2. Quarterly Program Briefing months, duration, and number of program-specific events
+3. Operations cadence, duration, and reason for two quarterly dates
+4. Supervisory Team frequency
+5. Leadership Team January exception
+6. Leadership Retreat dates and relationship to Executive Retreats
+7. BVR program-to-slot mapping
+8. Internal Risk purpose, owner, and attendees
+9. Public Policy Directors Roundtable rules
+10. Nominations Committee cadence
+11. Health Center & Programs purpose and dependencies
+12. Talent & Risk purpose and May-date exception
+13. Required preparation time for major meetings
+14. Which meetings require full attendance
+15. Which meetings may proceed with leadership coverage
+H.3 Scheduling Advisor Rules Requiring Validation
+1. Final priority tiers and definitions
+2. Executive-specific lists of protected, conditional, and flexible meetings
+3. Maximum desired evening commitments
+4. Preferred treatment of Monday holidays
+5. Preferred travel and location rules
+6. Whether Outlook color categories should represent flexibility
+7. Who can approve a schedule override
+8. Whether the advisor should present one recommendation or multiple ranked options
+9. How far ahead PTO must be entered
+10. Which external stakeholder categories justify moving an existing meeting
+________________
+
+
+Appendix I — Deferred Phase 2 Reference
+The following information is intentionally excluded from MVP 1 implementation.
+I.1 Confidential Meeting Management
+LSS currently avoids recurring Outlook series for protected meeting categories because an occasional attendee could gain access to notes, recordings, summaries, or artifacts from other occurrences.
+Known operating rule:
+* Create each protected occurrence as a separate Outlook event.
+* Invite only the attendees authorized for that occurrence.
+* Keep occurrence-specific artifacts scoped to that meeting.
+* When attendance changes, update each relevant future meeting instance.
+A future Phase 2 could create and maintain these separate instances in bulk while preserving the confidentiality boundary.
+I.2 Role Changes and Onboarding/Offboarding
+When a Board member or internal team member joins, leaves, or changes roles, updates may be required across:
+* role or roster records;
+* Outlook meetings;
+* distribution lists;
+* SharePoint access;
+* PayCom or organizational groups;
+* orientation;
+* forms;
+* training; and
+* other role-specific requirements.
+This applies to Board members and internal groups such as Executive Team, Leadership, Supervisory Team, and All Staff.
+A future Phase 2 should be role-driven and effective-dated rather than based only on replacing one named individual with another. It is not required for the MVP 1 calendar POC.
