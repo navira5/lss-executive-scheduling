@@ -24,6 +24,42 @@ test("uses the verified 2027 Labor Day date rather than copying the bad 2026 lab
   assert.ok(!holidays2027.some((holiday) => holiday.date === "2027-09-01"));
 });
 
+test("loads every OPM federal holiday observed during calendar year 2027", () => {
+  const expected = [
+    "2027-01-01",
+    "2027-01-18",
+    "2027-02-15",
+    "2027-05-31",
+    "2027-06-18",
+    "2027-07-05",
+    "2027-09-06",
+    "2027-10-11",
+    "2027-11-11",
+    "2027-11-25",
+    "2027-12-24",
+    "2027-12-31",
+  ];
+  const verified = holidays2027
+    .filter((holiday) => holiday.status === "verified_federal")
+    .map((holiday) => holiday.date);
+
+  assert.deepEqual(verified, expected);
+});
+
+test("blocks recurring meetings that land on the newly completed federal holiday set", () => {
+  const plan = generateCalendarPlan(baseline);
+  for (const date of ["2027-02-15", "2027-10-11"]) {
+    const executiveTeam = plan.events.find(
+      (event) => event.templateId === "executive-team" && event.date === date,
+    );
+    assert.ok(executiveTeam);
+    assert.equal(executiveTeam.status, "needs_decision");
+    assert.ok(
+      executiveTeam.conflicts.some((conflict) => conflict.type === "holiday"),
+    );
+  }
+});
+
 test("flags the Labor Day Executive Team occurrence and offers a business-day alternative", () => {
   const plan = generateCalendarPlan(baseline);
   const event = plan.events.find(

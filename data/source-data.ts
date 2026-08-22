@@ -24,6 +24,11 @@ export const holidays2027: HolidayConstraint[] = [
     name: "Martin Luther King Jr. Day",
     status: "verified_federal",
   },
+  {
+    date: "2027-02-15",
+    name: "Washington's Birthday",
+    status: "verified_federal",
+  },
   { date: "2027-03-26", name: "Good Friday", status: "projected_lss" },
   { date: "2027-05-31", name: "Memorial Day", status: "verified_federal" },
   {
@@ -37,14 +42,24 @@ export const holidays2027: HolidayConstraint[] = [
     status: "verified_federal",
   },
   { date: "2027-09-06", name: "Labor Day", status: "verified_federal" },
+  { date: "2027-10-11", name: "Columbus Day", status: "verified_federal" },
+  { date: "2027-11-11", name: "Veterans Day", status: "verified_federal" },
   { date: "2027-11-25", name: "Thanksgiving Day", status: "verified_federal" },
   {
     date: "2027-11-26",
     name: "Day after Thanksgiving",
     status: "projected_lss",
   },
-  { date: "2027-12-24", name: "Christmas Eve", status: "projected_lss" },
-  { date: "2027-12-25", name: "Christmas Day", status: "verified_federal" },
+  {
+    date: "2027-12-24",
+    name: "Christmas Day — observed",
+    status: "verified_federal",
+  },
+  {
+    date: "2027-12-31",
+    name: "New Year's Day 2028 — observed",
+    status: "verified_federal",
+  },
 ];
 
 export function buildAssumptions(
