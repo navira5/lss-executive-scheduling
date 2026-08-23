@@ -1,12 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
 import type { ImportedCalendarEvent } from "@/lib/calendar-import";
 import {
   isEventLocked,
-  proposeEventMove,
   resolvePlanEvent,
   visiblePlanEvents,
-  type PlanChangeProposal,
   type PlanYearState,
   type ResolvedPlanEvent,
 } from "@/lib/plan-year";
@@ -45,9 +45,13 @@ interface MonthCardProps {
   events: ResolvedPlanEvent[];
   importedEvents: ImportedCalendarEvent[];
   state: PlanYearState;
+  draggingEventId: string | null;
+  moveModeEventId: string | null;
   onSelectEvent: (eventId: string) => void;
   onSelectImported: (eventId: string) => void;
-  onProposeChange: (proposal: PlanChangeProposal) => void;
+  onMoveEvent: (eventId: string, date: string) => void;
+  onDragStateChange: (eventId: string | null) => void;
+  onFinishMoveMode: () => void;
 }
 
 function MonthCard({
@@ -55,9 +59,13 @@ function MonthCard({
   events,
   importedEvents,
   state,
+  draggingEventId,
+  moveModeEventId,
   onSelectEvent,
   onSelectImported,
-  onProposeChange,
+  onMoveEvent,
+  onDragStateChange,
+  onFinishMoveMode,
 }: MonthCardProps) {
   const start = firstWeekday(monthIndex);
   const count = daysInMonth(monthIndex);
@@ -101,15 +109,26 @@ function MonthCard({
           const holiday = holidays.find((item) => item.date === isoDate);
           return (
             <div
-              className={`day-cell${holiday ? " holiday" : ""}`}
+              className={`day-cell${holiday ? " holiday" : ""}${draggingEventId || moveModeEventId ? holiday ? " drop-blocked" : " drop-ready" : ""}`}
               key={isoDate}
+              data-calendar-date={isoDate}
               onDragOver={(event) => {
-                if (!holiday) event.preventDefault();
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
               }}
               onDrop={(event) => {
                 event.preventDefault();
-                const eventId = event.dataTransfer.getData("text/lss-event-id");
-                if (eventId) onProposeChange(proposeEventMove(state, eventId, isoDate));
+                const eventId =
+                  event.dataTransfer.getData("text/lss-event-id") ||
+                  event.dataTransfer.getData("text/plain") ||
+                  draggingEventId;
+                if (eventId) onMoveEvent(eventId, isoDate);
+                onDragStateChange(null);
+              }}
+              onClick={() => {
+                if (!moveModeEventId) return;
+                onMoveEvent(moveModeEventId, isoDate);
+                onFinishMoveMode();
               }}
             >
               <span className="day-number">{day}</span>
@@ -130,9 +149,15 @@ function MonthCard({
                     draggable={!isEventLocked(state, event)}
                     onDragStart={(dragEvent) => {
                       dragEvent.dataTransfer.setData("text/lss-event-id", event.id);
+                      dragEvent.dataTransfer.setData("text/plain", event.id);
                       dragEvent.dataTransfer.effectAllowed = "move";
+                      onDragStateChange(event.id);
                     }}
-                    onClick={() => onSelectEvent(event.id)}
+                    onDragEnd={() => onDragStateChange(null)}
+                    onClick={(clickEvent) => {
+                      clickEvent.stopPropagation();
+                      onSelectEvent(event.id);
+                    }}
                     title={`${event.title}${event.locked ? " — confirmed anchor" : " — drag or click to adjust"}`}
                   >
                     {event.abbreviation}
@@ -143,7 +168,10 @@ function MonthCard({
                     type="button"
                     className="event-chip outlook"
                     key={event.id}
-                    onClick={() => onSelectImported(event.id)}
+                    onClick={(clickEvent) => {
+                      clickEvent.stopPropagation();
+                      onSelectImported(event.id);
+                    }}
                     title={`${event.title} — imported from ${event.sourceLabel}`}
                   >
                     OUT
@@ -164,21 +192,31 @@ function MonthCard({
 interface PlanYearCalendarProps {
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
+  selectedEventId: string | null;
+  moveNotice: { valid: boolean; message: string } | null;
   onSelectEvent: (eventId: string) => void;
   onSelectImported: (eventId: string) => void;
-  onProposeChange: (proposal: PlanChangeProposal) => void;
+  onMoveEvent: (eventId: string, date: string) => void;
 }
 
 export function PlanYearCalendar({
   state,
   importedEvents,
+  selectedEventId,
+  moveNotice,
   onSelectEvent,
   onSelectImported,
-  onProposeChange,
+  onMoveEvent,
 }: PlanYearCalendarProps) {
+  const [draggingEventId, setDraggingEventId] = useState<string | null>(null);
+  const [moveModeEventId, setMoveModeEventId] = useState<string | null>(null);
   const events = visiblePlanEvents(state).map((event) =>
     resolvePlanEvent(state, event.id),
   );
+  const selectedEvent = selectedEventId
+    ? events.find((event) => event.id === selectedEventId) ?? null
+    : null;
+  const selectedCanMove = selectedEvent && !isEventLocked(state, selectedEvent);
   return (
     <section className="calendar-section" aria-labelledby="calendar-heading">
       <div className="section-heading">
@@ -195,6 +233,25 @@ export function PlanYearCalendar({
           <span><i className="legend-dot outlook" />Existing Outlook</span>
         </div>
       </div>
+      <div
+        className={`calendar-move-bar${moveNotice && !moveNotice.valid ? " invalid" : ""}`}
+        aria-live="polite"
+      >
+        <span>
+          {moveModeEventId
+            ? "Choose a destination day on the calendar."
+            : moveNotice?.message ?? "Drag an active meeting to another day."}
+        </span>
+        {selectedCanMove && (
+          <button
+            type="button"
+            className={moveModeEventId ? "active" : ""}
+            onClick={() => setMoveModeEventId((current) => current ? null : selectedEvent.id)}
+          >
+            {moveModeEventId ? "Cancel move" : `Move selected: ${selectedEvent.abbreviation}`}
+          </button>
+        )}
+      </div>
       <div className="year-scroll">
         <div className="year-grid">
           {MONTHS.map((_, monthIndex) => (
@@ -208,9 +265,13 @@ export function PlanYearCalendar({
                 (event) => dateParts(event.date).month === monthIndex + 1,
               )}
               state={state}
+              draggingEventId={draggingEventId}
+              moveModeEventId={moveModeEventId}
               onSelectEvent={onSelectEvent}
               onSelectImported={onSelectImported}
-              onProposeChange={onProposeChange}
+              onMoveEvent={onMoveEvent}
+              onDragStateChange={setDraggingEventId}
+              onFinishMoveMode={() => setMoveModeEventId(null)}
             />
           ))}
         </div>

@@ -14,6 +14,7 @@ import type {
 } from "@/lib/calendar-import";
 import {
   advancePlanStep,
+  applyManualEventMove,
   applyPlanProposal,
   bulkUpdateByExactTitle,
   clearActivePhase,
@@ -120,6 +121,10 @@ export function CalendarPlanner() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedImportedId, setSelectedImportedId] = useState<string | null>(null);
   const [pendingChange, setPendingChange] = useState<PlanChangeProposal | null>(null);
+  const [calendarMoveNotice, setCalendarMoveNotice] = useState<{
+    valid: boolean;
+    message: string;
+  } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -178,6 +183,27 @@ export function CalendarPlanner() {
     });
   };
 
+  const handleCalendarMove = (eventId: string, date: string) => {
+    const result = applyManualEventMove(state, eventId, date);
+    if (!result.proposal.valid) {
+      setPendingChange(result.proposal);
+      setCalendarMoveNotice({
+        valid: false,
+        message: result.proposal.reason ?? result.proposal.summary,
+      });
+      return;
+    }
+    const moved = resolvePlanEvent(result.state, eventId);
+    setState(result.state);
+    setSelectedEventId(eventId);
+    setSelectedImportedId(null);
+    setPendingChange(null);
+    setCalendarMoveNotice({
+      valid: true,
+      message: `${moved.title} moved to ${date}.`,
+    });
+  };
+
   const handleBulkUpdate = (exactTitle: string, patch: PlanEventOverride) => {
     try {
       const result = bulkUpdateByExactTitle(state, exactTitle, patch);
@@ -224,6 +250,7 @@ export function CalendarPlanner() {
     setSelectedEventId(null);
     setSelectedImportedId(null);
     setPendingChange(null);
+    setCalendarMoveNotice(null);
     window.localStorage.removeItem(STORAGE_KEY);
     window.localStorage.removeItem(IMPORT_KEY);
   };
@@ -232,6 +259,7 @@ export function CalendarPlanner() {
     if (!window.confirm("Changing the Board baseline restarts the local Plan Year meeting plan. Continue?")) return;
     setState(initialState({ ...state.plan.settings, boardScenario: value }));
     setPendingChange(null);
+    setCalendarMoveNotice(null);
   };
 
   const activePhaseIndex = PHASE_ORDER.indexOf(state.activePhase);
@@ -328,12 +356,14 @@ export function CalendarPlanner() {
               setState((current) => advancePlanStep(current));
               setSelectedEventId(null);
               setPendingChange(null);
+              setCalendarMoveNotice(null);
             }}
             onConfirm={() => {
               try {
                 setState((current) => confirmActivePhase(current));
                 setSelectedEventId(null);
                 setPendingChange(null);
+                setCalendarMoveNotice(null);
               } catch (error) {
                 setPendingChange({
                   valid: false,
@@ -354,6 +384,8 @@ export function CalendarPlanner() {
           <PlanYearCalendar
             state={state}
             importedEvents={importedEvents}
+            selectedEventId={effectiveSelectedEventId}
+            moveNotice={calendarMoveNotice}
             onSelectEvent={(eventId) => {
               setSelectedEventId(eventId);
               setSelectedImportedId(null);
@@ -362,7 +394,7 @@ export function CalendarPlanner() {
               setSelectedImportedId(eventId);
               setSelectedEventId(null);
             }}
-            onProposeChange={setPendingChange}
+            onMoveEvent={handleCalendarMove}
           />
         </div>
 

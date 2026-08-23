@@ -15,7 +15,8 @@ The planning workspace follows LSS's annual planning sequence instead of present
 Each active layer combines a 3 x 4 year view with:
 
 - rule-generated meeting dates;
-- drag-and-drop changes with deterministic holiday and lock validation;
+- immediate drag-and-drop changes with deterministic holiday and lock validation;
+- a select-and-click move fallback for browsers and touch devices without reliable drag support;
 - a short, context-aware planning question;
 - natural-language change proposals that require human approval;
 - contextual meeting, rules, and attendees editors;

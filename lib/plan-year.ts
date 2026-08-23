@@ -525,3 +525,20 @@ export function applyPlanProposal(
     state,
   );
 }
+
+export interface ManualEventMoveResult {
+  state: PlanYearState;
+  proposal: PlanChangeProposal;
+}
+
+export function applyManualEventMove(
+  state: PlanYearState,
+  eventId: string,
+  date: string,
+): ManualEventMoveResult {
+  const proposal = proposeEventMove(state, eventId, date);
+  return {
+    state: proposal.valid ? applyPlanProposal(state, proposal) : state,
+    proposal,
+  };
+}

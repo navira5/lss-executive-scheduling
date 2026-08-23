@@ -8,6 +8,7 @@ import {
 } from "@/lib/plan-agent";
 import {
   advancePlanStep,
+  applyManualEventMove,
   applyPlanProposal,
   bulkUpdateByExactTitle,
   clearActivePhase,
@@ -159,6 +160,32 @@ test("applies a valid move only after the proposal is accepted", () => {
 
   const applied = applyPlanProposal(state, proposal);
   assert.equal(resolvePlanEvent(applied, event.id).date, "2027-01-13");
+});
+
+test("a manual calendar drop applies immediately because the drag is the approval", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const event = visiblePlanEvents(state).find(
+    (item) => item.templateId === "full-board",
+  );
+  assert.ok(event);
+
+  const result = applyManualEventMove(state, event.id, "2027-01-13");
+
+  assert.equal(result.proposal.valid, true);
+  assert.equal(resolvePlanEvent(result.state, event.id).date, "2027-01-13");
+});
+
+test("a manual calendar drop still fails closed on a federal holiday", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const event = visiblePlanEvents(state).find(
+    (item) => item.templateId === "full-board",
+  );
+  assert.ok(event);
+
+  const result = applyManualEventMove(state, event.id, "2027-01-18");
+
+  assert.equal(result.proposal.valid, false);
+  assert.equal(resolvePlanEvent(result.state, event.id).date, event.date);
 });
 
 test("confirmed Board meetings cannot be edited without reopening the layer", () => {

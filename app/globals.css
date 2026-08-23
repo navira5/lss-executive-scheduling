@@ -272,6 +272,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .legend-dot.executive { background: var(--executive); }
 .legend-dot.organization { background: var(--organization); }
 .legend-dot.outlook { background: var(--outlook); }
+.calendar-move-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 39px; padding: 7px 16px; border-bottom: 1px solid var(--line); background: #f7faf8; color: var(--muted); font-size: .68rem; }
+.calendar-move-bar button { padding: 5px 8px; border: 1px solid var(--line-dark); border-radius: 7px; background: white; color: var(--committee); font-size: .66rem; font-weight: 800; cursor: pointer; }
+.calendar-move-bar button.active { border-color: var(--committee); background: var(--blue-soft); }
+.calendar-move-bar.invalid { background: var(--red-soft); color: var(--red); }
 .year-scroll { overflow-x: auto; padding: 13px; }
 .year-grid { display: grid; grid-template-columns: repeat(3, minmax(250px, 1fr)); gap: 10px; min-width: 790px; }
 .month-card { overflow: hidden; border: 1px solid var(--line); border-radius: 11px; background: white; }
@@ -284,11 +288,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .day-cell:nth-child(7n) { border-right: 0; }
 .day-cell.outside { background: #fbfbf8; }
 .day-cell.holiday { background: repeating-linear-gradient(135deg, #f5eee8, #f5eee8 5px, #faf7f2 5px, #faf7f2 10px); }
+.day-cell.drop-ready { cursor: copy; }
+.day-cell.drop-ready:hover { outline: 2px solid var(--committee); outline-offset: -2px; background: var(--blue-soft); }
+.day-cell.drop-blocked { cursor: not-allowed; }
 .day-number { display: block; color: #69777c; font-size: .55rem; line-height: 1; }
 .holiday-marker { display: block; margin-top: 2px; color: var(--red); font-size: .45rem; font-weight: 850; text-transform: uppercase; }
 .holiday-marker.projected_lss { color: var(--amber); }
 .day-events { display: grid; gap: 2px; margin-top: 2px; }
-.event-chip { width: 100%; min-width: 0; padding: 2px 3px; overflow: hidden; border: 0; border-radius: 4px; color: white; font-size: .48rem; font-weight: 850; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.event-chip { width: 100%; min-width: 0; padding: 2px 3px; overflow: hidden; border: 0; border-radius: 4px; color: white; font-size: .48rem; font-weight: 850; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; cursor: grab; -webkit-user-drag: element; }
+.event-chip:active { cursor: grabbing; }
 .event-chip.board { background: var(--board); }
 .event-chip.committee { background: var(--committee); }
 .event-chip.executive { background: var(--executive); }
