@@ -10,11 +10,15 @@ import {
   advancePlanStep,
   applyPlanProposal,
   bulkUpdateByExactTitle,
+  clearActivePhase,
   confirmActivePhase,
   createPlanYearState,
   proposeEventMove,
+  regenerateActivePhase,
+  reopenPhase,
   resolvePlanEvent,
   updateEvent,
+  updateWorkingRule,
   visiblePlanEvents,
 } from "@/lib/plan-year";
 import { generateCalendarPlan } from "@/lib/scheduling";
@@ -221,4 +225,72 @@ test("ambiguous demo requests ask a question instead of inventing a change", () 
   if (proposal.kind === "clarify") {
     assert.match(proposal.question, /what would you like to change/i);
   }
+});
+
+test("clearing and regenerating affect only the active phase", () => {
+  const initial = createPlanYearState(generateCalendarPlan(baseline));
+  const cleared = clearActivePhase(initial);
+
+  assert.equal(visiblePlanEvents(cleared).length, 0);
+  assert.ok(
+    cleared.plan.events.some((event) => event.templateId === "executive-team"),
+  );
+
+  const regenerated = regenerateActivePhase(cleared);
+  assert.ok(
+    visiblePlanEvents(regenerated).some(
+      (event) => event.templateId === "full-board",
+    ),
+  );
+  assert.ok(
+    regenerated.plan.events.some(
+      (event) => event.templateId === "executive-team",
+    ),
+  );
+});
+
+test("reopening Board removes downstream confirmation and returns to its final step", () => {
+  let state = createPlanYearState(generateCalendarPlan(baseline));
+  while (state.activeStepIndex < state.phaseSteps.length - 1) {
+    state = advancePlanStep(state);
+  }
+  state = confirmActivePhase(state);
+  while (state.activeStepIndex < state.phaseSteps.length - 1) {
+    state = advancePlanStep(state);
+  }
+  state = confirmActivePhase(state);
+
+  const reopened = reopenPhase(state, "board");
+
+  assert.equal(reopened.activePhase, "board");
+  assert.equal(reopened.activeStepId, "other-board-committees");
+  assert.deepEqual(reopened.confirmedPhases, []);
+});
+
+test("working rule edits update matching instances without promoting rule authority", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const updated = updateWorkingRule(state, "critical-checkin", {
+    startTime: "16:30",
+    durationMinutes: 45,
+    modality: "Virtual",
+    location: "Microsoft Teams",
+    attendees: ["Full Board", "CEO"],
+    distributionLists: ["Board Distribution List"],
+  });
+  const checkIns = visiblePlanEvents(updated).filter(
+    (event) => event.templateId === "critical-checkin",
+  );
+
+  assert.ok(checkIns.length > 1);
+  assert.ok(
+    checkIns.every((event) => resolvePlanEvent(updated, event.id).startTime === "16:30"),
+  );
+  assert.ok(
+    checkIns.every((event) => resolvePlanEvent(updated, event.id).durationMinutes === 45),
+  );
+  assert.ok(
+    checkIns.every(
+      (event) => resolvePlanEvent(updated, event.id).ruleStatus === "needs_validation",
+    ),
+  );
 });

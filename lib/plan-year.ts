@@ -19,6 +19,7 @@ export interface PlanYearState {
   confirmedPhases: PlanPhase[];
   eventOverrides: Record<string, PlanEventOverride>;
   workingRules: Record<string, WorkingMeetingRule>;
+  hiddenEventIds: string[];
 }
 
 export interface PlanEventOverride {
@@ -31,6 +32,8 @@ export interface PlanEventOverride {
   modality?: string;
   attendees?: string[];
   distributionLists?: string[];
+  owner?: string;
+  attendeeGroup?: string;
 }
 
 export interface WorkingMeetingRule {
@@ -213,6 +216,7 @@ export function createPlanYearState(plan: CalendarPlan): PlanYearState {
     confirmedPhases: [],
     eventOverrides: {},
     workingRules: {},
+    hiddenEventIds: [],
   });
 }
 
@@ -225,6 +229,7 @@ export function advancePlanStep(state: PlanYearState): PlanYearState {
     confirmedPhases: state.confirmedPhases,
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
+    hiddenEventIds: state.hiddenEventIds,
   });
 }
 
@@ -237,6 +242,7 @@ export function previousPlanStep(state: PlanYearState): PlanYearState {
     confirmedPhases: state.confirmedPhases,
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
+    hiddenEventIds: state.hiddenEventIds,
   });
 }
 
@@ -258,6 +264,7 @@ export function confirmActivePhase(state: PlanYearState): PlanYearState {
     confirmedPhases,
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
+    hiddenEventIds: state.hiddenEventIds,
   });
 }
 
@@ -280,7 +287,8 @@ export function visiblePlanEvents(state: PlanYearState): ProposedEvent[] {
   );
   return state.plan.events.filter(
     (event) =>
-      isConfirmedEvent(state, event) || activeTemplateIds.has(event.templateId),
+      !state.hiddenEventIds.includes(event.id) &&
+      (isConfirmedEvent(state, event) || activeTemplateIds.has(event.templateId)),
   );
 }
 
@@ -342,6 +350,102 @@ export function updateEvent(
       [eventId]: { ...state.eventOverrides[eventId], ...patch },
     },
   };
+}
+
+function activePhaseTemplateIds(state: PlanYearState): Set<string> {
+  return templateIdsForPhase(state.activePhase);
+}
+
+export function clearActivePhase(state: PlanYearState): PlanYearState {
+  const templateIds = activePhaseTemplateIds(state);
+  const hidden = state.plan.events
+    .filter((event) => templateIds.has(event.templateId) && !isEventLocked(state, event))
+    .map((event) => event.id);
+  return {
+    ...state,
+    hiddenEventIds: [...new Set([...state.hiddenEventIds, ...hidden])],
+  };
+}
+
+function eventPatchForRule(rule: WorkingMeetingRule): PlanEventOverride {
+  return {
+    ...(rule.startTime !== undefined ? { startTime: rule.startTime } : {}),
+    ...(rule.durationMinutes !== undefined
+      ? { durationMinutes: rule.durationMinutes }
+      : {}),
+    ...(rule.location !== undefined ? { location: rule.location } : {}),
+    ...(rule.modality !== undefined ? { modality: rule.modality } : {}),
+    ...(rule.attendees !== undefined ? { attendees: rule.attendees } : {}),
+    ...(rule.distributionLists !== undefined
+      ? { distributionLists: rule.distributionLists }
+      : {}),
+    ...(rule.titleTemplate !== undefined ? { title: rule.titleTemplate } : {}),
+    ...(rule.messageTemplate !== undefined ? { message: rule.messageTemplate } : {}),
+    ...(rule.owner !== undefined ? { owner: rule.owner } : {}),
+    ...(rule.attendeeGroup !== undefined
+      ? { attendeeGroup: rule.attendeeGroup }
+      : {}),
+  };
+}
+
+export function regenerateActivePhase(state: PlanYearState): PlanYearState {
+  const templateIds = activePhaseTemplateIds(state);
+  const activeEventIds = new Set(
+    state.plan.events
+      .filter((event) => templateIds.has(event.templateId))
+      .map((event) => event.id),
+  );
+  const eventOverrides = Object.fromEntries(
+    Object.entries(state.eventOverrides).filter(([eventId]) => !activeEventIds.has(eventId)),
+  );
+  let regenerated: PlanYearState = {
+    ...state,
+    eventOverrides,
+    hiddenEventIds: state.hiddenEventIds.filter((eventId) => !activeEventIds.has(eventId)),
+  };
+  for (const [templateId, rule] of Object.entries(state.workingRules)) {
+    if (templateIds.has(templateId)) {
+      regenerated = updateWorkingRule(regenerated, templateId, rule);
+    }
+  }
+  return regenerated;
+}
+
+export function reopenPhase(
+  state: PlanYearState,
+  phase: PlanPhase,
+): PlanYearState {
+  const targetIndex = PHASE_ORDER.indexOf(phase);
+  return stateAt({
+    plan: state.plan,
+    activePhase: phase,
+    activeStepIndex: PLAN_STEPS[phase].length - 1,
+    confirmedPhases: state.confirmedPhases.filter(
+      (confirmed) => PHASE_ORDER.indexOf(confirmed) < targetIndex,
+    ),
+    eventOverrides: state.eventOverrides,
+    workingRules: state.workingRules,
+    hiddenEventIds: state.hiddenEventIds,
+  });
+}
+
+export function updateWorkingRule(
+  state: PlanYearState,
+  templateId: string,
+  patch: WorkingMeetingRule,
+): PlanYearState {
+  const nextRule = { ...state.workingRules[templateId], ...patch };
+  let updated: PlanYearState = {
+    ...state,
+    workingRules: { ...state.workingRules, [templateId]: nextRule },
+  };
+  const eventPatch = eventPatchForRule(nextRule);
+  for (const event of state.plan.events.filter(
+    (item) => item.templateId === templateId && !isEventLocked(state, item),
+  )) {
+    updated = updateEvent(updated, event.id, eventPatch);
+  }
+  return updated;
 }
 
 export interface BulkUpdateResult {
