@@ -69,6 +69,7 @@ export interface WorkingMeetingRule {
   distributionLists?: string[];
   titleTemplate?: string;
   messageTemplate?: string;
+  minimumLeadDays?: number;
   note?: string;
 }
 

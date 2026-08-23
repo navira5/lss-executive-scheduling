@@ -175,6 +175,7 @@ export function PlanningCockpit({
   const [addingGroup, setAddingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupAttendees, setNewGroupAttendees] = useState("");
+  const [financeQuestionDismissed, setFinanceQuestionDismissed] = useState(false);
   const templates = useMemo(
     () => meetingTemplatesForState(state),
     [state],
@@ -231,10 +232,30 @@ export function PlanningCockpit({
   const downstreamConfirmed = state.confirmedPhases.some(
     (phase) => PHASE_ORDER.indexOf(phase) > activePhaseIndex,
   );
+  const financeLeadDays = state.workingRules["finance-committee"]?.minimumLeadDays;
+  const financeEvents = state.plan.events
+    .filter((event) => event.templateId === "finance-committee" && !event.isPlaceholder)
+    .map((event) => resolvePlanEvent(state, event.id));
+  const boardDecisionEvents = state.plan.events
+    .filter((event) => event.templateId === "full-board" && !event.isPlaceholder)
+    .map((event) => resolvePlanEvent(state, event.id))
+    .sort((left, right) => left.date.localeCompare(right.date));
+  const financeLeadRisks = financeLeadDays === undefined ? [] : financeEvents.flatMap((financeEvent) => {
+    const boardEvent = boardDecisionEvents.find((candidate) => candidate.date > financeEvent.date);
+    if (!boardEvent) return [];
+    const gap = Math.round((new Date(`${boardEvent.date}T12:00:00Z`).getTime() - new Date(`${financeEvent.date}T12:00:00Z`).getTime()) / 86_400_000);
+    return gap < financeLeadDays ? [{ financeEvent, boardEvent, gap }] : [];
+  });
+  const showFinanceQuestion = group.id === "finance-committee" && financeLeadDays === undefined && !financeQuestionDismissed;
+  const showFinanceRisk = ["finance-committee", "full-board"].includes(group.id) && financeLeadRisks.length > 0;
   const prompt = !editingAllowed
     ? `Return to ${PHASE_LABELS[groupPhase]} to change this group.`
     : holidayAdjustments.length > 0
       ? `${holidayAdjustments.length} occurrence${holidayAdjustments.length === 1 ? "" : "s"} would land on a federal holiday and ${holidayAdjustments.length === 1 ? "was" : "were"} moved to the recommended business day: ${holidayAdjustments.map((event) => `${event.originalDate} → ${event.date}`).join(", ")}.`
+    : showFinanceRisk
+      ? `${financeLeadRisks[0].financeEvent.date} Finance review leaves ${financeLeadRisks[0].gap} day${financeLeadRisks[0].gap === 1 ? "" : "s"} before the ${financeLeadRisks[0].boardEvent.date} Board meeting; the working minimum is ${financeLeadDays} days.`
+    : showFinanceQuestion
+      ? "How much review time should Finance have before a related Board decision?"
     : downstreamConfirmed && (overrides.length > 0 || group.templateIds.some((id) => state.workingRules[id]))
       ? "This earlier-layer change may affect placements in a downstream layer that was already confirmed."
       : state.activePhase === "board" && group.id === "full-board" && state.plan.settings.boardScenario === "continuity"
@@ -466,9 +487,16 @@ export function PlanningCockpit({
         )}
 
         {prompt && !pendingConversion && (
-          <section className={`context-prompt${holidayAdjustments.length > 0 ? " holiday-warning" : ""}`}>
+          <section className={`context-prompt${holidayAdjustments.length > 0 || showFinanceRisk ? " holiday-warning" : ""}`}>
             <span>Worth noticing</span>
             <p>{prompt}</p>
+            {showFinanceQuestion && (
+              <div>
+                <button type="button" onClick={() => onRuleChange("finance-committee", { minimumLeadDays: 7 })}>At least 7 days</button>
+                <button type="button" onClick={() => onRuleChange("finance-committee", { minimumLeadDays: 14 })}>At least 14 days</button>
+                <button type="button" onClick={() => setFinanceQuestionDismissed(true)}>Decide later</button>
+              </div>
+            )}
           </section>
         )}
 
