@@ -50,11 +50,6 @@ const CADENCE_OPTIONS: Array<{ value: CadencePreset; label: string; count?: numb
   { value: "custom", label: "Custom annual count" },
 ];
 
-export interface PendingCalendarMove {
-  eventId: string;
-  targetDate: string;
-}
-
 export interface PendingFormatConversion {
   retreatEventId: string;
   regularEventId: string;
@@ -129,7 +124,6 @@ function timeValue(value: string | null): string {
 interface PlanningCockpitProps {
   state: PlanYearState;
   selectedEventId: string | null;
-  pendingMove: PendingCalendarMove | null;
   pendingConversion: PendingFormatConversion | null;
   importedEvents: ImportedCalendarEvent[];
   selectedImportedEventId: string | null;
@@ -143,10 +137,9 @@ interface PlanningCockpitProps {
       annualCount?: number;
       startMonth?: number;
       ordinal?: number;
+      weekday?: number;
     },
   ) => void;
-  onResolveMove: (choice: "rule" | "override") => void;
-  onCancelMove: () => void;
   onApplyConversion: () => void;
   onCancelConversion: () => void;
   onUndo: () => void;
@@ -157,7 +150,6 @@ interface PlanningCockpitProps {
 export function PlanningCockpit({
   state,
   selectedEventId,
-  pendingMove,
   pendingConversion,
   importedEvents,
   selectedImportedEventId,
@@ -165,8 +157,6 @@ export function PlanningCockpit({
   onRuleChange,
   onSharedAttendeesChange,
   onScheduleChange,
-  onResolveMove,
-  onCancelMove,
   onApplyConversion,
   onCancelConversion,
   onUndo,
@@ -215,6 +205,9 @@ export function PlanningCockpit({
     const generatedDate = state.plan.events.find((item) => item.id === event.id)?.date;
     return Boolean(overrideDate && overrideDate !== generatedDate);
   });
+  const holidayAdjustments = groupEvents.filter((event) =>
+    event.conflicts.some((conflict) => conflict.type === "automatic_move"),
+  );
   const groupPhase = PHASE_ORDER.find((phase) =>
     PLAN_STEPS[phase].some((step) =>
       step.templateIds.some((templateId) => group.templateIds.includes(templateId)),
@@ -227,6 +220,8 @@ export function PlanningCockpit({
   );
   const prompt = !editingAllowed
     ? `Return to ${PHASE_LABELS[groupPhase]} to change this group.`
+    : holidayAdjustments.length > 0
+      ? `${holidayAdjustments.length} occurrence${holidayAdjustments.length === 1 ? "" : "s"} would land on a federal holiday and ${holidayAdjustments.length === 1 ? "was" : "were"} moved to the recommended business day: ${holidayAdjustments.map((event) => `${event.originalDate} → ${event.date}`).join(", ")}.`
     : downstreamConfirmed && (overrides.length > 0 || group.templateIds.some((id) => state.workingRules[id]))
       ? "This earlier-layer change may affect placements in a downstream layer that was already confirmed."
       : state.activePhase === "board" && group.id === "full-board" && state.plan.settings.boardScenario === "continuity"
@@ -384,16 +379,8 @@ export function PlanningCockpit({
           </section>
         )}
 
-        {pendingMove && !pendingConversion && (
-          <section className="context-prompt decision">
-            <span>Placement changed</span>
-            <p>Should this become the new meeting rule or apply only to 2027?</p>
-            <div><button type="button" onClick={() => onResolveMove("rule")}>New rule</button><button type="button" onClick={() => onResolveMove("override")}>Just 2027</button><button type="button" onClick={onCancelMove}>Cancel</button></div>
-          </section>
-        )}
-
-        {prompt && !pendingMove && !pendingConversion && (
-          <section className="context-prompt">
+        {prompt && !pendingConversion && (
+          <section className={`context-prompt${holidayAdjustments.length > 0 ? " holiday-warning" : ""}`}>
             <span>Worth noticing</span>
             <p>{prompt}</p>
           </section>

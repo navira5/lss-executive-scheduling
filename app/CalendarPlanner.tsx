@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { PlanYearCalendar } from "@/app/components/PlanYearCalendar";
+import type { PendingCalendarMove } from "@/app/components/PlanYearCalendar";
 import {
   PlanningCockpit,
-  type PendingCalendarMove,
   type PendingFormatConversion,
 } from "@/app/components/PlanningCockpit";
 import type { CalendarImportResult, ImportedCalendarEvent } from "@/lib/calendar-import";
@@ -31,14 +31,14 @@ import {
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
-const STORAGE_KEY = "lss-plan-year-2027-v3";
+const STORAGE_KEY = "lss-plan-year-2027-v4";
 const DEFAULT_SETTINGS: ScenarioSettings = {
   boardScenario: "recent_direction",
   allStaffPattern: "detailed_calendar",
 };
 
 interface StoredPlanYear {
-  version: 3;
+  version: 4;
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
 }
@@ -101,29 +101,6 @@ function phaseTemplateIds(state: PlanYearState, phase: PlanPhase): Set<string> {
   return new Set(PLAN_STEPS[phase].flatMap((step) => step.templateIds));
 }
 
-function ruleHolidayConflict(
-  state: PlanYearState,
-  templateId: string,
-  patch: WorkingMeetingRule,
-): { next: PlanYearState; message: string | null } {
-  const next = updateWorkingRule(state, templateId, patch);
-  if (patch.weekday === undefined) return { next, message: null };
-  const conflict = next.plan.events
-    .filter((event) => event.templateId === templateId && !event.isPlaceholder)
-    .map((event) => resolvePlanEvent(next, event.id))
-    .find((event) =>
-      next.plan.holidays.some(
-        (holiday) => holiday.status === "verified_federal" && holiday.date === event.date,
-      ),
-    );
-  if (!conflict) return { next, message: null };
-  const holiday = next.plan.holidays.find((item) => item.date === conflict.date);
-  return {
-    next: state,
-    message: `${conflict.title} would land on ${holiday?.name ?? "a federal holiday"}. Choose another preferred day.`,
-  };
-}
-
 export function CalendarPlanner() {
   const [state, setState] = useState<PlanYearState>(() => initialState());
   const [history, setHistory] = useState<PlanYearState[]>([]);
@@ -140,7 +117,7 @@ export function CalendarPlanner() {
     if (saved) {
       try {
         const stored = JSON.parse(saved) as StoredPlanYear;
-        if (stored.version === 3 && stored.state?.plan?.year === 2027) {
+        if (stored.version === 4 && stored.state?.plan?.year === 2027) {
           queueMicrotask(() => {
             setState(stored.state);
             setImportedEvents(stored.importedEvents ?? []);
@@ -155,7 +132,7 @@ export function CalendarPlanner() {
 
   useEffect(() => {
     if (!loaded) return;
-    const stored: StoredPlanYear = { version: 3, state, importedEvents };
+    const stored: StoredPlanYear = { version: 4, state, importedEvents };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   }, [state, importedEvents, loaded]);
 
@@ -205,14 +182,8 @@ export function CalendarPlanner() {
     if (choice === "rule") {
       const event = resolvePlanEvent(state, pendingMove.eventId);
       const weekday = new Date(`${pendingMove.targetDate}T12:00:00Z`).getUTCDay();
-      const result = ruleHolidayConflict(state, event.templateId, { weekday });
-      if (result.message) {
-        setCalendarMoveNotice({ valid: false, message: result.message });
-        setPendingMove(null);
-        return;
-      }
-      commitState(result.next);
-      setCalendarMoveNotice({ valid: true, message: `${WEEKDAY_LABELS[weekday]} is now the working rule for this meeting type.` });
+      commitState(updateTemplateSchedule(state, event.templateId, { weekday }));
+      setCalendarMoveNotice({ valid: true, message: `${WEEKDAY_LABELS[weekday]} is now the working rule. Holiday occurrences use the recommended business day.` });
     } else {
       const result = applyManualEventMove(state, pendingMove.eventId, pendingMove.targetDate);
       if (result.proposal.valid) {
@@ -240,12 +211,12 @@ export function CalendarPlanner() {
   };
 
   const updateRule = (templateId: string, patch: WorkingMeetingRule) => {
-    const result = ruleHolidayConflict(state, templateId, patch);
-    if (result.message) {
-      setCalendarMoveNotice({ valid: false, message: result.message });
+    if (patch.weekday !== undefined) {
+      commitState(updateTemplateSchedule(state, templateId, { weekday: patch.weekday }));
+      setCalendarMoveNotice({ valid: true, message: "Preferred day updated. Holiday occurrences use the recommended business day." });
       return;
     }
-    commitState(result.next);
+    commitState(updateWorkingRule(state, templateId, patch));
     setCalendarMoveNotice({ valid: true, message: "Calendar updated from the working rule." });
   };
 
@@ -296,7 +267,7 @@ export function CalendarPlanner() {
 
       <div className="plan-layout cockpit-layout">
         <nav className="phase-rail" aria-label="Plan Year layers">
-          <div className="phase-rail-heading"><span>Plan Year</span><strong>{Math.round((confirmedCount / 3) * 100)}%</strong></div>
+          <div className="phase-rail-heading"><span>Plan Year</span><strong>{Math.round((confirmedCount / 4) * 100)}%</strong></div>
           <div className="phase-list">
             {PHASE_ORDER.map((phase, index) => {
               const confirmed = state.confirmedPhases.includes(phase);
@@ -330,6 +301,7 @@ export function CalendarPlanner() {
             importedEvents={importedEvents}
             selectedEventId={effectiveSelectedEventId}
             moveNotice={calendarMoveNotice}
+            previewMove={pendingMove}
             onSelectEvent={(eventId) => {
               setSelectedEventId(eventId);
               setSelectedImportedEventId(null);
@@ -339,6 +311,8 @@ export function CalendarPlanner() {
               setCalendarMoveNotice({ valid: true, message: "Existing Outlook meeting selected. Details are open at right." });
             }}
             onMoveEvent={handleCalendarMove}
+            onResolveMove={resolveMove}
+            onCancelMove={() => setPendingMove(null)}
           />
         </div>
 
@@ -346,7 +320,6 @@ export function CalendarPlanner() {
           key={`${effectiveSelectedEventId ?? "none"}-${state.activePhase}`}
           state={state}
           selectedEventId={effectiveSelectedEventId}
-          pendingMove={pendingMove}
           pendingConversion={pendingConversion}
           importedEvents={importedEvents}
           selectedImportedEventId={selectedImportedEventId}
@@ -360,12 +333,10 @@ export function CalendarPlanner() {
             commitState(next);
             setCalendarMoveNotice({ valid: true, message: "Shared attendees updated for this meeting group." });
           }}
-          onScheduleChange={(templateId, patch: { cadencePreset?: CadencePreset; annualCount?: number; startMonth?: number; ordinal?: number }) => {
+          onScheduleChange={(templateId, patch: { cadencePreset?: CadencePreset; annualCount?: number; startMonth?: number; ordinal?: number; weekday?: number }) => {
             commitState(updateTemplateSchedule(state, templateId, patch));
             setCalendarMoveNotice({ valid: true, message: "Calendar regenerated from the updated cadence." });
           }}
-          onResolveMove={resolveMove}
-          onCancelMove={() => setPendingMove(null)}
           onApplyConversion={applyConversion}
           onCancelConversion={() => setPendingConversion(null)}
           onUndo={() => {

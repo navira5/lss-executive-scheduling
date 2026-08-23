@@ -32,7 +32,7 @@ const baseline: ScenarioSettings = {
   allStaffPattern: "detailed_calendar",
 };
 
-test("starts with the complete Board layer and hides later layers", () => {
+test("starts with Board meetings only and hides later layers", () => {
   const state = createPlanYearState(generateCalendarPlan(baseline));
   const visible = visiblePlanEvents(state);
 
@@ -41,14 +41,15 @@ test("starts with the complete Board layer and hides later layers", () => {
   assert.ok(visible.some((event) => event.templateId === "full-board"));
   assert.ok(visible.some((event) => event.templateId === "board-retreat"));
   assert.ok(visible.some((event) => event.templateId === "critical-checkin"));
-  assert.ok(visible.some((event) => event.templateId === "executive-committee"));
-  assert.ok(visible.some((event) => event.templateId === "finance-committee"));
+  assert.ok(!visible.some((event) => event.templateId === "executive-committee"));
+  assert.ok(!visible.some((event) => event.templateId === "finance-committee"));
   assert.ok(!visible.some((event) => event.templateId === "executive-team"));
   assert.ok(!visible.some((event) => event.templateId === "all-staff"));
 });
 
-test("Board governance groups are visible together as one planning layer", () => {
-  const state = createPlanYearState(generateCalendarPlan(baseline));
+test("Board committees appear only after Board is confirmed", () => {
+  const initial = createPlanYearState(generateCalendarPlan(baseline));
+  const state = confirmActivePhase(initial);
   const templateIds = new Set(visiblePlanEvents(state).map((event) => event.templateId));
 
   assert.ok(templateIds.has("full-board"));
@@ -58,28 +59,29 @@ test("Board governance groups are visible together as one planning layer", () =>
   assert.ok(templateIds.has("talent-risk"));
 });
 
-test("confirming Board unlocks Executive and preserves locked Board anchors", () => {
+test("confirming Board unlocks Committees and preserves locked Board anchors", () => {
   let state = createPlanYearState(generateCalendarPlan(baseline));
   while (state.activeStepIndex < state.phaseSteps.length - 1) {
     state = advancePlanStep(state);
   }
-  const executive = confirmActivePhase(state);
-  const visible = visiblePlanEvents(executive);
+  const committee = confirmActivePhase(state);
+  const visible = visiblePlanEvents(committee);
 
-  assert.equal(executive.activePhase, "executive");
-  assert.equal(executive.activeStepId, "executive-team");
-  assert.deepEqual(executive.confirmedPhases, ["board"]);
+  assert.equal(committee.activePhase, "committee");
+  assert.equal(committee.activeStepId, "executive-committee");
+  assert.deepEqual(committee.confirmedPhases, ["board"]);
   assert.ok(visible.some((event) => event.templateId === "full-board"));
-  assert.ok(visible.some((event) => event.templateId === "executive-team"));
+  assert.ok(visible.some((event) => event.templateId === "executive-committee"));
+  assert.ok(!visible.some((event) => event.templateId === "executive-team"));
   assert.ok(!visible.some((event) => event.templateId === "all-staff"));
 });
 
 test("confirms the complete active layer without artificial substep gates", () => {
   const state = createPlanYearState(generateCalendarPlan(baseline));
-  const executive = confirmActivePhase(state);
+  const committee = confirmActivePhase(state);
 
-  assert.equal(executive.activePhase, "executive");
-  assert.deepEqual(executive.confirmedPhases, ["board"]);
+  assert.equal(committee.activePhase, "committee");
+  assert.deepEqual(committee.confirmedPhases, ["board"]);
 });
 
 test("bulk title and message updates exclude a custom-title instance", () => {
@@ -190,7 +192,7 @@ test("confirmed Board meetings cannot be edited without reopening the layer", ()
 
   assert.throws(
     () => updateEvent(state, event.id, { startTime: "16:30" }),
-    /reopen Board & Governance/i,
+    /reopen Board/i,
   );
 });
 
@@ -266,6 +268,26 @@ test("cadence and annual count regenerate actual meeting occurrences", () => {
       .filter((event) => event.templateId === "full-board")
       .map((event) => Number(event.date.slice(5, 7))),
     [2, 4, 6, 8, 10, 12],
+  );
+});
+
+test("a preferred Monday cadence preserves the recommended holiday adjustment", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const updated = updateTemplateSchedule(state, "finance-committee", {
+    cadencePreset: "biweekly",
+    weekday: 1,
+  });
+  const holidayOccurrence = updated.plan.events.find(
+    (event) =>
+      event.templateId === "finance-committee" &&
+      event.originalDate === "2027-01-18",
+  );
+
+  assert.ok(holidayOccurrence);
+  assert.equal(holidayOccurrence.date, "2027-01-19");
+  assert.equal(resolvePlanEvent(updated, holidayOccurrence.id).date, "2027-01-19");
+  assert.ok(
+    holidayOccurrence.conflicts.some((conflict) => conflict.type === "automatic_move"),
   );
 });
 
@@ -391,7 +413,7 @@ test("reopening Board removes downstream confirmation and returns to its final s
   const reopened = reopenPhase(state, "board");
 
   assert.equal(reopened.activePhase, "board");
-  assert.equal(reopened.activeStepId, "other-board-committees");
+  assert.equal(reopened.activeStepId, "board-calendar");
   assert.deepEqual(reopened.confirmedPhases, []);
 });
 

@@ -8,7 +8,7 @@ import type {
   ScenarioSettings,
 } from "@/lib/types";
 
-export type PlanPhase = "board" | "executive" | "organization" | "review";
+export type PlanPhase = "board" | "committee" | "executive" | "organization" | "review";
 
 export interface PlanStep {
   id: string;
@@ -95,7 +95,8 @@ export interface PlanChangeProposal {
 }
 
 export const PHASE_LABELS: Record<PlanPhase, string> = {
-  board: "Board & Governance",
+  board: "Board",
+  committee: "Board Committees",
   executive: "Executive Leadership",
   organization: "Organization & Operations",
   review: "Final Review",
@@ -103,6 +104,7 @@ export const PHASE_LABELS: Record<PlanPhase, string> = {
 
 export const PHASE_ORDER: PlanPhase[] = [
   "board",
+  "committee",
   "executive",
   "organization",
   "review",
@@ -118,6 +120,8 @@ export const PLAN_STEPS: Record<PlanPhase, PlanStep[]> = {
         "I placed the 2026 Board rhythm as a working baseline. Should 2027 keep that rhythm or use four regular meetings and two longer retreats?",
       templateIds: ["full-board", "board-retreat", "critical-checkin"],
     },
+  ],
+  committee: [
     {
       id: "executive-committee",
       label: "Executive Committee",
@@ -337,7 +341,10 @@ export function resolvePlanEvent(
   const workingRule = state.workingRules[event.templateId] ?? {};
   const rulePatch = eventPatchForRule(workingRule);
   const override = state.eventOverrides[eventId] ?? {};
-  const ruleDate = workingRule.weekday === undefined
+  const automaticallyMoved = event.conflicts.some(
+    (conflict) => conflict.type === "automatic_move",
+  );
+  const ruleDate = workingRule.weekday === undefined || automaticallyMoved
     ? event.date
     : dateOnPreferredWeekday(event.date, workingRule.weekday);
   return {
@@ -577,6 +584,7 @@ export function updateTemplateSchedule(
     annualCount?: number;
     startMonth?: number;
     ordinal?: number;
+    weekday?: number;
   },
 ): PlanYearState {
   const template = buildMeetingTemplates(state.plan.settings).find(
@@ -598,7 +606,7 @@ export function updateTemplateSchedule(
   const cadencePreset = patch.annualCount !== undefined && patch.cadencePreset === undefined
     ? "custom"
     : requestedPreset;
-  const weekday = templateWeekday(template, currentRule);
+  const weekday = patch.weekday ?? templateWeekday(template, currentRule);
   const templateMonths = "months" in template.generation ? template.generation.months : [];
   const startMonth = Math.max(
     1,
@@ -642,6 +650,7 @@ export function updateTemplateSchedule(
         cadence: CADENCE_LABELS[cadencePreset],
         startMonth,
         ordinal,
+        weekday,
       },
     },
     eventOverrides: Object.fromEntries(
