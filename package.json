@@ -13,7 +13,8 @@
     "test:plan-year": "npx -y node@22.13.1 --import tsx --test tests/plan-year.test.ts",
     "test:agent-route": "npx -y node@22.13.1 --import tsx --test tests/plan-agent-route.test.ts",
     "test:calendar-import": "npx -y node@22.13.1 --import tsx --test tests/calendar-import.test.ts",
-    "test": "npm run test:engine && npm run test:plan-year && npm run test:agent-route && npm run test:calendar-import && npm run build && npx -y node@22.13.1 --test tests/rendered-html.test.mjs",
+    "test:rule-summaries": "npx -y node@22.13.1 --import tsx --test tests/rule-summaries.test.ts",
+    "test": "npm run test:engine && npm run test:plan-year && npm run test:agent-route && npm run test:calendar-import && npm run test:rule-summaries && npm run build && npx -y node@22.13.1 --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

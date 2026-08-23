@@ -14,6 +14,7 @@ import {
   type PlanYearState,
   type WorkingMeetingRule,
 } from "@/lib/plan-year";
+import { ruleSummaryFor } from "@/lib/rule-summaries";
 import type { MeetingTemplate } from "@/lib/types";
 
 type ContextTab = "meeting" | "rules" | "attendees" | "outlook";
@@ -125,7 +126,6 @@ function RuleEditorForm({
   onUpdateRule,
 }: RuleEditorFormProps) {
   const override = state.workingRules[templateId] ?? {};
-  const [owner, setOwner] = useState(override.owner ?? template.owner);
   const [cadence, setCadence] = useState(override.cadence ?? template.cadence);
   const [startTime, setStartTime] = useState(override.startTime ?? template.startTime ?? "");
   const [duration, setDuration] = useState(String(override.durationMinutes ?? template.durationMinutes));
@@ -137,22 +137,27 @@ function RuleEditorForm({
   const [distributionLists, setDistributionLists] = useState(
     (override.distributionLists ?? []).join("\n"),
   );
-  const [titleTemplate, setTitleTemplate] = useState(override.titleTemplate ?? template.name);
-  const [messageTemplate, setMessageTemplate] = useState(override.messageTemplate ?? template.purpose);
+  const [saved, setSaved] = useState(false);
+  const summary = ruleSummaryFor(template);
 
-  const save = () =>
+  const saveAttendees = () => {
     onUpdateRule(templateId, {
-      owner,
+      attendees: list(attendees),
+      distributionLists: list(distributionLists),
+    });
+    setSaved(true);
+  };
+
+  const saveSchedulingRule = () => {
+    onUpdateRule(templateId, {
       cadence,
       startTime: startTime || null,
       durationMinutes: Number(duration) || template.durationMinutes,
       location,
       modality,
-      attendees: list(attendees),
-      distributionLists: list(distributionLists),
-      titleTemplate,
-      messageTemplate,
     });
+    setSaved(true);
+  };
 
   if (attendeesOnly) {
     return (
@@ -163,32 +168,48 @@ function RuleEditorForm({
         </div>
         <label className="wide"><span>Attendees or role groups</span><textarea rows={6} value={attendees} onChange={(e) => setAttendees(e.target.value)} placeholder="One person, role, or group per line" /></label>
         <label className="wide"><span>Distribution lists</span><textarea rows={4} value={distributionLists} onChange={(e) => setDistributionLists(e.target.value)} placeholder="One distribution list per line" /></label>
-        <button className="button primary full" type="button" onClick={save}>Save attendees to working rule</button>
+        <button className="button primary full" type="button" onClick={saveAttendees}>Save attendees to working rule</button>
+        {saved && <div className="save-receipt">Saved to this working plan</div>}
         <small className="field-note">Names remain working planning data. This does not update Outlook or Microsoft 365 groups.</small>
       </div>
     );
   }
 
   return (
-    <div className="context-form">
-      <div className="rule-summary">
-        <div><span className={`rule-pill ${template.ruleStatus}`}>{template.ruleStatus.replaceAll("_", " ")}</span></div>
-        <strong>{template.name}</strong>
-        <p>{template.purpose}</p>
-      </div>
-      <label><span>Owner</span><input value={owner} onChange={(e) => setOwner(e.target.value)} /></label>
-      <label><span>Cadence</span><input value={cadence} onChange={(e) => setCadence(e.target.value)} /></label>
-      <div className="form-row">
-        <label><span>Start time</span><input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></label>
-        <label><span>Duration</span><input type="number" min="15" step="15" value={duration} onChange={(e) => setDuration(e.target.value)} /></label>
-      </div>
-      <div className="form-row">
-        <label><span>Format</span><input value={modality} onChange={(e) => setModality(e.target.value)} /></label>
-        <label><span>Location</span><input value={location} onChange={(e) => setLocation(e.target.value)} /></label>
-      </div>
-      <label><span>Title template</span><input value={titleTemplate} onChange={(e) => setTitleTemplate(e.target.value)} /></label>
-      <label className="wide"><span>Message template</span><textarea rows={4} value={messageTemplate} onChange={(e) => setMessageTemplate(e.target.value)} /></label>
-      <button className="button primary full" type="button" onClick={save}>Save rule &amp; regenerate meetings</button>
+    <div className="context-form rule-context-form">
+      <section className="rule-profile" aria-label={`${summary.title} scheduling rules`}>
+        <header>
+          <div>
+            <span>Selected meeting type</span>
+            <h3>{summary.title}</h3>
+          </div>
+          <span className={`rule-pill ${template.ruleStatus}`}>{template.ruleStatus.replaceAll("_", " ")}</span>
+        </header>
+        <dl>
+          {summary.rows.map((row) => (
+            <div className={row.emphasis ? `rule-row ${row.emphasis}` : "rule-row"} key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+      <details className="working-rule-editor">
+        <summary>Update 2027 working settings</summary>
+        <div className="working-rule-fields">
+          <label><span>Working cadence</span><input value={cadence} onChange={(e) => { setCadence(e.target.value); setSaved(false); }} /></label>
+          <div className="form-row">
+            <label><span>Start time</span><input type="time" value={startTime} onChange={(e) => { setStartTime(e.target.value); setSaved(false); }} /></label>
+            <label><span>Duration</span><input type="number" min="15" step="15" value={duration} onChange={(e) => { setDuration(e.target.value); setSaved(false); }} /></label>
+          </div>
+          <div className="form-row">
+            <label><span>Format</span><input value={modality} onChange={(e) => { setModality(e.target.value); setSaved(false); }} /></label>
+            <label><span>Location</span><input value={location} onChange={(e) => { setLocation(e.target.value); setSaved(false); }} /></label>
+          </div>
+          <button className="button primary full" type="button" onClick={saveSchedulingRule}>Save to working plan</button>
+          {saved && <div className="save-receipt">Saved without changing source-rule authority</div>}
+        </div>
+      </details>
       <details className="source-evidence">
         <summary>View source evidence</summary>
         {template.sourceReferences.map((source) => (
