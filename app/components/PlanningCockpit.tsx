@@ -234,8 +234,10 @@ export function PlanningCockpit({
     return phaseTemplateIds.has(event.templateId) && !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder;
   });
   const phaseSummary = state.activePhase === "board"
-    ? `You're confirming ${phaseEvents.filter((event) => event.templateId === "full-board").length} board meetings and ${phaseEvents.filter((event) => event.templateId === "board-retreat").length} retreats for 2027. Executive Leadership planning will work around these dates.`
-    : `You're confirming ${phaseEvents.length} ${PHASE_LABELS[state.activePhase]} placements for 2027. Later layers will work around these dates.`;
+    ? `You're confirming ${phaseEvents.filter((event) => event.templateId === "full-board").length} board meetings and ${phaseEvents.filter((event) => event.templateId === "board-retreat").length} retreats for 2027. Board Committee planning will work around these dates.`
+    : state.activePhase === "committee"
+      ? `You're confirming ${phaseEvents.length} Board Committee placements for 2027. Executive Leadership planning will work around these dates.`
+      : `You're confirming ${phaseEvents.length} ${PHASE_LABELS[state.activePhase]} placements for 2027. Later layers will work around these dates.`;
 
   const importFiles = async (files: FileList | null) => {
     if (!files?.length) return;
