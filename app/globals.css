@@ -270,7 +270,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .section-heading h2 { margin: 0; font-size: 1.05rem; font-weight: 650; letter-spacing: -.015em; }
 .section-heading p:not(.eyebrow) { margin: 3px 0 0; color: var(--muted); font-size: .7rem; }
 .calendar-legend { display: grid; justify-items: end; gap: 7px; max-width: 470px; }
-.legend-colors, .legend-status { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 7px 13px; }
+.legend-colors { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 7px 13px; }
 .calendar-legend span { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: .65rem; font-weight: 700; }
 .calendar-filter { display: flex; align-items: center; gap: 6px; padding: 5px 7px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted); font-size: .65rem; font-weight: 800; cursor: pointer; }
 .calendar-filter:hover { border-color: var(--line-dark); background: #f7f9f7; }
@@ -282,14 +282,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .legend-dot.executive { background: var(--executive); }
 .legend-dot.organization { background: var(--organization); }
 .legend-dot.outlook { background: var(--outlook); }
-.legend-status { padding-top: 6px; border-top: 1px solid #e9edeb; }
-.legend-state { display: grid; place-items: center; width: 22px; height: 13px; border: 1px solid var(--board); border-radius: 4px; background: white; color: var(--board); font-size: .38rem; font-style: normal; font-weight: 900; line-height: 1; }
-.legend-state.confirmed { background: var(--board); color: white; }
-.legend-state.override { background: var(--board); color: white; box-shadow: 0 0 0 2px white, 0 0 0 3px var(--board); }
-.calendar-move-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 42px; padding: 8px 18px; border-bottom: 1px solid var(--line); background: #f8faf8; color: var(--muted); font-size: .71rem; }
-.calendar-move-bar button { padding: 5px 8px; border: 1px solid var(--line-dark); border-radius: 7px; background: white; color: var(--committee); font-size: .66rem; font-weight: 800; cursor: pointer; }
-.calendar-move-bar button.active { border-color: var(--committee); background: var(--blue-soft); }
-.calendar-move-bar.invalid { background: var(--red-soft); color: var(--red); }
+.calendar-notice { padding: 8px 18px; border-bottom: 1px solid var(--line); background: #f7f8f9; color: var(--muted); font-size: var(--text-meta); }
+.calendar-notice.invalid { background: var(--red-soft); color: var(--red); }
 .year-scroll { overflow-x: auto; padding: 12px; }
 .year-grid { display: grid; grid-template-columns: repeat(3, minmax(232px, 1fr)); gap: 11px; min-width: 730px; }
 .month-card { position: relative; overflow: visible; border: 1px solid var(--line); border-radius: 6px; background: white; }

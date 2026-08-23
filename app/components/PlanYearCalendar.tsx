@@ -89,15 +89,13 @@ interface MonthCardProps {
   importedEvents: ImportedCalendarEvent[];
   state: PlanYearState;
   draggingEventId: string | null;
-  moveModeEventId: string | null;
   selectedEventId: string | null;
   onSelectEvent: (eventId: string) => void;
   onSelectImported: (eventId: string) => void;
   onMoveEvent: (eventId: string, date: string) => void;
   onDragStateChange: (eventId: string | null) => void;
-  onFinishMoveMode: () => void;
   onHoverEvent: (
-    detail: { title: string; date: string; x: number; y: number; note?: string } | null,
+    detail: { title: string; date: string; x: number; y: number; status: string; note?: string } | null,
   ) => void;
   pendingMove: PendingCalendarMove | null;
   onResolveMove: (choice: "rule" | "override") => void;
@@ -113,13 +111,11 @@ function MonthCard({
   importedEvents,
   state,
   draggingEventId,
-  moveModeEventId,
   selectedEventId,
   onSelectEvent,
   onSelectImported,
   onMoveEvent,
   onDragStateChange,
-  onFinishMoveMode,
   onHoverEvent,
   pendingMove,
   onResolveMove,
@@ -172,7 +168,7 @@ function MonthCard({
           const closure = (state.calendarClosures ?? []).find((item) => item.date === isoDate);
           return (
             <div
-              className={`day-cell${holiday ? " holiday" : ""}${closure ? " closure" : ""}${draggingEventId || moveModeEventId ? holiday || closure ? " drop-blocked" : " drop-ready" : ""}`}
+              className={`day-cell${holiday ? " holiday" : ""}${closure ? " closure" : ""}${draggingEventId ? holiday || closure ? " drop-blocked" : " drop-ready" : ""}`}
               key={isoDate}
               data-calendar-date={isoDate}
               onDragOver={(event) => {
@@ -189,11 +185,6 @@ function MonthCard({
                 onDragStateChange(null);
               }}
               onClick={() => {
-                if (moveModeEventId) {
-                  onMoveEvent(moveModeEventId, isoDate);
-                  onFinishMoveMode();
-                  return;
-                }
                 setDayAction((current) => current?.date === isoDate ? null : { date: isoDate, mode: "choose", value: "" });
               }}
             >
@@ -230,6 +221,11 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
+                      status: state.eventOverrides[event.id]?.date
+                        ? "2027 override"
+                        : isEventConfirmed(state, event)
+                          ? "Confirmed"
+                          : "Working placement",
                       note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
                         ? `Moved from ${event.originalDate} because of a federal holiday`
                         : undefined,
@@ -239,6 +235,11 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
+                      status: state.eventOverrides[event.id]?.date
+                        ? "2027 override"
+                        : isEventConfirmed(state, event)
+                          ? "Confirmed"
+                          : "Working placement",
                       note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
                         ? `Moved from ${event.originalDate} because of a federal holiday`
                         : undefined,
@@ -264,12 +265,14 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
+                      status: "Imported Outlook event",
                     })}
                     onMouseMove={(mouseEvent) => onHoverEvent({
                       title: event.title,
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
+                      status: "Imported Outlook event",
                     })}
                     onMouseLeave={() => onHoverEvent(null)}
                     title={`${event.title} — imported from ${event.sourceLabel}`}
@@ -361,7 +364,6 @@ export function PlanYearCalendar({
   onAddAdHoc,
 }: PlanYearCalendarProps) {
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null);
-  const [moveModeEventId, setMoveModeEventId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     board: true,
     committee: true,
@@ -374,6 +376,7 @@ export function PlanYearCalendar({
     date: string;
     x: number;
     y: number;
+    status: string;
     note?: string;
   } | null>(null);
   const events = visiblePlanEvents(state).map((event) => {
@@ -383,10 +386,6 @@ export function PlanYearCalendar({
       : resolved;
   }).filter((event) => filters[event.category]);
   const filteredImportedEvents = filters.outlook ? importedEvents : [];
-  const selectedEvent = selectedEventId
-    ? events.find((event) => event.id === selectedEventId) ?? null
-    : null;
-  const selectedCanMove = selectedEvent && !isEventLocked(state, selectedEvent);
   return (
     <section className="calendar-section" aria-labelledby="calendar-heading">
       <div className="section-heading">
@@ -415,32 +414,13 @@ export function PlanYearCalendar({
               </button>
             ))}
           </div>
-          <div className="legend-status">
-            <span><i className="legend-state working">Aa</i>Working</span>
-            <span><i className="legend-state confirmed">Aa</i>Confirmed</span>
-            <span><i className="legend-state override">Aa</i>Override</span>
-          </div>
         </div>
       </div>
-      <div
-        className={`calendar-move-bar${moveNotice && !moveNotice.valid ? " invalid" : ""}`}
-        aria-live="polite"
-      >
-        <span>
-          {moveModeEventId
-            ? "Choose a destination day on the calendar."
-            : moveNotice?.message ?? "Drag a meeting label to another day."}
-        </span>
-        {selectedCanMove && (
-          <button
-            type="button"
-            className={moveModeEventId ? "active" : ""}
-            onClick={() => setMoveModeEventId((current) => current ? null : selectedEvent.id)}
-          >
-            {moveModeEventId ? "Cancel move" : `Move selected: ${selectedEvent.abbreviation}`}
-          </button>
-        )}
-      </div>
+      {moveNotice && (
+        <div className={`calendar-notice${moveNotice.valid ? "" : " invalid"}`} aria-live="polite">
+          {moveNotice.message}
+        </div>
+      )}
       <div className="year-scroll">
         <div className="year-grid">
           {MONTHS.map((_, monthIndex) => (
@@ -455,13 +435,11 @@ export function PlanYearCalendar({
               )}
               state={state}
               draggingEventId={draggingEventId}
-              moveModeEventId={moveModeEventId}
               selectedEventId={selectedEventId}
               onSelectEvent={onSelectEvent}
               onSelectImported={onSelectImported}
               onMoveEvent={onMoveEvent}
               onDragStateChange={setDraggingEventId}
-              onFinishMoveMode={() => setMoveModeEventId(null)}
               onHoverEvent={setHoveredEvent}
               pendingMove={previewMove}
               onResolveMove={onResolveMove}
@@ -480,7 +458,7 @@ export function PlanYearCalendar({
           style={{ left: hoveredEvent.x + 12, top: hoveredEvent.y + 14 }}
         >
           <strong>{hoveredEvent.title}</strong>
-          <span>{hoveredEvent.date}</span>
+          <span>{hoveredEvent.date} · {hoveredEvent.status}</span>
           {hoveredEvent.note && <em>{hoveredEvent.note}</em>}
         </div>
       )}
