@@ -10,7 +10,8 @@
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log npx -y node@22.13.1 node_modules/vinext/dist/cli.js build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log npx -y node@22.13.1 node_modules/vinext/dist/cli.js start",
     "test:engine": "npx -y node@22.13.1 --import tsx --test tests/scheduling.test.ts",
-    "test": "npm run test:engine && npm run build && npx -y node@22.13.1 --test tests/rendered-html.test.mjs",
+    "test:plan-year": "npx -y node@22.13.1 --import tsx --test tests/plan-year.test.ts",
+    "test": "npm run test:engine && npm run test:plan-year && npm run build && npx -y node@22.13.1 --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
