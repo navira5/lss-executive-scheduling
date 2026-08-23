@@ -36,6 +36,8 @@ const CALENDAR_LABELS: Record<string, string> = {
   "finance-committee": "FINANCE",
   "health-programs": "PROGRAMS",
   "talent-risk": "TALENT/RISK",
+  "nominations-committee": "NOMINATIONS",
+  "program-committee": "PROGRAM CMTE",
   "board-orientation": "ORIENT",
   "executive-team": "EXEC TEAM",
   "executive-retreat": "EXEC RETREAT",
@@ -48,6 +50,20 @@ const CALENDAR_LABELS: Record<string, string> = {
   bvr: "BVR",
   "internal-risk": "RISK",
 };
+
+function committeeToneClass(templateId: string): string {
+  const known: Record<string, string> = {
+    "executive-committee": "committee-executive-committee",
+    "finance-committee": "committee-finance-committee",
+    "health-programs": "committee-health-programs",
+    "talent-risk": "committee-talent-risk",
+    "nominations-committee": "committee-nominations-committee",
+    "program-committee": "committee-program-committee",
+  };
+  if (known[templateId]) return known[templateId];
+  const tone = [...templateId].reduce((total, character) => total + character.charCodeAt(0), 0) % 4;
+  return `committee-custom-${tone + 1}`;
+}
 
 export interface PendingCalendarMove {
   eventId: string;
@@ -86,6 +102,9 @@ interface MonthCardProps {
   pendingMove: PendingCalendarMove | null;
   onResolveMove: (choice: "rule" | "override") => void;
   onCancelMove: () => void;
+  onCloseDate: (date: string, label: string) => void;
+  onRemoveClosure: (date: string) => void;
+  onAddAdHoc: (date: string, title: string) => void;
 }
 
 function MonthCard({
@@ -105,7 +124,11 @@ function MonthCard({
   pendingMove,
   onResolveMove,
   onCancelMove,
+  onCloseDate,
+  onRemoveClosure,
+  onAddAdHoc,
 }: MonthCardProps) {
+  const [dayAction, setDayAction] = useState<{ date: string; mode: "choose" | "closure" | "event"; value: string } | null>(null);
   const start = firstWeekday(monthIndex);
   const count = daysInMonth(monthIndex);
   const cells = Array.from({ length: 42 }, (_, index) => {
@@ -146,9 +169,10 @@ function MonthCard({
           const dayEvents = realEvents.filter((event) => event.date === isoDate);
           const dayImported = importedEvents.filter((event) => event.date === isoDate);
           const holiday = holidays.find((item) => item.date === isoDate);
+          const closure = state.calendarClosures.find((item) => item.date === isoDate);
           return (
             <div
-              className={`day-cell${holiday ? " holiday" : ""}${draggingEventId || moveModeEventId ? holiday ? " drop-blocked" : " drop-ready" : ""}`}
+              className={`day-cell${holiday ? " holiday" : ""}${closure ? " closure" : ""}${draggingEventId || moveModeEventId ? holiday || closure ? " drop-blocked" : " drop-ready" : ""}`}
               key={isoDate}
               data-calendar-date={isoDate}
               onDragOver={(event) => {
@@ -165,9 +189,12 @@ function MonthCard({
                 onDragStateChange(null);
               }}
               onClick={() => {
-                if (!moveModeEventId) return;
-                onMoveEvent(moveModeEventId, isoDate);
-                onFinishMoveMode();
+                if (moveModeEventId) {
+                  onMoveEvent(moveModeEventId, isoDate);
+                  onFinishMoveMode();
+                  return;
+                }
+                setDayAction((current) => current?.date === isoDate ? null : { date: isoDate, mode: "choose", value: "" });
               }}
             >
               <span className="day-number">{day}</span>
@@ -179,11 +206,12 @@ function MonthCard({
                   {holiday.name}
                 </span>
               )}
+              {closure && <span className="closure-marker" title={`${closure.label} — no meetings`}>{closure.label}</span>}
               <div className="day-events">
                 {dayEvents.slice(0, 3).map((event) => (
                   <button
                     type="button"
-                    className={`meeting-chip ${event.category} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.conflicts.some((conflict) => conflict.type === "automatic_move") ? " holiday-adjusted" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
+                    className={`meeting-chip ${event.category}${event.category === "committee" ? ` ${committeeToneClass(event.templateId)}` : ""} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.conflicts.some((conflict) => conflict.type === "automatic_move") ? " holiday-adjusted" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
                     key={event.id}
                     draggable={!isEventLocked(state, event)}
                     onDragStart={(dragEvent) => {
@@ -265,6 +293,34 @@ function MonthCard({
                   </div>
                 </div>
               )}
+              {dayAction?.date === isoDate && !pendingMove && (
+                <div className="day-action-popover" onClick={(event) => event.stopPropagation()}>
+                  {dayAction.mode === "choose" && (
+                    <>
+                      <strong>{isoDate}</strong>
+                      {closure ? (
+                        <button type="button" onClick={() => { onRemoveClosure(isoDate); setDayAction(null); }}>Remove closure</button>
+                      ) : (
+                        <button type="button" disabled={Boolean(holiday)} onClick={() => setDayAction({ date: isoDate, mode: "closure", value: "" })}>Close this day</button>
+                      )}
+                      <button type="button" disabled={Boolean(holiday || closure)} onClick={() => setDayAction({ date: isoDate, mode: "event", value: "" })}>Add event</button>
+                      <button className="quiet" type="button" onClick={() => setDayAction(null)}>Cancel</button>
+                    </>
+                  )}
+                  {dayAction.mode !== "choose" && (
+                    <form onSubmit={(event) => {
+                      event.preventDefault();
+                      if (dayAction.mode === "closure") onCloseDate(isoDate, dayAction.value);
+                      else if (dayAction.value.trim()) onAddAdHoc(isoDate, dayAction.value.trim());
+                      setDayAction(null);
+                    }}>
+                      <strong>{dayAction.mode === "closure" ? "Close this day" : "Add ad hoc event"}</strong>
+                      <input autoFocus value={dayAction.value} onChange={(event) => setDayAction({ ...dayAction, value: event.target.value })} placeholder={dayAction.mode === "closure" ? "Optional label" : "Event name"} />
+                      <div><button className="quiet" type="button" onClick={() => setDayAction({ date: isoDate, mode: "choose", value: "" })}>Back</button><button type="submit" disabled={dayAction.mode === "event" && !dayAction.value.trim()}>{dayAction.mode === "closure" ? "Close day" : "Add event"}</button></div>
+                    </form>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -284,6 +340,9 @@ interface PlanYearCalendarProps {
   onMoveEvent: (eventId: string, date: string) => void;
   onResolveMove: (choice: "rule" | "override") => void;
   onCancelMove: () => void;
+  onCloseDate: (date: string, label: string) => void;
+  onRemoveClosure: (date: string) => void;
+  onAddAdHoc: (date: string, title: string) => void;
 }
 
 export function PlanYearCalendar({
@@ -297,6 +356,9 @@ export function PlanYearCalendar({
   onMoveEvent,
   onResolveMove,
   onCancelMove,
+  onCloseDate,
+  onRemoveClosure,
+  onAddAdHoc,
 }: PlanYearCalendarProps) {
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null);
   const [moveModeEventId, setMoveModeEventId] = useState<string | null>(null);
@@ -404,6 +466,9 @@ export function PlanYearCalendar({
               pendingMove={previewMove}
               onResolveMove={onResolveMove}
               onCancelMove={onCancelMove}
+              onCloseDate={onCloseDate}
+              onRemoveClosure={onRemoveClosure}
+              onAddAdHoc={onAddAdHoc}
             />
           ))}
         </div>

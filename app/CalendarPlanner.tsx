@@ -9,9 +9,13 @@ import {
   type PendingFormatConversion,
 } from "@/app/components/PlanningCockpit";
 import type { CalendarImportResult, ImportedCalendarEvent } from "@/lib/calendar-import";
+import { calendarIcs, downloadPlanPdf } from "@/lib/plan-export";
 import {
   applyManualEventMove,
   applyPlanProposal,
+  addAdHocEvent,
+  addCalendarClosure,
+  addCommitteeMeetingGroup,
   confirmActivePhase,
   createPlanYearState,
   navigateToPhase,
@@ -19,6 +23,7 @@ import {
   PHASE_LABELS,
   PHASE_ORDER,
   resolvePlanEvent,
+  removeCalendarClosure,
   updateTemplateSchedule,
   updateWorkingRule,
   visiblePlanEvents,
@@ -31,14 +36,14 @@ import {
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
-const STORAGE_KEY = "lss-plan-year-2027-v4";
+const STORAGE_KEY = "lss-plan-year-2027-v5";
 const DEFAULT_SETTINGS: ScenarioSettings = {
   boardScenario: "recent_direction",
   allStaffPattern: "detailed_calendar",
 };
 
 interface StoredPlanYear {
-  version: 4;
+  version: 5;
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
 }
@@ -59,44 +64,6 @@ function download(filename: string, contents: string) {
   URL.revokeObjectURL(url);
 }
 
-function csvCell(value: unknown): string {
-  const text = String(value ?? "");
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function workingCsv(state: PlanYearState, importedEvents: ImportedCalendarEvent[]): string {
-  const rows = state.plan.events
-    .filter((event) => !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder)
-    .map((event) => {
-      const resolved = resolvePlanEvent(state, event.id);
-      return [
-        resolved.date,
-        resolved.startTime ?? "TBD",
-        resolved.durationMinutes,
-        resolved.title,
-        resolved.category,
-        resolved.location,
-        resolved.attendees.join("; "),
-        state.eventOverrides[event.id]?.date ? "2027 override" : "Plan Year rule",
-      ];
-    });
-  const imported = importedEvents.map((event) => [
-    event.date,
-    event.startTime ?? "All day",
-    event.durationMinutes,
-    event.title,
-    "Existing Outlook",
-    event.location ?? "",
-    event.attendees?.join("; ") ?? "",
-    event.sourceLabel,
-  ]);
-  return [
-    ["Date", "Time", "Duration", "Meeting", "Category", "Location", "Attendees", "Source"],
-    ...rows,
-    ...imported,
-  ].map((row) => row.map(csvCell).join(",")).join("\n");
-}
-
 function phaseTemplateIds(state: PlanYearState, phase: PlanPhase): Set<string> {
   return new Set(PLAN_STEPS[phase].flatMap((step) => step.templateIds));
 }
@@ -106,10 +73,12 @@ export function CalendarPlanner() {
   const [history, setHistory] = useState<PlanYearState[]>([]);
   const [importedEvents, setImportedEvents] = useState<ImportedCalendarEvent[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedImportedEventId, setSelectedImportedEventId] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<PendingCalendarMove | null>(null);
   const [pendingConversion, setPendingConversion] = useState<PendingFormatConversion | null>(null);
   const [calendarMoveNotice, setCalendarMoveNotice] = useState<{ valid: boolean; message: string } | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -117,7 +86,7 @@ export function CalendarPlanner() {
     if (saved) {
       try {
         const stored = JSON.parse(saved) as StoredPlanYear;
-        if (stored.version === 4 && stored.state?.plan?.year === 2027) {
+        if (stored.version === 5 && stored.state?.plan?.year === 2027) {
           queueMicrotask(() => {
             setState(stored.state);
             setImportedEvents(stored.importedEvents ?? []);
@@ -132,7 +101,7 @@ export function CalendarPlanner() {
 
   useEffect(() => {
     if (!loaded) return;
-    const stored: StoredPlanYear = { version: 4, state, importedEvents };
+    const stored: StoredPlanYear = { version: 5, state, importedEvents };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   }, [state, importedEvents, loaded]);
 
@@ -158,6 +127,7 @@ export function CalendarPlanner() {
           .find((event) => event.templateId === "full-board" && event.date === targetDate)
       : null;
     setSelectedEventId(eventId);
+    setSelectedTemplateId(dragged.templateId);
     setCalendarMoveNotice(null);
     if (regularAtTarget) {
       setPendingConversion({
@@ -234,6 +204,7 @@ export function CalendarPlanner() {
     setHistory([]);
     setImportedEvents([]);
     setSelectedEventId(null);
+    setSelectedTemplateId(null);
     setSelectedImportedEventId(null);
     setPendingMove(null);
     setPendingConversion(null);
@@ -260,8 +231,23 @@ export function CalendarPlanner() {
           <strong>{confirmedCount} layers confirmed</strong>
         </div>
         <div className="header-actions">
-          <button className="button ghost" type="button" onClick={() => window.print()}>Print</button>
-          <button className="button secondary" type="button" onClick={() => download("lss-plan-year-2027.csv", workingCsv(state, importedEvents))}>Export CSV</button>
+          <button className="button ghost" type="button" disabled={pdfBusy} onClick={async () => {
+            setPdfBusy(true);
+            try {
+              await downloadPlanPdf(state, importedEvents);
+            } finally {
+              setPdfBusy(false);
+            }
+          }}>{pdfBusy ? "Preparing PDF…" : "Download PDF"}</button>
+          <button className="button secondary" type="button" onClick={() => {
+            const exported = calendarIcs(state);
+            if (!exported.count) {
+              window.alert("No meetings are ready for the calendar file yet. Confirm a planning layer first; unresolved meetings remain in the PDF only.");
+              return;
+            }
+            download("LSS-2027-Confirmed-Meetings.ics", exported.contents);
+            setCalendarMoveNotice({ valid: true, message: `Downloaded ${exported.count} confirmed meetings. Working and unresolved placements were excluded.` });
+          }}>Download Calendar File</button>
         </div>
       </header>
 
@@ -282,6 +268,7 @@ export function CalendarPlanner() {
                   onClick={() => {
                     setState((current) => navigateToPhase(current, phase));
                     setSelectedEventId(null);
+                    setSelectedTemplateId(null);
                     setPendingMove(null);
                     setPendingConversion(null);
                   }}
@@ -299,11 +286,12 @@ export function CalendarPlanner() {
           <PlanYearCalendar
             state={state}
             importedEvents={importedEvents}
-            selectedEventId={effectiveSelectedEventId}
+            selectedEventId={state.activePhase === "committee" && !selectedTemplateId ? null : effectiveSelectedEventId}
             moveNotice={calendarMoveNotice}
             previewMove={pendingMove}
             onSelectEvent={(eventId) => {
               setSelectedEventId(eventId);
+              setSelectedTemplateId(state.plan.events.find((event) => event.id === eventId)?.templateId ?? null);
               setSelectedImportedEventId(null);
             }}
             onSelectImported={(eventId) => {
@@ -313,18 +301,59 @@ export function CalendarPlanner() {
             onMoveEvent={handleCalendarMove}
             onResolveMove={resolveMove}
             onCancelMove={() => setPendingMove(null)}
+            onCloseDate={(date, label) => {
+              try {
+                commitState(addCalendarClosure(state, date, label));
+                setCalendarMoveNotice({ valid: true, message: `${label.trim() || "LSS closure"} now blocks ${date}.` });
+              } catch (error) {
+                setCalendarMoveNotice({ valid: false, message: error instanceof Error ? error.message : "The date could not be closed." });
+              }
+            }}
+            onRemoveClosure={(date) => {
+              commitState(removeCalendarClosure(state, date));
+              setCalendarMoveNotice({ valid: true, message: `Closure removed from ${date}.` });
+            }}
+            onAddAdHoc={(date, title) => {
+              try {
+                const added = addAdHocEvent(state, date, title);
+                commitState(added.state);
+                setSelectedTemplateId(added.templateId);
+                setSelectedEventId(added.eventId);
+                setSelectedImportedEventId(null);
+                setCalendarMoveNotice({ valid: true, message: `${title} added on ${date}. Complete details in the meeting cockpit.` });
+              } catch (error) {
+                setCalendarMoveNotice({ valid: false, message: error instanceof Error ? error.message : "The event could not be added." });
+              }
+            }}
           />
         </div>
 
         <PlanningCockpit
-          key={`${effectiveSelectedEventId ?? "none"}-${state.activePhase}`}
+          key={`${selectedTemplateId ?? effectiveSelectedEventId ?? "none"}-${state.activePhase}`}
           state={state}
           selectedEventId={effectiveSelectedEventId}
+          selectedTemplateId={selectedTemplateId}
           pendingConversion={pendingConversion}
           importedEvents={importedEvents}
           selectedImportedEventId={selectedImportedEventId}
           canUndo={history.length > 0}
           onRuleChange={updateRule}
+          onOpenMeetingGroup={(templateId) => {
+            setSelectedTemplateId(templateId);
+            setSelectedEventId(state.plan.events.find((event) => event.templateId === templateId)?.id ?? null);
+            setSelectedImportedEventId(null);
+          }}
+          onBackToMeetingGroups={() => {
+            setSelectedTemplateId(null);
+            setSelectedEventId(null);
+          }}
+          onAddMeetingGroup={(name, attendees) => {
+            const added = addCommitteeMeetingGroup(state, { name, attendees });
+            commitState(added.state);
+            setSelectedTemplateId(added.templateId);
+            setSelectedEventId(null);
+            setCalendarMoveNotice({ valid: true, message: `${name} added without inventing a cadence. Choose a schedule when ready.` });
+          }}
           onSharedAttendeesChange={(templateIds, attendees) => {
             let next = state;
             for (const templateId of templateIds) {
@@ -351,6 +380,7 @@ export function CalendarPlanner() {
           onConfirmPhase={() => {
             commitState(confirmActivePhase(state));
             setSelectedEventId(null);
+            setSelectedTemplateId(null);
             setPendingMove(null);
             setPendingConversion(null);
           }}

@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from "react";
 
-import { buildMeetingTemplates } from "@/data/source-data";
 import {
   parseCalendarSnapshot,
   type CalendarImportResult,
   type ImportedCalendarEvent,
 } from "@/lib/calendar-import";
 import {
+  meetingTemplatesForState,
   PHASE_ORDER,
   PLAN_STEPS,
   PHASE_LABELS,
@@ -124,11 +124,15 @@ function timeValue(value: string | null): string {
 interface PlanningCockpitProps {
   state: PlanYearState;
   selectedEventId: string | null;
+  selectedTemplateId: string | null;
   pendingConversion: PendingFormatConversion | null;
   importedEvents: ImportedCalendarEvent[];
   selectedImportedEventId: string | null;
   canUndo: boolean;
   onRuleChange: (templateId: string, patch: WorkingMeetingRule) => void;
+  onOpenMeetingGroup: (templateId: string) => void;
+  onBackToMeetingGroups: () => void;
+  onAddMeetingGroup: (name: string, attendees: string[]) => void;
   onSharedAttendeesChange: (templateIds: string[], attendees: string[]) => void;
   onScheduleChange: (
     templateId: string,
@@ -150,11 +154,15 @@ interface PlanningCockpitProps {
 export function PlanningCockpit({
   state,
   selectedEventId,
+  selectedTemplateId: explicitlySelectedTemplateId,
   pendingConversion,
   importedEvents,
   selectedImportedEventId,
   canUndo,
   onRuleChange,
+  onOpenMeetingGroup,
+  onBackToMeetingGroups,
+  onAddMeetingGroup,
   onSharedAttendeesChange,
   onScheduleChange,
   onApplyConversion,
@@ -164,13 +172,18 @@ export function PlanningCockpit({
   onImport,
 }: PlanningCockpitProps) {
   const [confirming, setConfirming] = useState(false);
+  const [addingGroup, setAddingGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupAttendees, setNewGroupAttendees] = useState("");
   const templates = useMemo(
-    () => buildMeetingTemplates(state.plan.settings),
-    [state.plan.settings],
+    () => meetingTemplatesForState(state),
+    [state],
   );
-  const selectedTemplateId = selectedEventId
+  const eventTemplateId = selectedEventId
     ? state.plan.events.find((event) => event.id === selectedEventId)?.templateId
     : null;
+  const selectedTemplateId = explicitlySelectedTemplateId ?? eventTemplateId;
+  const showCommitteeOverview = state.activePhase === "committee" && !explicitlySelectedTemplateId;
   const fallbackTemplateId = state.phaseSteps.flatMap((step) => step.templateIds)[0] ?? null;
   const group = groupFor(selectedTemplateId ?? fallbackTemplateId ?? "full-board");
   const groupTemplates = group.templateIds
@@ -231,7 +244,8 @@ export function PlanningCockpit({
       : "";
   const phaseEvents = state.plan.events.filter((event) => {
     const phaseTemplateIds = new Set(state.phaseSteps.flatMap((step) => step.templateIds));
-    return phaseTemplateIds.has(event.templateId) && !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder;
+    const belongsToCustomCommittee = state.activePhase === "committee" && state.customTemplates.some((template) => template.id === event.templateId);
+    return (phaseTemplateIds.has(event.templateId) || belongsToCustomCommittee) && !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder;
   });
   const phaseSummary = state.activePhase === "board"
     ? `You're confirming ${phaseEvents.filter((event) => event.templateId === "full-board").length} board meetings and ${phaseEvents.filter((event) => event.templateId === "board-retreat").length} retreats for 2027. Board Committee planning will work around these dates.`
@@ -249,9 +263,65 @@ export function PlanningCockpit({
     ? importedEvents.find((event) => event.id === selectedImportedEventId) ?? null
     : null;
 
+  const committeeTemplates = templates.filter((template) => template.category === "committee");
+  const committeeRows = committeeTemplates.map((template) => {
+    const count = state.plan.events.filter(
+      (event) => event.templateId === template.id && !event.isPlaceholder && !state.hiddenEventIds.includes(event.id),
+    ).length;
+    return { template, count };
+  });
+  const scheduledCommitteeRows = committeeRows.filter((row) => row.count > 0);
+  const committeeTotal = scheduledCommitteeRows.reduce((sum, row) => sum + row.count, 0);
+
   return (
     <aside className="cockpit" aria-label="Selected meeting group settings">
       <div className="cockpit-scroll">
+        {showCommitteeOverview ? (
+          <>
+            <section className="committee-overview-header">
+              <p className="eyebrow">Committee layer</p>
+              <h2>{committeeTotal} sessions across {scheduledCommitteeRows.length} scheduled groups</h2>
+              <p>Open one group to adjust its provisional rule. Unscheduled groups remain honest blanks until leadership confirms them.</p>
+            </section>
+            <section className="committee-group-list" aria-label="Board committee meeting groups">
+              {committeeRows.map(({ template, count }) => (
+                <button type="button" key={template.id} onClick={() => onOpenMeetingGroup(template.id)}>
+                  <i className={`committee-swatch committee-${template.id}`} aria-hidden="true" />
+                  <span><strong>{template.name}</strong><small>{count > 0 ? template.cadence : "Awaiting confirmation"}</small></span>
+                  <em className={count > 0 ? "scheduled" : "unscheduled"}>{count > 0 ? `${count} sessions` : "Not scheduled"}</em>
+                  <b aria-hidden="true">›</b>
+                </button>
+              ))}
+            </section>
+            <section className="add-group-section">
+              {!addingGroup ? (
+                <button className="add-group-button" type="button" onClick={() => setAddingGroup(true)}>+ Add meeting group</button>
+              ) : (
+                <form onSubmit={(event) => {
+                  event.preventDefault();
+                  if (!newGroupName.trim()) return;
+                  onAddMeetingGroup(
+                    newGroupName.trim(),
+                    newGroupAttendees.split("\n").map((item) => item.trim()).filter(Boolean),
+                  );
+                  setAddingGroup(false);
+                  setNewGroupName("");
+                  setNewGroupAttendees("");
+                }}>
+                  <h3>Add a committee group</h3>
+                  <label><span>Group name</span><input autoFocus value={newGroupName} onChange={(event) => setNewGroupName(event.target.value)} placeholder="e.g., Nominations Committee" /></label>
+                  <label><span>Attendees <i>one per line</i></span><textarea rows={3} value={newGroupAttendees} onChange={(event) => setNewGroupAttendees(event.target.value)} placeholder="Names or distribution lists" /></label>
+                  <p>The group starts unscheduled. Open it next to choose a cadence or place meetings manually.</p>
+                  <div><button type="button" onClick={() => setAddingGroup(false)}>Cancel</button><button type="submit">Add group</button></div>
+                </form>
+              )}
+            </section>
+          </>
+        ) : (
+          <>
+        {state.activePhase === "committee" && (
+          <button className="back-to-groups" type="button" onClick={onBackToMeetingGroups}>← All committee groups</button>
+        )}
         {selectedImported && (
           <section className="imported-snapshot-card">
             <p className="eyebrow">Existing Outlook meeting</p>
@@ -289,6 +359,7 @@ export function PlanningCockpit({
             const startMonth = rule.startMonth ?? templateMonths[0] ?? 1;
             const ordinal = rule.ordinal ?? ("ordinal" in template.generation ? template.generation.ordinal : 2);
             const monthBased = !["weekly", "biweekly"].includes(cadence);
+            const isAdHoc = template.id.startsWith("ad-hoc-");
             return (
               <article className="format-row" key={template.id}>
                 <header>
@@ -296,6 +367,8 @@ export function PlanningCockpit({
                   <strong>{formatName(template)}</strong>
                 </header>
                 <div className="setting-grid">
+                  {!isAdHoc && (
+                    <>
                   <label>
                     <span>Annual count</span>
                     <input
@@ -343,16 +416,27 @@ export function PlanningCockpit({
                       </label>
                     </>
                   )}
+                    </>
+                  )}
                   <label><span>Duration</span><div className="input-with-unit"><input disabled={!editingAllowed} type="number" min="15" step="15" value={rule.durationMinutes ?? template.durationMinutes} onChange={(event) => onRuleChange(template.id, { durationMinutes: Number(event.target.value) })} /><i>min</i></div></label>
                   <label><span>Time</span><input disabled={!editingAllowed} type="time" value={timeValue(rule.startTime ?? template.startTime)} onChange={(event) => onRuleChange(template.id, { startTime: event.target.value || null })} /></label>
-                  <label>
+                  {!isAdHoc && <label>
                     <span>Preferred day</span>
                     <select disabled={!editingAllowed} value={weekday ?? ""} onChange={(event) => onRuleChange(template.id, { weekday: Number(event.target.value) })}>
                       {weekday === null && <option value="" disabled>Choose</option>}
                       {WEEKDAYS.map((day, index) => <option value={index} key={day}>{day}</option>)}
                     </select>
-                  </label>
+                  </label>}
                 </div>
+                <details className="meeting-details">
+                  <summary>Meeting details</summary>
+                  <div>
+                    <label><span>Title</span><input disabled={!editingAllowed} value={rule.titleTemplate ?? template.name} onChange={(event) => onRuleChange(template.id, { titleTemplate: event.target.value })} /></label>
+                    <label><span>Location</span><input disabled={!editingAllowed} value={rule.location ?? template.location} onChange={(event) => onRuleChange(template.id, { location: event.target.value })} /></label>
+                    <label><span>Format</span><select disabled={!editingAllowed} value={rule.modality ?? template.modality} onChange={(event) => onRuleChange(template.id, { modality: event.target.value })}><option>In person</option><option>Virtual</option><option>Hybrid</option><option>To confirm</option></select></label>
+                    <label><span>Invitation message</span><textarea disabled={!editingAllowed} rows={3} value={rule.messageTemplate ?? template.purpose} onChange={(event) => onRuleChange(template.id, { messageTemplate: event.target.value })} /></label>
+                  </div>
+                </details>
               </article>
             );
           })}
@@ -401,6 +485,8 @@ export function PlanningCockpit({
           <summary>Existing Outlook snapshot <i>{importedEvents.length || ""}</i></summary>
           <label><input type="file" accept=".ics,text/calendar" multiple onChange={(event) => void importFiles(event.target.files)} /><span>Import .ics snapshot locally</span></label>
         </details>
+          </>
+        )}
       </div>
 
       <div className="cockpit-footer">

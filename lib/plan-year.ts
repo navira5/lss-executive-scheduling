@@ -28,6 +28,14 @@ export interface PlanYearState {
   eventOverrides: Record<string, PlanEventOverride>;
   workingRules: Record<string, WorkingMeetingRule>;
   hiddenEventIds: string[];
+  customTemplates: MeetingTemplate[];
+  calendarClosures: CalendarClosure[];
+}
+
+export interface CalendarClosure {
+  id: string;
+  date: string;
+  label: string;
 }
 
 export interface PlanEventOverride {
@@ -139,12 +147,32 @@ export const PLAN_STEPS: Record<PlanPhase, PlanStep[]> = {
       templateIds: ["finance-committee"],
     },
     {
-      id: "other-board-committees",
-      label: "Other Board committees",
-      meetingLabel: "Programs, Talent & Risk, and orientation",
-      question:
-        "Which remaining Board committee and orientation patterns should carry into 2027?",
-      templateIds: ["health-programs", "talent-risk", "board-orientation"],
+      id: "health-programs",
+      label: "Health Center & Programs",
+      meetingLabel: "Health Center & Programs Committee",
+      question: "Should the quarterly 2026 pattern remain the provisional 2027 baseline?",
+      templateIds: ["health-programs"],
+    },
+    {
+      id: "talent-risk",
+      label: "Talent & Risk",
+      meetingLabel: "Talent & Risk Management Committee",
+      question: "Should the quarterly 2026 pattern remain the provisional 2027 baseline?",
+      templateIds: ["talent-risk"],
+    },
+    {
+      id: "nominations-committee",
+      label: "Nominations",
+      meetingLabel: "Nominations Committee",
+      question: "Should Nominations receive a recurring cadence or be scheduled only when needed?",
+      templateIds: ["nominations-committee"],
+    },
+    {
+      id: "program-committee",
+      label: "Program",
+      meetingLabel: "Program Committee",
+      question: "What purpose, participants, and cadence should define the Program Committee?",
+      templateIds: ["program-committee"],
     },
   ],
   executive: [
@@ -244,7 +272,148 @@ export function createPlanYearState(plan: CalendarPlan): PlanYearState {
     eventOverrides: {},
     workingRules: {},
     hiddenEventIds: [],
+    customTemplates: [],
+    calendarClosures: [],
   });
+}
+
+export function meetingTemplatesForState(state: PlanYearState): MeetingTemplate[] {
+  return [...buildMeetingTemplates(state.plan.settings), ...state.customTemplates];
+}
+
+export function addCommitteeMeetingGroup(
+  state: PlanYearState,
+  input: { name: string; attendees: string[] },
+): { state: PlanYearState; templateId: string } {
+  const name = input.name.trim();
+  if (!name) throw new Error("Meeting group name is required.");
+  const baseId = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "committee-group";
+  const usedIds = new Set(meetingTemplatesForState(state).map((template) => template.id));
+  let templateId = baseId;
+  let suffix = 2;
+  while (usedIds.has(templateId)) {
+    templateId = `${baseId}-${suffix}`;
+    suffix += 1;
+  }
+  const template: MeetingTemplate = {
+    id: templateId,
+    abbreviation: name
+      .split(/\s+/)
+      .map((word) => word[0])
+      .join("")
+      .slice(0, 7)
+      .toUpperCase(),
+    name,
+    category: "committee",
+    purpose: "Purpose needs confirmation.",
+    owner: "To confirm",
+    attendeeGroup: name,
+    cadence: "No recurring cadence selected",
+    durationMinutes: 60,
+    startTime: null,
+    modality: "To confirm",
+    location: "To confirm",
+    attendanceRequirement: "To confirm",
+    flexibility: "conditional",
+    ruleStatus: "open_question",
+    generation: { type: "nth_weekday", months: [], ordinal: 2, weekday: 2 },
+    priority: 72,
+    sourceReferences: [
+      {
+        label: "2027 Plan Year session",
+        detail: "Created locally by the planning user; cadence and authority remain unconfirmed.",
+      },
+    ],
+    validationNote: "Confirm purpose, authority, and cadence before treating this as an organizational rule.",
+  };
+  return {
+    templateId,
+    state: {
+      ...state,
+      customTemplates: [...state.customTemplates, template],
+      workingRules: {
+        ...state.workingRules,
+        [templateId]: { attendees: input.attendees.length ? input.attendees : [name] },
+      },
+    },
+  };
+}
+
+export function addCalendarClosure(
+  state: PlanYearState,
+  date: string,
+  label = "LSS closure",
+): PlanYearState {
+  if (!/^2027-\d{2}-\d{2}$/.test(date)) throw new Error("Choose a date in calendar year 2027.");
+  const holiday = state.plan.holidays.find((item) => item.date === date && item.status === "verified_federal");
+  if (holiday) throw new Error(`${holiday.name} is already blocked as a federal holiday.`);
+  const meetings = state.plan.events.filter(
+    (event) => !event.isPlaceholder && !state.hiddenEventIds.includes(event.id) && resolvePlanEvent(state, event.id).date === date,
+  );
+  if (meetings.length) {
+    throw new Error(`Move ${meetings.length} meeting${meetings.length === 1 ? "" : "s"} off this date before closing it.`);
+  }
+  if (state.calendarClosures.some((closure) => closure.date === date)) return state;
+  return {
+    ...state,
+    calendarClosures: [...state.calendarClosures, {
+      id: `closure-${date}`,
+      date,
+      label: label.trim() || "LSS closure",
+    }].sort((left, right) => left.date.localeCompare(right.date)),
+  };
+}
+
+export function removeCalendarClosure(state: PlanYearState, date: string): PlanYearState {
+  return { ...state, calendarClosures: state.calendarClosures.filter((closure) => closure.date !== date) };
+}
+
+export function addAdHocEvent(
+  state: PlanYearState,
+  date: string,
+  title: string,
+): { state: PlanYearState; eventId: string; templateId: string } {
+  const cleanTitle = title.trim();
+  if (!cleanTitle) throw new Error("Event name is required.");
+  const blocked = state.plan.holidays.find((holiday) => holiday.date === date && holiday.status === "verified_federal")
+    ?? state.calendarClosures.find((closure) => closure.date === date);
+  if (blocked) throw new Error(`${"name" in blocked ? blocked.name : blocked.label} is closed to meetings.`);
+  const slug = cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32) || "event";
+  const templateId = `ad-hoc-${date}-${slug}-${state.customTemplates.filter((template) => template.id.startsWith(`ad-hoc-${date}-`)).length + 1}`;
+  const template: MeetingTemplate = {
+    id: templateId,
+    abbreviation: cleanTitle.split(/\s+/).map((word) => word[0]).join("").slice(0, 7).toUpperCase(),
+    name: cleanTitle,
+    category: "organization",
+    purpose: "Ad hoc calendar event added during 2027 planning.",
+    owner: "To confirm",
+    attendeeGroup: "To confirm",
+    cadence: "One-time 2027 event",
+    durationMinutes: 60,
+    startTime: null,
+    modality: "To confirm",
+    location: "To confirm",
+    attendanceRequirement: "To confirm",
+    flexibility: "conditional",
+    ruleStatus: "confirmed",
+    generation: { type: "fixed_dates", dates: [date] },
+    priority: 84,
+    sourceReferences: [{ label: "2027 Plan Year session", detail: "Added directly by the planning user as a one-time 2027 event." }],
+  };
+  const event = generateEventsForTemplate(template)[0];
+  return {
+    templateId,
+    eventId: event.id,
+    state: {
+      ...state,
+      customTemplates: [...state.customTemplates, template],
+      plan: { ...state.plan, events: [...state.plan.events, event].sort((left, right) => left.date.localeCompare(right.date)) },
+      workingRules: { ...state.workingRules, [templateId]: { annualCount: 1, cadencePreset: "custom", cadence: "One-time 2027 event" } },
+    },
+  };
 }
 
 export function advancePlanStep(state: PlanYearState): PlanYearState {
@@ -257,6 +426,8 @@ export function advancePlanStep(state: PlanYearState): PlanYearState {
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
     hiddenEventIds: state.hiddenEventIds,
+    customTemplates: state.customTemplates,
+    calendarClosures: state.calendarClosures,
   });
 }
 
@@ -270,6 +441,8 @@ export function previousPlanStep(state: PlanYearState): PlanYearState {
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
     hiddenEventIds: state.hiddenEventIds,
+    customTemplates: state.customTemplates,
+    calendarClosures: state.calendarClosures,
   });
 }
 
@@ -287,26 +460,33 @@ export function confirmActivePhase(state: PlanYearState): PlanYearState {
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
     hiddenEventIds: state.hiddenEventIds,
+    customTemplates: state.customTemplates,
+    calendarClosures: state.calendarClosures,
   });
 }
 
-function templateIdsForPhase(phase: PlanPhase): Set<string> {
-  return new Set(PLAN_STEPS[phase].flatMap((step) => step.templateIds));
+function templateIdsForPhase(phase: PlanPhase, state?: PlanYearState): Set<string> {
+  const ids = PLAN_STEPS[phase].flatMap((step) => step.templateIds);
+  if (phase === "committee" && state) {
+    ids.push(...state.customTemplates.filter((template) => template.category === "committee").map((template) => template.id));
+  }
+  return new Set(ids);
 }
 
 export function isEventConfirmed(state: PlanYearState, event: ProposedEvent): boolean {
+  if (event.templateId.startsWith("ad-hoc-")) return true;
   return state.confirmedPhases.some((phase) =>
-    templateIdsForPhase(phase).has(event.templateId),
+    templateIdsForPhase(phase, state).has(event.templateId),
   );
 }
 
 export function visiblePlanEvents(state: PlanYearState): ProposedEvent[] {
   if (state.activePhase === "review") return state.plan.events;
-  const activeTemplateIds = templateIdsForPhase(state.activePhase);
+  const activeTemplateIds = templateIdsForPhase(state.activePhase, state);
   return state.plan.events.filter(
     (event) =>
       !state.hiddenEventIds.includes(event.id) &&
-      (isEventConfirmed(state, event) || activeTemplateIds.has(event.templateId)),
+      (event.templateId.startsWith("ad-hoc-") || isEventConfirmed(state, event) || activeTemplateIds.has(event.templateId)),
   );
 }
 
@@ -314,7 +494,8 @@ export function isEventLocked(
   state: PlanYearState,
   event: ProposedEvent,
 ): boolean {
-  const eventPhase = phaseForTemplate(event.templateId);
+  if (event.templateId.startsWith("ad-hoc-")) return false;
+  const eventPhase = phaseForTemplate(event.templateId, state);
   return isEventConfirmed(state, event) && eventPhase !== state.activePhase;
 }
 
@@ -324,7 +505,9 @@ function eventById(state: PlanYearState, eventId: string): ProposedEvent {
   return event;
 }
 
-function phaseForTemplate(templateId: string): PlanPhase | null {
+function phaseForTemplate(templateId: string, state?: PlanYearState): PlanPhase | null {
+  const customTemplate = state?.customTemplates.find((template) => template.id === templateId);
+  if (customTemplate?.category === "committee") return "committee";
   for (const phase of PHASE_ORDER) {
     if (PLAN_STEPS[phase].some((step) => step.templateIds.includes(templateId))) {
       return phase;
@@ -376,7 +559,7 @@ export function updateEvent(
 ): PlanYearState {
   const event = eventById(state, eventId);
   if (isEventLocked(state, event)) {
-    const phase = phaseForTemplate(event.templateId);
+    const phase = phaseForTemplate(event.templateId, state);
     throw new Error(
       `Reopen ${phase ? PHASE_LABELS[phase] : "the confirmed layer"} before editing this meeting.`,
     );
@@ -391,7 +574,7 @@ export function updateEvent(
 }
 
 function activePhaseTemplateIds(state: PlanYearState): Set<string> {
-  return templateIdsForPhase(state.activePhase);
+  return templateIdsForPhase(state.activePhase, state);
 }
 
 export function clearActivePhase(state: PlanYearState): PlanYearState {
@@ -464,6 +647,8 @@ export function reopenPhase(
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
     hiddenEventIds: state.hiddenEventIds,
+    customTemplates: state.customTemplates,
+    calendarClosures: state.calendarClosures,
   });
 }
 
@@ -479,6 +664,8 @@ export function navigateToPhase(
     eventOverrides: state.eventOverrides,
     workingRules: state.workingRules,
     hiddenEventIds: state.hiddenEventIds,
+    customTemplates: state.customTemplates,
+    calendarClosures: state.calendarClosures,
   });
 }
 
@@ -519,6 +706,57 @@ function monthsForCount(count: number, startMonth: number): number[] {
     const offset = Math.floor((index * 12) / count);
     return ((startMonth - 1 + offset) % 12) + 1;
   }).sort((left, right) => left - right);
+}
+
+function nextDateOutsideClosures(state: PlanYearState, date: string): string | null {
+  const cursor = new Date(`${date}T12:00:00Z`);
+  for (let distance = 1; distance <= 14; distance += 1) {
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+    const candidate = cursor.toISOString().slice(0, 10);
+    const weekday = cursor.getUTCDay();
+    const federalHoliday = state.plan.holidays.some(
+      (holiday) => holiday.date === candidate && holiday.status === "verified_federal",
+    );
+    if (weekday !== 0 && weekday !== 6 && !federalHoliday && !state.calendarClosures.some((closure) => closure.date === candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function moveGeneratedEventsOffClosures(
+  state: PlanYearState,
+  events: ProposedEvent[],
+): ProposedEvent[] {
+  return events.map((event) => {
+    const closure = state.calendarClosures.find((item) => item.date === event.date);
+    if (!closure) return event;
+    const alternative = nextDateOutsideClosures(state, event.date);
+    if (!alternative) return {
+      ...event,
+      status: "blocked",
+      conflicts: [...event.conflicts, {
+        id: `${event.id}-calendar-closure`,
+        type: "blackout",
+        severity: "blocked",
+        summary: `${closure.label} blocks this occurrence.`,
+        detail: "No open business day was found within the next two weeks.",
+      }],
+    };
+    return {
+      ...event,
+      date: alternative,
+      conflicts: [...event.conflicts, {
+        id: `${event.id}-calendar-closure-move`,
+        type: "automatic_move",
+        severity: "warning",
+        summary: `${closure.label} moved this occurrence.`,
+        detail: `The generated date ${event.date} is an LSS closure, so the working placement moved to ${alternative}.`,
+      }],
+      alternatives: [{ date: alternative, reason: `Recommended business day after ${closure.label}.` }, ...event.alternatives],
+      explanation: `${event.explanation} The generated date was an LSS closure, so this working occurrence moved to ${alternative}.`,
+    };
+  });
 }
 
 function intervalMonths(startMonth: number, interval: number, count: number): number[] {
@@ -587,7 +825,7 @@ export function updateTemplateSchedule(
     weekday?: number;
   },
 ): PlanYearState {
-  const template = buildMeetingTemplates(state.plan.settings).find(
+  const template = meetingTemplatesForState(state).find(
     (item) => item.id === templateId,
   );
   if (!template) throw new Error(`Meeting template ${templateId} was not found.`);
@@ -622,7 +860,7 @@ export function updateTemplateSchedule(
     startMonth,
     ordinal,
   );
-  const generated = generateEventsForTemplate({
+  const generated = moveGeneratedEventsOffClosures(state, generateEventsForTemplate({
     ...template,
     generation,
     cadence: CADENCE_LABELS[cadencePreset],
@@ -630,7 +868,7 @@ export function updateTemplateSchedule(
       ? { durationMinutes: currentRule.durationMinutes }
       : {}),
     ...(currentRule.startTime !== undefined ? { startTime: currentRule.startTime } : {}),
-  });
+  }));
   const removedIds = new Set(
     state.plan.events.filter((event) => event.templateId === templateId).map((event) => event.id),
   );
@@ -717,6 +955,15 @@ export function proposeEventMove(
       valid: false,
       summary: `${holiday.name} is unavailable.`,
       reason: "A verified federal holiday is a hard stop.",
+      changes: [],
+    };
+  }
+  const closure = state.calendarClosures.find((item) => item.date === date);
+  if (closure) {
+    return {
+      valid: false,
+      summary: `${closure.label} is unavailable.`,
+      reason: "An LSS closure is a hard stop.",
       changes: [],
     };
   }

@@ -8,6 +8,9 @@ import {
 } from "@/lib/plan-agent";
 import {
   advancePlanStep,
+  addCommitteeMeetingGroup,
+  addAdHocEvent,
+  addCalendarClosure,
   applyManualEventMove,
   applyPlanProposal,
   bulkUpdateByExactTitle,
@@ -24,6 +27,7 @@ import {
   updateWorkingRule,
   visiblePlanEvents,
 } from "@/lib/plan-year";
+import { calendarIcs, confirmedCalendarEvents } from "@/lib/plan-export";
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
@@ -443,4 +447,89 @@ test("working rule edits update matching instances without promoting rule author
       (event) => resolvePlanEvent(updated, event.id).ruleStatus === "needs_validation",
     ),
   );
+});
+
+test("Committee starts as four provisional schedules plus two honest unscheduled shells", () => {
+  const boardConfirmed = confirmActivePhase(createPlanYearState(generateCalendarPlan(baseline)));
+  const counts = Object.fromEntries(
+    ["executive-committee", "finance-committee", "health-programs", "talent-risk", "nominations-committee", "program-committee"]
+      .map((templateId) => [templateId, boardConfirmed.plan.events.filter((event) => event.templateId === templateId && !event.isPlaceholder).length]),
+  );
+  assert.deepEqual(counts, {
+    "executive-committee": 6,
+    "finance-committee": 6,
+    "health-programs": 4,
+    "talent-risk": 4,
+    "nominations-committee": 0,
+    "program-committee": 0,
+  });
+});
+
+test("a user-created committee group begins unscheduled and can receive its own cadence", () => {
+  const committeeState = confirmActivePhase(createPlanYearState(generateCalendarPlan(baseline)));
+  const added = addCommitteeMeetingGroup(committeeState, {
+    name: "Community Advisory Committee",
+    attendees: ["Community Advisory Committee"],
+  });
+  assert.equal(added.state.plan.events.some((event) => event.templateId === added.templateId), false);
+  const scheduled = updateTemplateSchedule(added.state, added.templateId, {
+    cadencePreset: "quarterly",
+    annualCount: 4,
+    startMonth: 2,
+    ordinal: 2,
+    weekday: 3,
+  });
+  assert.equal(scheduled.plan.events.filter((event) => event.templateId === added.templateId).length, 4);
+  assert.equal(visiblePlanEvents(scheduled).some((event) => event.templateId === added.templateId), true);
+});
+
+test("calendar export contains only approved placements and excludes open-question groups", () => {
+  const initial = createPlanYearState(generateCalendarPlan(baseline));
+  assert.equal(confirmedCalendarEvents(initial).length, 0);
+  const boardConfirmed = confirmActivePhase(initial);
+  const boardExport = calendarIcs(boardConfirmed);
+  assert.equal(boardExport.count, 12);
+  assert.match(boardExport.contents, /SUMMARY:Full Board Meeting/);
+  assert.doesNotMatch(boardExport.contents, /SUMMARY:Administration & Finance Committee/);
+
+  const nominationsScheduled = updateTemplateSchedule(boardConfirmed, "nominations-committee", {
+    cadencePreset: "semiannual",
+    annualCount: 2,
+  });
+  const committeeConfirmed = confirmActivePhase(nominationsScheduled);
+  assert.equal(
+    confirmedCalendarEvents(committeeConfirmed).some((event) => event.templateId === "nominations-committee"),
+    false,
+  );
+});
+
+test("calendar-level closures block manual placement and recurring regeneration", () => {
+  const initial = createPlanYearState(generateCalendarPlan(baseline));
+  const closed = addCalendarClosure(initial, "2027-01-27", "Staff development day");
+  const board = visiblePlanEvents(closed).find((event) => event.templateId === "full-board");
+  assert.ok(board);
+  assert.equal(applyManualEventMove(closed, board.id, "2027-01-27").proposal.valid, false);
+
+  const recurring = updateTemplateSchedule(closed, "critical-checkin", {
+    cadencePreset: "monthly",
+    annualCount: 12,
+    startMonth: 1,
+    ordinal: 4,
+    weekday: 3,
+  });
+  assert.equal(recurring.plan.events.some((event) => event.templateId === "critical-checkin" && event.date === "2027-01-27"), false);
+  assert.ok(recurring.plan.events.some((event) => event.templateId === "critical-checkin" && event.conflicts.some((conflict) => conflict.type === "automatic_move")));
+});
+
+test("ad hoc events are immediately visible, editable, and eligible for the calendar export", () => {
+  const initial = createPlanYearState(generateCalendarPlan(baseline));
+  const added = addAdHocEvent(initial, "2027-04-17", "Annual Gala");
+  assert.ok(visiblePlanEvents(added.state).some((event) => event.id === added.eventId));
+  const resolved = resolvePlanEvent(updateWorkingRule(added.state, added.templateId, {
+    startTime: "18:00",
+    durationMinutes: 180,
+    location: "Downtown Columbus",
+  }), added.eventId);
+  assert.equal(resolved.location, "Downtown Columbus");
+  assert.ok(confirmedCalendarEvents(added.state).some((event) => event.id === added.eventId));
 });
