@@ -83,6 +83,12 @@ function formatName(template: MeetingTemplate): string {
   return template.name;
 }
 
+function countLabel(template: MeetingTemplate, count: number): string {
+  const name = formatName(template).toLowerCase();
+  if (count !== 1) return `${count} ${name}`;
+  return `${count} ${name.replace(/s$/, "")}`;
+}
+
 function timeValue(value: string | null): string {
   return value ?? "";
 }
@@ -161,7 +167,7 @@ export function PlanningCockpit({
   const historicalTotal = variants.reduce((sum, variant) => sum + variant.historical, 0);
   const plannedTotal = variants.reduce((sum, variant) => sum + variant.planned, 0);
   const variantSummary = variants
-    .map((variant) => `${variant.planned} ${formatName(variant.template).toLowerCase()}`)
+    .map((variant) => countLabel(variant.template, variant.planned))
     .join(", ");
   const overrides = groupEvents.filter((event) => {
     const overrideDate = state.eventOverrides[event.id]?.date;
@@ -225,15 +231,15 @@ export function PlanningCockpit({
           <div className="cockpit-title-row">
             <div>
               <p className="eyebrow">Meeting settings</p>
-              <h2>{groupLabel}</h2>
+              <h2>{groupLabel} — {plannedTotal} sessions per year</h2>
             </div>
             <span className={`group-color ${groupTemplates[0]?.category ?? "board"}`} aria-hidden="true" />
           </div>
-          <p>{groupLabel} — {plannedTotal} sessions per year{variantSummary ? `: ${variantSummary}.` : "."}</p>
+          <p>{variantSummary ? `${variantSummary}.` : "No meetings planned."}</p>
         </section>
 
         <section className="quick-compare" aria-label="2026 and 2027 meeting counts">
-          <div><span>2026 actual</span><strong>{historicalTotal}</strong><small>{variants.map((variant) => `${variant.historical} ${formatName(variant.template).toLowerCase()}`).join(" · ")}</small></div>
+          <div><span>2026 actual</span><strong>{historicalTotal}</strong><small>{variants.map((variant) => countLabel(variant.template, variant.historical)).join(" · ")}</small></div>
           <div><span>2027 planned</span><strong>{plannedTotal}</strong><small>{variantSummary}</small></div>
         </section>
 

@@ -28,6 +28,27 @@ const MONTHS = [
 ];
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
+const CALENDAR_LABELS: Record<string, string> = {
+  "full-board": "BOARD",
+  "board-retreat": "RETREAT",
+  "critical-checkin": "CHECK-IN",
+  "executive-committee": "EXEC CMTE",
+  "finance-committee": "FINANCE",
+  "health-programs": "PROGRAMS",
+  "talent-risk": "TALENT/RISK",
+  "board-orientation": "ORIENT",
+  "executive-team": "EXEC TEAM",
+  "executive-retreat": "EXEC RETREAT",
+  "leadership-team": "LEADERSHIP",
+  "leadership-retreat": "LEAD RETREAT",
+  "all-staff": "ALL STAFF",
+  "program-briefing": "PROGRAM BRIEF",
+  "supervisory-team": "SUPERVISORS",
+  operations: "OPERATIONS",
+  bvr: "BVR",
+  "internal-risk": "RISK",
+};
+
 function dateParts(date: string) {
   const [year, month, day] = date.split("-").map(Number);
   return { year, month, day };
@@ -147,7 +168,7 @@ function MonthCard({
                 {dayEvents.slice(0, 3).map((event) => (
                   <button
                     type="button"
-                    className={`meeting-dot ${event.category} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
+                    className={`meeting-chip ${event.category} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
                     key={event.id}
                     draggable={!isEventLocked(state, event)}
                     onDragStart={(dragEvent) => {
@@ -163,12 +184,14 @@ function MonthCard({
                     }}
                     aria-label={`${event.title} on ${event.date}`}
                     title={`${event.title} · ${event.date}${event.locked ? " · confirmed anchor" : " · drag or click to adjust"}`}
-                  />
+                  >
+                    {CALENDAR_LABELS[event.templateId] ?? event.abbreviation}
+                  </button>
                 ))}
                 {dayImported.slice(0, 2).map((event) => (
                   <button
                     type="button"
-                    className="meeting-dot outlook confirmed regular"
+                    className="meeting-chip outlook confirmed regular"
                     key={event.id}
                     onClick={(clickEvent) => {
                       clickEvent.stopPropagation();
@@ -176,7 +199,9 @@ function MonthCard({
                     }}
                     title={`${event.title} — imported from ${event.sourceLabel}`}
                     aria-label={`${event.title} imported from Outlook`}
-                  />
+                  >
+                    OUTLOOK
+                  </button>
                 ))}
                 {dayEvents.length + dayImported.length > 5 && (
                   <span className="more-events">+{dayEvents.length + dayImported.length - 5}</span>
@@ -235,9 +260,9 @@ export function PlanYearCalendar({
             <span><i className="legend-dot outlook" />Outlook</span>
           </div>
           <div className="legend-status">
-            <span><i className="legend-state working" />Working</span>
-            <span><i className="legend-state confirmed" />Confirmed</span>
-            <span><i className="legend-state override" />Override</span>
+            <span><i className="legend-state working">Aa</i>Working</span>
+            <span><i className="legend-state confirmed">Aa</i>Confirmed</span>
+            <span><i className="legend-state override">Aa</i>Override</span>
           </div>
         </div>
       </div>
@@ -248,7 +273,7 @@ export function PlanYearCalendar({
         <span>
           {moveModeEventId
             ? "Choose a destination day on the calendar."
-            : moveNotice?.message ?? "Drag a meeting dot to another day."}
+            : moveNotice?.message ?? "Drag a meeting label to another day."}
         </span>
         {selectedCanMove && (
           <button

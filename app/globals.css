@@ -275,9 +275,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .legend-dot.organization { background: var(--organization); }
 .legend-dot.outlook { background: var(--outlook); }
 .legend-status { padding-top: 6px; border-top: 1px solid #e9edeb; }
-.legend-state { display: inline-block; width: 9px; height: 9px; border: 2px solid var(--board); border-radius: 50%; background: white; }
-.legend-state.confirmed { background: var(--board); }
-.legend-state.override { background: var(--board); box-shadow: 0 0 0 2px white, 0 0 0 3px var(--board); }
+.legend-state { display: grid; place-items: center; width: 22px; height: 13px; border: 1px solid var(--board); border-radius: 4px; background: white; color: var(--board); font-size: .38rem; font-style: normal; font-weight: 900; line-height: 1; }
+.legend-state.confirmed { background: var(--board); color: white; }
+.legend-state.override { background: var(--board); color: white; box-shadow: 0 0 0 2px white, 0 0 0 3px var(--board); }
 .calendar-move-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 42px; padding: 8px 18px; border-bottom: 1px solid var(--line); background: #f8faf8; color: var(--muted); font-size: .71rem; }
 .calendar-move-bar button { padding: 5px 8px; border: 1px solid var(--line-dark); border-radius: 7px; background: white; color: var(--committee); font-size: .66rem; font-weight: 800; cursor: pointer; }
 .calendar-move-bar button.active { border-color: var(--committee); background: var(--blue-soft); }
@@ -290,7 +290,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .month-header span { color: var(--muted); font-size: .58rem; }
 .weekday-row, .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
 .weekday-row { padding: 5px 4px 3px; color: #879397; font-size: .53rem; font-weight: 800; text-align: center; }
-.day-cell { position: relative; min-height: 46px; padding: 4px; border-top: 1px solid #edf1ee; border-right: 1px solid #edf1ee; background: white; }
+.day-cell { position: relative; min-height: 54px; padding: 4px; border-top: 1px solid #edf1ee; border-right: 1px solid #edf1ee; background: white; }
 .day-cell:nth-child(7n) { border-right: 0; }
 .day-cell.outside { background: #fbfbf8; }
 .day-cell.holiday { background: repeating-linear-gradient(135deg, #f5eee8, #f5eee8 5px, #faf7f2 5px, #faf7f2 10px); }
@@ -300,34 +300,42 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .day-number { display: block; color: #5f7076; font-size: .57rem; line-height: 1; }
 .holiday-marker { display: block; margin-top: 2px; color: var(--red); font-size: .45rem; font-weight: 850; text-transform: uppercase; }
 .holiday-marker.projected_lss { color: var(--amber); }
-.day-events { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-.meeting-dot {
+.day-events { display: grid; gap: 3px; margin-top: 4px; }
+.meeting-chip {
   position: relative;
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  flex: 0 0 auto;
-  padding: 0;
-  border: 2px solid currentColor;
-  border-radius: 50%;
-  background: transparent;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 15px;
+  padding: 2px 3px;
+  overflow: hidden;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: white;
   color: var(--board);
+  font-size: .43rem;
+  font-weight: 900;
+  letter-spacing: .015em;
+  line-height: 1.08;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: grab;
   -webkit-user-drag: element;
 }
-.meeting-dot.board { color: var(--board); }
-.meeting-dot.committee { color: var(--committee); }
-.meeting-dot.executive { color: var(--executive); }
-.meeting-dot.organization { color: var(--organization); }
-.meeting-dot.outlook { color: var(--outlook); }
-.meeting-dot.confirmed { background: currentColor; }
-.meeting-dot.unconfirmed { background: white; }
-.meeting-dot.retreat { width: 15px; height: 15px; border-width: 3px; border-radius: 4px; }
-.meeting-dot.override { box-shadow: 0 0 0 2px white, 0 0 0 3px currentColor; }
-.meeting-dot.locked { cursor: default; opacity: .62; }
-.meeting-dot.selected { box-shadow: 0 0 0 3px white, 0 0 0 5px #d39a27; z-index: 2; }
-.meeting-dot.override.selected { box-shadow: 0 0 0 3px white, 0 0 0 5px #d39a27; }
-.meeting-dot:active { cursor: grabbing; }
+.meeting-chip.board { color: var(--board); }
+.meeting-chip.committee { color: var(--committee); }
+.meeting-chip.executive { color: var(--executive); }
+.meeting-chip.organization { color: var(--organization); }
+.meeting-chip.outlook { color: var(--outlook); }
+.meeting-chip.confirmed { background: currentColor; color: white; }
+.meeting-chip.unconfirmed { background: white; }
+.meeting-chip.retreat { min-height: 18px; border-width: 2px; }
+.meeting-chip.override { box-shadow: 0 0 0 2px white, 0 0 0 3px currentColor; }
+.meeting-chip.locked { cursor: default; opacity: .66; }
+.meeting-chip.selected { box-shadow: 0 0 0 2px white, 0 0 0 4px #d39a27; z-index: 2; }
+.meeting-chip.override.selected { box-shadow: 0 0 0 2px white, 0 0 0 4px #d39a27; }
+.meeting-chip:active { cursor: grabbing; }
 .event-chip { width: 100%; min-width: 0; padding: 2px 3px; overflow: hidden; border: 0; border-radius: 4px; color: white; font-size: .48rem; font-weight: 850; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; cursor: grab; -webkit-user-drag: element; }
 .event-chip:active { cursor: grabbing; }
 .event-chip.board { background: var(--board); }
