@@ -169,7 +169,7 @@ function MonthCard({
           const dayEvents = realEvents.filter((event) => event.date === isoDate);
           const dayImported = importedEvents.filter((event) => event.date === isoDate);
           const holiday = holidays.find((item) => item.date === isoDate);
-          const closure = state.calendarClosures.find((item) => item.date === isoDate);
+          const closure = (state.calendarClosures ?? []).find((item) => item.date === isoDate);
           return (
             <div
               className={`day-cell${holiday ? " holiday" : ""}${closure ? " closure" : ""}${draggingEventId || moveModeEventId ? holiday || closure ? " drop-blocked" : " drop-ready" : ""}`}

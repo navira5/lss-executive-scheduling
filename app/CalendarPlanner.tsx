@@ -37,20 +37,29 @@ import {
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
-const STORAGE_KEY = "lss-plan-year-2027-v5";
+const STORAGE_KEY = "lss-plan-year-2027-v6";
 const DEFAULT_SETTINGS: ScenarioSettings = {
   boardScenario: "recent_direction",
   allStaffPattern: "detailed_calendar",
 };
 
 interface StoredPlanYear {
-  version: 5;
+  version: 6;
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
 }
 
 function initialState(settings: ScenarioSettings = DEFAULT_SETTINGS): PlanYearState {
   return createPlanYearState(generateCalendarPlan(settings));
+}
+
+function normalizeStoredState(state: PlanYearState): PlanYearState {
+  return {
+    ...state,
+    customTemplates: state.customTemplates ?? [],
+    calendarClosures: state.calendarClosures ?? [],
+    approvedTemplateIds: state.approvedTemplateIds ?? [],
+  };
 }
 
 function download(filename: string, contents: string) {
@@ -87,9 +96,9 @@ export function CalendarPlanner() {
     if (saved) {
       try {
         const stored = JSON.parse(saved) as StoredPlanYear;
-        if (stored.version === 5 && stored.state?.plan?.year === 2027) {
+        if (stored.version === 6 && stored.state?.plan?.year === 2027) {
           queueMicrotask(() => {
-            setState(stored.state);
+            setState(normalizeStoredState(stored.state));
             setImportedEvents(stored.importedEvents ?? []);
           });
         }
@@ -102,7 +111,7 @@ export function CalendarPlanner() {
 
   useEffect(() => {
     if (!loaded) return;
-    const stored: StoredPlanYear = { version: 5, state, importedEvents };
+    const stored: StoredPlanYear = { version: 6, state, importedEvents };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   }, [state, importedEvents, loaded]);
 

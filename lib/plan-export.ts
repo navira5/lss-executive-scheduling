@@ -13,7 +13,7 @@ export function confirmedCalendarEvents(state: PlanYearState): ResolvedPlanEvent
       !event.isPlaceholder &&
       !state.hiddenEventIds.includes(event.id) &&
       isEventConfirmed(state, event) &&
-      (event.ruleStatus !== "open_question" || state.approvedTemplateIds.includes(event.templateId)) &&
+      (event.ruleStatus !== "open_question" || (state.approvedTemplateIds ?? []).includes(event.templateId)) &&
       !event.conflicts.some((conflict) => conflict.severity === "blocked"),
     )
     .map((event) => resolvePlanEvent(state, event.id))
@@ -171,7 +171,7 @@ export async function downloadPlanPdf(
   for (let month = 1; month <= 12; month += 1) {
     const planned = allEvents.filter((event) => Number(event.date.slice(5, 7)) === month);
     const imported = importedEvents.filter((event) => Number(event.date.slice(5, 7)) === month);
-    const closures = state.calendarClosures.filter((closure) => Number(closure.date.slice(5, 7)) === month);
+    const closures = (state.calendarClosures ?? []).filter((closure) => Number(closure.date.slice(5, 7)) === month);
     if (!planned.length && !imported.length && !closures.length) continue;
     ensure(34 + (planned.length + imported.length + closures.length) * 28);
     pdf.setFont("helvetica", "bold");
@@ -229,7 +229,7 @@ export async function downloadPlanPdf(
     const events = state.plan.events.filter((event) => event.templateId === template.id && !event.isPlaceholder);
     return events.length === 0 ||
       events.some((event) => !isEventConfirmed(state, event)) ||
-      (template.ruleStatus === "open_question" && !state.approvedTemplateIds.includes(template.id));
+      (template.ruleStatus === "open_question" && !(state.approvedTemplateIds ?? []).includes(template.id));
   });
   if (unresolvedTemplates.length) {
     ensure(44);

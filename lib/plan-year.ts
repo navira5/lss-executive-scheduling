@@ -281,7 +281,7 @@ export function createPlanYearState(plan: CalendarPlan): PlanYearState {
 }
 
 export function meetingTemplatesForState(state: PlanYearState): MeetingTemplate[] {
-  return [...buildMeetingTemplates(state.plan.settings), ...state.customTemplates];
+  return [...buildMeetingTemplates(state.plan.settings), ...(state.customTemplates ?? [])];
 }
 
 export function addCommitteeMeetingGroup(
@@ -336,7 +336,7 @@ export function addCommitteeMeetingGroup(
     templateId,
     state: {
       ...state,
-      customTemplates: [...state.customTemplates, template],
+      customTemplates: [...(state.customTemplates ?? []), template],
       workingRules: {
         ...state.workingRules,
         [templateId]: { attendees: input.attendees.length ? input.attendees : [name] },
@@ -359,10 +359,10 @@ export function addCalendarClosure(
   if (meetings.length) {
     throw new Error(`Move ${meetings.length} meeting${meetings.length === 1 ? "" : "s"} off this date before closing it.`);
   }
-  if (state.calendarClosures.some((closure) => closure.date === date)) return state;
+  if ((state.calendarClosures ?? []).some((closure) => closure.date === date)) return state;
   return {
     ...state,
-    calendarClosures: [...state.calendarClosures, {
+    calendarClosures: [...(state.calendarClosures ?? []), {
       id: `closure-${date}`,
       date,
       label: label.trim() || "LSS closure",
@@ -371,7 +371,7 @@ export function addCalendarClosure(
 }
 
 export function removeCalendarClosure(state: PlanYearState, date: string): PlanYearState {
-  return { ...state, calendarClosures: state.calendarClosures.filter((closure) => closure.date !== date) };
+  return { ...state, calendarClosures: (state.calendarClosures ?? []).filter((closure) => closure.date !== date) };
 }
 
 export function addAdHocEvent(
@@ -382,10 +382,10 @@ export function addAdHocEvent(
   const cleanTitle = title.trim();
   if (!cleanTitle) throw new Error("Event name is required.");
   const blocked = state.plan.holidays.find((holiday) => holiday.date === date && holiday.status === "verified_federal")
-    ?? state.calendarClosures.find((closure) => closure.date === date);
+    ?? (state.calendarClosures ?? []).find((closure) => closure.date === date);
   if (blocked) throw new Error(`${"name" in blocked ? blocked.name : blocked.label} is closed to meetings.`);
   const slug = cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32) || "event";
-  const templateId = `ad-hoc-${date}-${slug}-${state.customTemplates.filter((template) => template.id.startsWith(`ad-hoc-${date}-`)).length + 1}`;
+  const templateId = `ad-hoc-${date}-${slug}-${(state.customTemplates ?? []).filter((template) => template.id.startsWith(`ad-hoc-${date}-`)).length + 1}`;
   const template: MeetingTemplate = {
     id: templateId,
     abbreviation: cleanTitle.split(/\s+/).map((word) => word[0]).join("").slice(0, 7).toUpperCase(),
@@ -412,7 +412,7 @@ export function addAdHocEvent(
     eventId: event.id,
     state: {
       ...state,
-      customTemplates: [...state.customTemplates, template],
+      customTemplates: [...(state.customTemplates ?? []), template],
       plan: { ...state.plan, events: [...state.plan.events, event].sort((left, right) => left.date.localeCompare(right.date)) },
       workingRules: { ...state.workingRules, [templateId]: { annualCount: 1, cadencePreset: "custom", cadence: "One-time 2027 event" } },
     },
@@ -474,7 +474,7 @@ export function confirmActivePhase(state: PlanYearState): PlanYearState {
 function templateIdsForPhase(phase: PlanPhase, state?: PlanYearState): Set<string> {
   const ids = PLAN_STEPS[phase].flatMap((step) => step.templateIds);
   if (phase === "committee" && state) {
-    ids.push(...state.customTemplates.filter((template) => template.category === "committee").map((template) => template.id));
+    ids.push(...(state.customTemplates ?? []).filter((template) => template.category === "committee").map((template) => template.id));
   }
   return new Set(ids);
 }
@@ -512,7 +512,7 @@ function eventById(state: PlanYearState, eventId: string): ProposedEvent {
 }
 
 function phaseForTemplate(templateId: string, state?: PlanYearState): PlanPhase | null {
-  const customTemplate = state?.customTemplates.find((template) => template.id === templateId);
+  const customTemplate = state?.customTemplates?.find((template) => template.id === templateId);
   if (customTemplate?.category === "committee") return "committee";
   for (const phase of PHASE_ORDER) {
     if (PLAN_STEPS[phase].some((step) => step.templateIds.includes(templateId))) {
@@ -690,8 +690,8 @@ export function updateWorkingRule(
 }
 
 export function approveTemplateForPlan(state: PlanYearState, templateId: string): PlanYearState {
-  if (state.approvedTemplateIds.includes(templateId)) return state;
-  return { ...state, approvedTemplateIds: [...state.approvedTemplateIds, templateId] };
+  if ((state.approvedTemplateIds ?? []).includes(templateId)) return state;
+  return { ...state, approvedTemplateIds: [...(state.approvedTemplateIds ?? []), templateId] };
 }
 
 const CADENCE_COUNTS: Record<Exclude<CadencePreset, "custom">, number> = {
@@ -730,7 +730,7 @@ function nextDateOutsideClosures(state: PlanYearState, date: string): string | n
     const federalHoliday = state.plan.holidays.some(
       (holiday) => holiday.date === candidate && holiday.status === "verified_federal",
     );
-    if (weekday !== 0 && weekday !== 6 && !federalHoliday && !state.calendarClosures.some((closure) => closure.date === candidate)) {
+    if (weekday !== 0 && weekday !== 6 && !federalHoliday && !(state.calendarClosures ?? []).some((closure) => closure.date === candidate)) {
       return candidate;
     }
   }
@@ -742,7 +742,7 @@ function moveGeneratedEventsOffClosures(
   events: ProposedEvent[],
 ): ProposedEvent[] {
   return events.map((event) => {
-    const closure = state.calendarClosures.find((item) => item.date === event.date);
+    const closure = (state.calendarClosures ?? []).find((item) => item.date === event.date);
     if (!closure) return event;
     const alternative = nextDateOutsideClosures(state, event.date);
     if (!alternative) return {
@@ -971,7 +971,7 @@ export function proposeEventMove(
       changes: [],
     };
   }
-  const closure = state.calendarClosures.find((item) => item.date === date);
+  const closure = (state.calendarClosures ?? []).find((item) => item.date === date);
   if (closure) {
     return {
       valid: false,

@@ -251,7 +251,7 @@ export function PlanningCockpit({
   const showFinanceQuestion = group.id === "finance-committee" && financeLeadDays === undefined && !financeQuestionDismissed;
   const showFinanceRisk = ["finance-committee", "full-board"].includes(group.id) && financeLeadRisks.length > 0;
   const openQuestionTemplate = groupTemplates.find(
-    (template) => template.ruleStatus === "open_question" && !state.approvedTemplateIds.includes(template.id),
+    (template) => template.ruleStatus === "open_question" && !(state.approvedTemplateIds ?? []).includes(template.id),
   );
   const showPlanApproval = Boolean(openQuestionTemplate && plannedTotal > 0);
   const prompt = !editingAllowed
@@ -273,7 +273,7 @@ export function PlanningCockpit({
       : "";
   const phaseEvents = state.plan.events.filter((event) => {
     const phaseTemplateIds = new Set(state.phaseSteps.flatMap((step) => step.templateIds));
-    const belongsToCustomCommittee = state.activePhase === "committee" && state.customTemplates.some((template) => template.id === event.templateId);
+    const belongsToCustomCommittee = state.activePhase === "committee" && (state.customTemplates ?? []).some((template) => template.id === event.templateId);
     return (phaseTemplateIds.has(event.templateId) || belongsToCustomCommittee) && !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder;
   });
   const phaseSummary = state.activePhase === "board"
