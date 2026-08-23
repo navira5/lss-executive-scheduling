@@ -50,6 +50,14 @@ function modelProposal(value: unknown): AgentProposal {
         exactTitle: typeof source.exactTitle === "string" ? source.exactTitle : "matching meetings",
         patch: compactPatch(source.patch),
       };
+    case "configure_board":
+      return {
+        kind: "configure_board",
+        boardScenario: source.boardScenario === "recent_direction"
+          ? "recent_direction"
+          : "continuity",
+        weekday: typeof source.weekday === "number" ? source.weekday : null,
+      };
     case "regenerate_layer":
       return { kind: "regenerate_layer" };
     case "clear_layer":

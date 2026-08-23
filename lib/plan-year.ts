@@ -1,4 +1,5 @@
-import type { CalendarPlan, ProposedEvent } from "@/lib/types";
+import { generateCalendarPlan } from "@/lib/scheduling";
+import type { CalendarPlan, ProposedEvent, ScenarioSettings } from "@/lib/types";
 
 export type PlanPhase = "board" | "executive" | "organization" | "review";
 
@@ -69,6 +70,7 @@ export interface PlanChangeProposal {
   summary: string;
   reason?: string;
   changes: ProposedPlanChange[];
+  settingsPatch?: Partial<ScenarioSettings>;
 }
 
 export const PHASE_LABELS: Record<PlanPhase, string> = {
@@ -520,9 +522,14 @@ export function applyPlanProposal(
   proposal: PlanChangeProposal,
 ): PlanYearState {
   if (!proposal.valid) throw new Error(proposal.reason ?? "The proposal is invalid.");
+  const baseState = proposal.settingsPatch
+    ? createPlanYearState(
+        generateCalendarPlan({ ...state.plan.settings, ...proposal.settingsPatch }),
+      )
+    : state;
   return proposal.changes.reduce(
     (current, change) => updateEvent(current, change.eventId, change.patch),
-    state,
+    baseState,
   );
 }
 

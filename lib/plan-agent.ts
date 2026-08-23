@@ -1,13 +1,17 @@
 import { buildMeetingTemplates } from "@/data/source-data";
 import {
+  createPlanYearState,
   isEventLocked,
   proposeEventMove,
   resolvePlanEvent,
+  visiblePlanEvents,
   type PlanChangeProposal,
   type PlanEventOverride,
   type PlanYearState,
   type WorkingMeetingRule,
 } from "@/lib/plan-year";
+import { generateCalendarPlan } from "@/lib/scheduling";
+import type { ScenarioSettings } from "@/lib/types";
 
 export interface AgentEventContext {
   id: string;
@@ -36,6 +40,7 @@ export interface PlanAgentContext {
   activeStepId: string;
   activeStepLabel: string;
   question: string;
+  boardScenario: ScenarioSettings["boardScenario"];
   rules: AgentRuleContext[];
   events: AgentEventContext[];
   holidays: { date: string; name: string; status: string }[];
@@ -58,6 +63,11 @@ export type AgentProposal =
       kind: "update_rule";
       templateId: string;
       patch: WorkingMeetingRule;
+    }
+  | {
+      kind: "configure_board";
+      boardScenario: ScenarioSettings["boardScenario"];
+      weekday: number | null;
     }
   | { kind: "regenerate_layer" }
   | { kind: "clear_layer" }
@@ -94,6 +104,7 @@ export function buildAgentContext(state: PlanYearState): PlanAgentContext {
     activeStepId: activeStep.id,
     activeStepLabel: activeStep.label,
     question: activeStep.question,
+    boardScenario: state.plan.settings.boardScenario,
     rules: templates.map((template) => ({
       templateId: template.id,
       name: template.name,
@@ -132,6 +143,35 @@ export function interpretDemoRequest(
   context: PlanAgentContext,
 ): AgentProposal {
   const normalized = request.toLowerCase();
+  const weekdayNames = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
+  const requestedWeekday = weekdayNames.findIndex((day) =>
+    new RegExp(`\\b${day}s?\\b`).test(normalized),
+  );
+  const recentBoardDirection =
+    normalized.includes("four regular") &&
+    normalized.includes("two") &&
+    normalized.includes("retreat");
+  if (
+    context.activePhase === "board" &&
+    context.activeStepId === "board-calendar" &&
+    (requestedWeekday >= 0 || recentBoardDirection)
+  ) {
+    return {
+      kind: "configure_board",
+      boardScenario: recentBoardDirection
+        ? "recent_direction"
+        : context.boardScenario,
+      weekday: requestedWeekday >= 0 ? requestedWeekday : null,
+    };
+  }
   const checkIns = context.events.filter(
     (event) => event.templateId === "critical-checkin" && !event.locked,
   );
@@ -192,6 +232,54 @@ export function validateAgentProposal(
           ...(proposal.startTime ? { startTime: proposal.startTime } : {}),
         },
       })),
+    };
+  }
+  if (proposal.kind === "configure_board") {
+    if (state.activePhase !== "board" || state.activeStepId !== "board-calendar") {
+      return {
+        valid: false,
+        summary: "The Board structure can only be changed in the Board calendar step.",
+        reason: "Reopen the Board calendar step before changing its structure.",
+        changes: [],
+      };
+    }
+    const targetState = createPlanYearState(
+      generateCalendarPlan({
+        ...state.plan.settings,
+        boardScenario: proposal.boardScenario,
+      }),
+    );
+    const boardTemplateIds = new Set(
+      targetState.phaseSteps[targetState.activeStepIndex].templateIds,
+    );
+    const boardEvents = visiblePlanEvents(targetState).filter((event) =>
+      boardTemplateIds.has(event.templateId),
+    );
+    const changes: PlanChangeProposal["changes"] = [];
+    if (proposal.weekday !== null) {
+      for (const event of boardEvents) {
+          const source = new Date(`${event.date}T12:00:00Z`);
+          let offset = proposal.weekday - source.getUTCDay();
+          if (offset > 3) offset -= 7;
+          if (offset < -3) offset += 7;
+          source.setUTCDate(source.getUTCDate() + offset);
+          const date = source.toISOString().slice(0, 10);
+          const move = proposeEventMove(targetState, event.id, date);
+          if (!move.valid) return move;
+          changes.push(...move.changes);
+      }
+    }
+    const weekdayLabel = proposal.weekday === null
+      ? "their generated weekdays"
+      : ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"][proposal.weekday];
+    const structureLabel = proposal.boardScenario === "recent_direction"
+      ? "four regular Board meetings, two longer retreats, and six check-ins"
+      : "the 2026-continuity Board structure";
+    return {
+      valid: true,
+      summary: `Use ${structureLabel} and place the active Board layer on ${weekdayLabel}.`,
+      settingsPatch: { boardScenario: proposal.boardScenario },
+      changes,
     };
   }
   if (proposal.kind === "bulk_update") {

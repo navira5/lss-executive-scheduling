@@ -225,6 +225,41 @@ test("interprets the golden Board check-in command without applying it", () => {
   assert.deepEqual(state.eventOverrides, {});
 });
 
+test("interprets a combined Board structure and weekday request", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const proposal = interpretDemoRequest(
+    "move all board meetings to Wednesdays. use four regular meetings and two longer retreats",
+    buildAgentContext(state),
+  );
+
+  assert.equal(proposal.kind, "configure_board");
+  if (proposal.kind !== "configure_board") return;
+  assert.equal(proposal.boardScenario, "recent_direction");
+  assert.equal(proposal.weekday, 3);
+
+  const validation = validateAgentProposal(state, proposal);
+  assert.equal(validation.valid, true);
+  assert.equal(validation.settingsPatch?.boardScenario, "recent_direction");
+  assert.equal(validation.changes.length, 12);
+
+  const applied = applyPlanProposal(state, validation);
+  const boardLayer = visiblePlanEvents(applied);
+  assert.equal(applied.plan.settings.boardScenario, "recent_direction");
+  assert.equal(boardLayer.filter((event) => event.templateId === "full-board").length, 4);
+  assert.equal(boardLayer.filter((event) => event.templateId === "board-retreat").length, 2);
+  assert.ok(
+    boardLayer.every(
+      (event) => new Date(`${resolvePlanEvent(applied, event.id).date}T12:00:00Z`).getUTCDay() === 3,
+    ),
+  );
+  assert.ok(
+    boardLayer.every(
+      (event) => resolvePlanEvent(applied, event.id).ruleStatus === "needs_validation",
+    ),
+  );
+  assert.deepEqual(applied.workingRules, {});
+});
+
 test("agent proposals cannot bypass federal-holiday validation", () => {
   const state = createPlanYearState(generateCalendarPlan(baseline));
   const event = visiblePlanEvents(state).find(

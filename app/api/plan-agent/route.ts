@@ -10,6 +10,7 @@ const proposalParameters = {
         "move",
         "bulk_update",
         "update_rule",
+        "configure_board",
         "regenerate_layer",
         "clear_layer",
         "clarify",
@@ -20,6 +21,11 @@ const proposalParameters = {
     exactTitle: { type: ["string", "null"] },
     date: { type: ["string", "null"] },
     templateId: { type: ["string", "null"] },
+    boardScenario: {
+      type: ["string", "null"],
+      enum: ["continuity", "recent_direction", null],
+    },
+    weekday: { type: ["number", "null"], minimum: 0, maximum: 6 },
     patch: {
       type: "object",
       additionalProperties: false,
@@ -49,6 +55,8 @@ const proposalParameters = {
     "exactTitle",
     "date",
     "templateId",
+    "boardScenario",
+    "weekday",
     "patch",
     "question",
     "explanation",
@@ -70,6 +78,8 @@ function sanitizeContext(value: unknown) {
     activeStepId: typeof source.activeStepId === "string" ? source.activeStepId : "",
     activeStepLabel: typeof source.activeStepLabel === "string" ? source.activeStepLabel : "",
     question: typeof source.question === "string" ? source.question : "",
+    boardScenario:
+      source.boardScenario === "recent_direction" ? "recent_direction" : "continuity",
     rules: rules.map((item) => {
       const rule = item && typeof item === "object" ? item as Record<string, unknown> : {};
       return {
