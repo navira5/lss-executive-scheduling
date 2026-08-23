@@ -161,7 +161,7 @@ function MonthCard({
                   className={`holiday-marker ${holiday.status}`}
                   title={`${holiday.name} — no meetings`}
                 >
-                  {holiday.status === "verified_federal" ? "Holiday" : "LSS?"}
+                  {holiday.name}
                 </span>
               )}
               <div className="day-events">

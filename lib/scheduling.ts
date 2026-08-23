@@ -303,6 +303,12 @@ function makeEvent(template: MeetingTemplate, date: string, index: number): Prop
   };
 }
 
+export function generateEventsForTemplate(template: MeetingTemplate): ProposedEvent[] {
+  return datesForRule(template.generation).map((date, index) =>
+    makeEvent(template, date, index),
+  );
+}
+
 function minutes(time: string | null): number | null {
   if (!time) return null;
   const [hour, minute] = time.split(":").map(Number);

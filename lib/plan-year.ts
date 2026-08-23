@@ -1,5 +1,12 @@
-import { generateCalendarPlan } from "@/lib/scheduling";
-import type { CalendarPlan, ProposedEvent, ScenarioSettings } from "@/lib/types";
+import { buildMeetingTemplates } from "@/data/source-data";
+import { generateCalendarPlan, generateEventsForTemplate } from "@/lib/scheduling";
+import type {
+  CalendarPlan,
+  GenerationRule,
+  MeetingTemplate,
+  ProposedEvent,
+  ScenarioSettings,
+} from "@/lib/types";
 
 export type PlanPhase = "board" | "executive" | "organization" | "review";
 
@@ -39,6 +46,8 @@ export interface PlanEventOverride {
 
 export interface WorkingMeetingRule {
   cadence?: string;
+  cadencePreset?: CadencePreset;
+  annualCount?: number;
   weekday?: number;
   owner?: string;
   startTime?: string | null;
@@ -52,6 +61,15 @@ export interface WorkingMeetingRule {
   messageTemplate?: string;
   note?: string;
 }
+
+export type CadencePreset =
+  | "weekly"
+  | "biweekly"
+  | "monthly"
+  | "every_other_month"
+  | "quarterly"
+  | "semiannual"
+  | "custom";
 
 export interface ResolvedPlanEvent extends ProposedEvent {
   title: string;
@@ -464,6 +482,142 @@ export function updateWorkingRule(
   return {
     ...state,
     workingRules: { ...state.workingRules, [templateId]: nextRule },
+  };
+}
+
+const CADENCE_COUNTS: Record<Exclude<CadencePreset, "custom">, number> = {
+  weekly: 52,
+  biweekly: 26,
+  monthly: 12,
+  every_other_month: 6,
+  quarterly: 4,
+  semiannual: 2,
+};
+
+const CADENCE_LABELS: Record<CadencePreset, string> = {
+  weekly: "Weekly",
+  biweekly: "Every two weeks",
+  monthly: "Monthly",
+  every_other_month: "Every other month",
+  quarterly: "Quarterly",
+  semiannual: "Every six months",
+  custom: "Custom annual count",
+};
+
+function monthsForCount(count: number): number[] {
+  if (count <= 0) return [];
+  return Array.from({ length: Math.min(count, 12) }, (_, index) =>
+    Math.min(12, Math.floor((index * 12) / count) + 1),
+  );
+}
+
+function dateSequence(count: number, weekday: number, everyDays?: number): string[] {
+  if (count <= 0) return [];
+  const first = new Date(Date.UTC(2027, 0, 1, 12));
+  while (first.getUTCDay() !== weekday) first.setUTCDate(first.getUTCDate() + 1);
+  const interval = everyDays ?? Math.max(1, Math.floor(365 / count));
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(first);
+    date.setUTCDate(date.getUTCDate() + index * interval);
+    return date.toISOString().slice(0, 10);
+  }).filter((date) => date.startsWith("2027-"));
+}
+
+function templateWeekday(template: MeetingTemplate, rule: WorkingMeetingRule): number {
+  if (rule.weekday !== undefined) return rule.weekday;
+  if ("weekday" in template.generation) return template.generation.weekday;
+  const first = template.generation.type === "fixed_dates"
+    ? template.generation.dates[0]
+    : null;
+  return first ? new Date(`${first}T12:00:00Z`).getUTCDay() : 2;
+}
+
+function scheduleGeneration(
+  template: MeetingTemplate,
+  preset: CadencePreset,
+  count: number,
+  weekday: number,
+): GenerationRule {
+  const ordinal = "ordinal" in template.generation ? template.generation.ordinal : 2;
+  if (preset === "weekly") {
+    return { type: "fixed_dates", dates: dateSequence(count, weekday, 7) };
+  }
+  if (preset === "biweekly") {
+    return { type: "fixed_dates", dates: dateSequence(count, weekday, 14) };
+  }
+  const months = preset === "monthly"
+    ? Array.from({ length: 12 }, (_, index) => index + 1)
+    : preset === "every_other_month"
+      ? [1, 3, 5, 7, 9, 11]
+      : preset === "quarterly"
+        ? [1, 4, 7, 10]
+        : preset === "semiannual"
+          ? [1, 7]
+          : monthsForCount(count);
+  if (count <= 12) {
+    return { type: "nth_weekday", months: months.slice(0, count), ordinal, weekday };
+  }
+  return { type: "fixed_dates", dates: dateSequence(count, weekday) };
+}
+
+export function updateTemplateSchedule(
+  state: PlanYearState,
+  templateId: string,
+  patch: { cadencePreset?: CadencePreset; annualCount?: number },
+): PlanYearState {
+  const template = buildMeetingTemplates(state.plan.settings).find(
+    (item) => item.id === templateId,
+  );
+  if (!template) throw new Error(`Meeting template ${templateId} was not found.`);
+  const currentEvents = state.plan.events.filter(
+    (event) => event.templateId === templateId && !event.isPlaceholder,
+  );
+  const currentRule = state.workingRules[templateId] ?? {};
+  const requestedPreset = patch.cadencePreset ?? currentRule.cadencePreset ?? "custom";
+  const canonicalCount = requestedPreset === "custom"
+    ? undefined
+    : CADENCE_COUNTS[requestedPreset];
+  const annualCount = Math.max(
+    1,
+    Math.min(52, patch.annualCount ?? canonicalCount ?? currentRule.annualCount ?? currentEvents.length),
+  );
+  const cadencePreset = patch.annualCount !== undefined && patch.cadencePreset === undefined
+    ? "custom"
+    : requestedPreset;
+  const weekday = templateWeekday(template, currentRule);
+  const generation = scheduleGeneration(template, cadencePreset, annualCount, weekday);
+  const generated = generateEventsForTemplate({
+    ...template,
+    generation,
+    cadence: CADENCE_LABELS[cadencePreset],
+    ...(currentRule.durationMinutes !== undefined
+      ? { durationMinutes: currentRule.durationMinutes }
+      : {}),
+    ...(currentRule.startTime !== undefined ? { startTime: currentRule.startTime } : {}),
+  });
+  const removedIds = new Set(
+    state.plan.events.filter((event) => event.templateId === templateId).map((event) => event.id),
+  );
+  const events = [
+    ...state.plan.events.filter((event) => event.templateId !== templateId),
+    ...generated,
+  ].sort((left, right) => left.date.localeCompare(right.date));
+  return {
+    ...state,
+    plan: { ...state.plan, events },
+    workingRules: {
+      ...state.workingRules,
+      [templateId]: {
+        ...currentRule,
+        cadencePreset,
+        annualCount: generated.length,
+        cadence: CADENCE_LABELS[cadencePreset],
+      },
+    },
+    eventOverrides: Object.fromEntries(
+      Object.entries(state.eventOverrides).filter(([eventId]) => !removedIds.has(eventId)),
+    ),
+    hiddenEventIds: state.hiddenEventIds.filter((eventId) => !removedIds.has(eventId)),
   };
 }
 

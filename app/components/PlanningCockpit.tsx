@@ -13,10 +13,11 @@ import {
   PLAN_STEPS,
   PHASE_LABELS,
   resolvePlanEvent,
+  type CadencePreset,
   type PlanYearState,
   type WorkingMeetingRule,
 } from "@/lib/plan-year";
-import type { MeetingTemplate, ScenarioSettings } from "@/lib/types";
+import type { MeetingTemplate } from "@/lib/types";
 
 const WEEKDAYS = [
   "Sunday",
@@ -26,6 +27,16 @@ const WEEKDAYS = [
   "Thursday",
   "Friday",
   "Saturday",
+];
+
+const CADENCE_OPTIONS: Array<{ value: CadencePreset; label: string; count?: number }> = [
+  { value: "weekly", label: "Weekly", count: 52 },
+  { value: "biweekly", label: "Every two weeks", count: 26 },
+  { value: "monthly", label: "Monthly", count: 12 },
+  { value: "every_other_month", label: "Every other month", count: 6 },
+  { value: "quarterly", label: "Quarterly", count: 4 },
+  { value: "semiannual", label: "Every six months", count: 2 },
+  { value: "custom", label: "Custom annual count" },
 ];
 
 export interface PendingCalendarMove {
@@ -76,6 +87,17 @@ function defaultWeekday(template: MeetingTemplate): number | null {
   return "weekday" in template.generation ? template.generation.weekday : null;
 }
 
+function defaultCadence(template: MeetingTemplate): CadencePreset {
+  if (template.generation.type === "weekly") return "weekly";
+  if (template.generation.type !== "nth_weekday") return "custom";
+  const months = template.generation.months.join(",");
+  if (months === "1,2,3,4,5,6,7,8,9,10,11,12") return "monthly";
+  if (months === "1,3,5,7,9,11" || months === "2,4,6,8,10,12") return "every_other_month";
+  if (months === "1,4,7,10") return "quarterly";
+  if (months === "1,7" || months === "5,11") return "semiannual";
+  return "custom";
+}
+
 function formatName(template: MeetingTemplate): string {
   if (template.id === "full-board") return "Regular meetings";
   if (template.id === "board-retreat") return "Retreats";
@@ -103,7 +125,10 @@ interface PlanningCockpitProps {
   canUndo: boolean;
   onRuleChange: (templateId: string, patch: WorkingMeetingRule) => void;
   onSharedAttendeesChange: (templateIds: string[], attendees: string[]) => void;
-  onBoardScenarioChange: (scenario: ScenarioSettings["boardScenario"]) => void;
+  onScheduleChange: (
+    templateId: string,
+    patch: { cadencePreset?: CadencePreset; annualCount?: number },
+  ) => void;
   onResolveMove: (choice: "rule" | "override") => void;
   onCancelMove: () => void;
   onApplyConversion: () => void;
@@ -123,7 +148,7 @@ export function PlanningCockpit({
   canUndo,
   onRuleChange,
   onSharedAttendeesChange,
-  onBoardScenarioChange,
+  onScheduleChange,
   onResolveMove,
   onCancelMove,
   onApplyConversion,
@@ -179,7 +204,7 @@ export function PlanningCockpit({
       step.templateIds.some((templateId) => group.templateIds.includes(templateId)),
     ),
   ) ?? state.activePhase;
-  const editingAllowed = groupEvents.some((event) => !event.locked);
+  const editingAllowed = groupPhase === state.activePhase;
   const activePhaseIndex = PHASE_ORDER.indexOf(state.activePhase);
   const downstreamConfirmed = state.confirmedPhases.some(
     (phase) => PHASE_ORDER.indexOf(phase) > activePhaseIndex,
@@ -246,7 +271,7 @@ export function PlanningCockpit({
         <section className="format-settings">
           {variants.map(({ template, planned, rule }) => {
             const weekday = rule.weekday ?? defaultWeekday(template);
-            const boardCountControl = group.id === "full-board";
+            const cadence = rule.cadencePreset ?? defaultCadence(template);
             return (
               <article className="format-row" key={template.id}>
                 <header>
@@ -255,20 +280,35 @@ export function PlanningCockpit({
                 </header>
                 <div className="setting-grid">
                   <label>
-                    <span>Count</span>
-                    {boardCountControl ? (
-                      <select
-                        disabled={!editingAllowed}
-                        value={planned}
-                        onChange={(event) => {
-                          const count = Number(event.target.value);
-                          const recent = template.id === "full-board" ? count === 4 : count === 2;
-                          onBoardScenarioChange(recent ? "recent_direction" : "continuity");
-                        }}
-                      >
-                        {template.id === "full-board" ? <><option value="5">5</option><option value="4">4</option></> : <><option value="1">1</option><option value="2">2</option></>}
-                      </select>
-                    ) : <output>{planned}</output>}
+                    <span>Annual count</span>
+                    <input
+                      disabled={!editingAllowed}
+                      type="number"
+                      min="1"
+                      max="52"
+                      value={planned}
+                      onChange={(event) => {
+                        if (event.target.value === "") return;
+                        onScheduleChange(template.id, { annualCount: Number(event.target.value) });
+                      }}
+                    />
+                  </label>
+                  <label className="cadence-control">
+                    <span>Cadence</span>
+                    <select
+                      disabled={!editingAllowed}
+                      value={cadence}
+                      onChange={(event) => {
+                        const cadencePreset = event.target.value as CadencePreset;
+                        const option = CADENCE_OPTIONS.find((item) => item.value === cadencePreset);
+                        onScheduleChange(template.id, {
+                          cadencePreset,
+                          ...(option?.count !== undefined ? { annualCount: option.count } : {}),
+                        });
+                      }}
+                    >
+                      {CADENCE_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
+                    </select>
                   </label>
                   <label><span>Duration</span><div className="input-with-unit"><input disabled={!editingAllowed} type="number" min="15" step="15" value={rule.durationMinutes ?? template.durationMinutes} onChange={(event) => onRuleChange(template.id, { durationMinutes: Number(event.target.value) })} /><i>min</i></div></label>
                   <label><span>Time</span><input disabled={!editingAllowed} type="time" value={timeValue(rule.startTime ?? template.startTime)} onChange={(event) => onRuleChange(template.id, { startTime: event.target.value || null })} /></label>

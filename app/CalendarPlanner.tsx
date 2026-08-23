@@ -19,8 +19,10 @@ import {
   PHASE_LABELS,
   PHASE_ORDER,
   resolvePlanEvent,
+  updateTemplateSchedule,
   updateWorkingRule,
   visiblePlanEvents,
+  type CadencePreset,
   type PlanChangeProposal,
   type PlanPhase,
   type PlanYearState,
@@ -93,28 +95,6 @@ function workingCsv(state: PlanYearState, importedEvents: ImportedCalendarEvent[
     ...rows,
     ...imported,
   ].map((row) => row.map(csvCell).join(",")).join("\n");
-}
-
-function scenarioState(
-  current: PlanYearState,
-  boardScenario: ScenarioSettings["boardScenario"],
-): PlanYearState {
-  const generated = createPlanYearState(
-    generateCalendarPlan({ ...current.plan.settings, boardScenario }),
-  );
-  const validIds = new Set(generated.plan.events.map((event) => event.id));
-  return navigateToPhase(
-    {
-      ...generated,
-      confirmedPhases: current.confirmedPhases,
-      workingRules: current.workingRules,
-      eventOverrides: Object.fromEntries(
-        Object.entries(current.eventOverrides).filter(([eventId]) => validIds.has(eventId)),
-      ),
-      hiddenEventIds: current.hiddenEventIds.filter((eventId) => validIds.has(eventId)),
-    },
-    current.activePhase,
-  );
 }
 
 function phaseTemplateIds(state: PlanYearState, phase: PlanPhase): Set<string> {
@@ -380,7 +360,10 @@ export function CalendarPlanner() {
             commitState(next);
             setCalendarMoveNotice({ valid: true, message: "Shared attendees updated for this meeting group." });
           }}
-          onBoardScenarioChange={(scenario) => commitState(scenarioState(state, scenario))}
+          onScheduleChange={(templateId, patch: { cadencePreset?: CadencePreset; annualCount?: number }) => {
+            commitState(updateTemplateSchedule(state, templateId, patch));
+            setCalendarMoveNotice({ valid: true, message: "Calendar regenerated from the updated cadence." });
+          }}
           onResolveMove={resolveMove}
           onCancelMove={() => setPendingMove(null)}
           onApplyConversion={applyConversion}

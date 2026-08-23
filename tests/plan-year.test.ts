@@ -20,6 +20,7 @@ import {
   reopenPhase,
   resolvePlanEvent,
   updateEvent,
+  updateTemplateSchedule,
   updateWorkingRule,
   visiblePlanEvents,
 } from "@/lib/plan-year";
@@ -223,6 +224,38 @@ test("a working weekday rule regenerates the group without becoming a 2027 overr
   assert.ok(
     boardMeetings.every((event) => resolvePlanEvent(updated, event.id).ruleStatus === "needs_validation"),
   );
+});
+
+test("cadence and annual count regenerate actual meeting occurrences", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const everyOtherMonth = updateTemplateSchedule(state, "full-board", {
+    cadencePreset: "every_other_month",
+    annualCount: 6,
+  });
+  const recurring = everyOtherMonth.plan.events.filter(
+    (event) => event.templateId === "full-board",
+  );
+
+  assert.equal(recurring.length, 6);
+  assert.deepEqual(
+    recurring.map((event) => Number(event.date.slice(5, 7))),
+    [1, 3, 5, 7, 9, 11],
+  );
+  assert.equal(everyOtherMonth.workingRules["full-board"].annualCount, 6);
+  assert.equal(
+    everyOtherMonth.workingRules["full-board"].cadencePreset,
+    "every_other_month",
+  );
+  assert.deepEqual(everyOtherMonth.eventOverrides, {});
+
+  const custom = updateTemplateSchedule(everyOtherMonth, "full-board", {
+    annualCount: 8,
+  });
+  assert.equal(
+    custom.plan.events.filter((event) => event.templateId === "full-board").length,
+    8,
+  );
+  assert.equal(custom.workingRules["full-board"].cadencePreset, "custom");
 });
 
 test("interprets the golden Board check-in command without applying it", () => {

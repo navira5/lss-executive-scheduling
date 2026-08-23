@@ -37,6 +37,10 @@ test("server-renders the LSS annual planning workbench", async () => {
   assert.match(html, /2026 actual/);
   assert.match(html, /2027 planned/);
   assert.match(html, /Shared attendees/);
+  assert.match(html, /Annual count/);
+  assert.match(html, /Cadence/);
+  assert.match(html, /Every other month/);
+  assert.match(html, /Martin Luther King Jr\. Day/);
   assert.match(html, /meeting-chip board regular unconfirmed/);
   assert.doesNotMatch(html, /Ask the planning agent|Plan Year scheduling agent/);
   assert.doesNotMatch(html, /Discovery session|Decision Queue/);
