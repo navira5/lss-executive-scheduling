@@ -17,6 +17,55 @@ export interface PlanYearState {
   activeStepId: string;
   phaseSteps: PlanStep[];
   confirmedPhases: PlanPhase[];
+  eventOverrides: Record<string, PlanEventOverride>;
+  workingRules: Record<string, WorkingMeetingRule>;
+}
+
+export interface PlanEventOverride {
+  date?: string;
+  startTime?: string | null;
+  durationMinutes?: number;
+  title?: string;
+  message?: string;
+  location?: string;
+  modality?: string;
+  attendees?: string[];
+  distributionLists?: string[];
+}
+
+export interface WorkingMeetingRule {
+  cadence?: string;
+  owner?: string;
+  startTime?: string | null;
+  durationMinutes?: number;
+  location?: string;
+  modality?: string;
+  attendeeGroup?: string;
+  attendees?: string[];
+  distributionLists?: string[];
+  titleTemplate?: string;
+  messageTemplate?: string;
+  note?: string;
+}
+
+export interface ResolvedPlanEvent extends ProposedEvent {
+  title: string;
+  message: string;
+  attendees: string[];
+  distributionLists: string[];
+  locked: boolean;
+}
+
+export interface ProposedPlanChange {
+  eventId: string;
+  patch: PlanEventOverride;
+}
+
+export interface PlanChangeProposal {
+  valid: boolean;
+  summary: string;
+  reason?: string;
+  changes: ProposedPlanChange[];
 }
 
 export const PHASE_LABELS: Record<PlanPhase, string> = {
@@ -162,6 +211,8 @@ export function createPlanYearState(plan: CalendarPlan): PlanYearState {
     activePhase: "board",
     activeStepIndex: 0,
     confirmedPhases: [],
+    eventOverrides: {},
+    workingRules: {},
   });
 }
 
@@ -172,6 +223,8 @@ export function advancePlanStep(state: PlanYearState): PlanYearState {
     activePhase: state.activePhase,
     activeStepIndex: state.activeStepIndex + 1,
     confirmedPhases: state.confirmedPhases,
+    eventOverrides: state.eventOverrides,
+    workingRules: state.workingRules,
   });
 }
 
@@ -182,6 +235,8 @@ export function previousPlanStep(state: PlanYearState): PlanYearState {
     activePhase: state.activePhase,
     activeStepIndex: state.activeStepIndex - 1,
     confirmedPhases: state.confirmedPhases,
+    eventOverrides: state.eventOverrides,
+    workingRules: state.workingRules,
   });
 }
 
@@ -201,6 +256,8 @@ export function confirmActivePhase(state: PlanYearState): PlanYearState {
     activePhase: nextPhase,
     activeStepIndex: 0,
     confirmedPhases,
+    eventOverrides: state.eventOverrides,
+    workingRules: state.workingRules,
   });
 }
 
@@ -232,4 +289,135 @@ export function isEventLocked(
   event: ProposedEvent,
 ): boolean {
   return isConfirmedEvent(state, event);
+}
+
+function eventById(state: PlanYearState, eventId: string): ProposedEvent {
+  const event = state.plan.events.find((item) => item.id === eventId);
+  if (!event) throw new Error(`Meeting ${eventId} was not found.`);
+  return event;
+}
+
+function phaseForTemplate(templateId: string): PlanPhase | null {
+  for (const phase of PHASE_ORDER) {
+    if (PLAN_STEPS[phase].some((step) => step.templateIds.includes(templateId))) {
+      return phase;
+    }
+  }
+  return null;
+}
+
+export function resolvePlanEvent(
+  state: PlanYearState,
+  eventId: string,
+): ResolvedPlanEvent {
+  const event = eventById(state, eventId);
+  const override = state.eventOverrides[eventId] ?? {};
+  return {
+    ...event,
+    ...override,
+    title: override.title ?? event.name,
+    message: override.message ?? event.purpose,
+    attendees: override.attendees ?? [event.attendeeGroup],
+    distributionLists: override.distributionLists ?? [],
+    locked: isEventLocked(state, event),
+  };
+}
+
+export function updateEvent(
+  state: PlanYearState,
+  eventId: string,
+  patch: PlanEventOverride,
+): PlanYearState {
+  const event = eventById(state, eventId);
+  if (isEventLocked(state, event)) {
+    const phase = phaseForTemplate(event.templateId);
+    throw new Error(
+      `Reopen ${phase ? PHASE_LABELS[phase] : "the confirmed layer"} before editing this meeting.`,
+    );
+  }
+  return {
+    ...state,
+    eventOverrides: {
+      ...state.eventOverrides,
+      [eventId]: { ...state.eventOverrides[eventId], ...patch },
+    },
+  };
+}
+
+export interface BulkUpdateResult {
+  state: PlanYearState;
+  includedEventIds: string[];
+  excludedEventIds: string[];
+}
+
+export function bulkUpdateByExactTitle(
+  state: PlanYearState,
+  exactTitle: string,
+  patch: PlanEventOverride,
+): BulkUpdateResult {
+  const eligible = visiblePlanEvents(state).filter(
+    (event) => event.name === exactTitle || resolvePlanEvent(state, event.id).title === exactTitle,
+  );
+  const includedEventIds = eligible
+    .filter((event) => resolvePlanEvent(state, event.id).title === exactTitle)
+    .map((event) => event.id);
+  const excludedEventIds = eligible
+    .filter((event) => resolvePlanEvent(state, event.id).title !== exactTitle)
+    .map((event) => event.id);
+  let updated = state;
+  for (const eventId of includedEventIds) {
+    updated = updateEvent(updated, eventId, patch);
+  }
+  return { state: updated, includedEventIds, excludedEventIds };
+}
+
+export function proposeEventMove(
+  state: PlanYearState,
+  eventId: string,
+  date: string,
+): PlanChangeProposal {
+  const event = eventById(state, eventId);
+  if (isEventLocked(state, event)) {
+    return {
+      valid: false,
+      summary: "This meeting is in a confirmed layer.",
+      reason: "Reopen the confirmed layer before moving this meeting.",
+      changes: [],
+    };
+  }
+  if (!/^2027-\d{2}-\d{2}$/.test(date)) {
+    return {
+      valid: false,
+      summary: "The proposed date is outside the 2027 plan.",
+      reason: "Choose a valid date in calendar year 2027.",
+      changes: [],
+    };
+  }
+  const holiday = state.plan.holidays.find(
+    (item) => item.date === date && item.status === "verified_federal",
+  );
+  if (holiday) {
+    return {
+      valid: false,
+      summary: `${holiday.name} is unavailable.`,
+      reason: "A verified federal holiday is a hard stop.",
+      changes: [],
+    };
+  }
+  return {
+    valid: true,
+    summary: `Move ${resolvePlanEvent(state, eventId).title} to ${date}.`,
+    changes: [{ eventId, patch: { date } }],
+  };
+}
+
+export function applyPlanProposal(
+  state: PlanYearState,
+  proposal: PlanChangeProposal,
+): PlanYearState {
+  if (!proposal.valid) throw new Error(proposal.reason ?? "The proposal is invalid.");
+  return proposal.changes.reduce(
+    (current, change) => updateEvent(current, change.eventId, change.patch),
+    state,
+  );
 }
