@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { ImportedCalendarEvent } from "@/lib/calendar-import";
 import {
+  isEventConfirmed,
   isEventLocked,
   resolvePlanEvent,
   visiblePlanEvents,
@@ -47,6 +48,7 @@ interface MonthCardProps {
   state: PlanYearState;
   draggingEventId: string | null;
   moveModeEventId: string | null;
+  selectedEventId: string | null;
   onSelectEvent: (eventId: string) => void;
   onSelectImported: (eventId: string) => void;
   onMoveEvent: (eventId: string, date: string) => void;
@@ -61,6 +63,7 @@ function MonthCard({
   state,
   draggingEventId,
   moveModeEventId,
+  selectedEventId,
   onSelectEvent,
   onSelectImported,
   onMoveEvent,
@@ -144,7 +147,7 @@ function MonthCard({
                 {dayEvents.slice(0, 3).map((event) => (
                   <button
                     type="button"
-                    className={`event-chip ${event.category} status-${event.status}${event.locked ? " locked" : ""}`}
+                    className={`meeting-dot ${event.category} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
                     key={event.id}
                     draggable={!isEventLocked(state, event)}
                     onDragStart={(dragEvent) => {
@@ -158,24 +161,22 @@ function MonthCard({
                       clickEvent.stopPropagation();
                       onSelectEvent(event.id);
                     }}
-                    title={`${event.title}${event.locked ? " — confirmed anchor" : " — drag or click to adjust"}`}
-                  >
-                    {event.abbreviation}
-                  </button>
+                    aria-label={`${event.title} on ${event.date}`}
+                    title={`${event.title} · ${event.date}${event.locked ? " · confirmed anchor" : " · drag or click to adjust"}`}
+                  />
                 ))}
                 {dayImported.slice(0, 2).map((event) => (
                   <button
                     type="button"
-                    className="event-chip outlook"
+                    className="meeting-dot outlook confirmed regular"
                     key={event.id}
                     onClick={(clickEvent) => {
                       clickEvent.stopPropagation();
                       onSelectImported(event.id);
                     }}
                     title={`${event.title} — imported from ${event.sourceLabel}`}
-                  >
-                    OUT
-                  </button>
+                    aria-label={`${event.title} imported from Outlook`}
+                  />
                 ))}
                 {dayEvents.length + dayImported.length > 5 && (
                   <span className="more-events">+{dayEvents.length + dayImported.length - 5}</span>
@@ -223,14 +224,21 @@ export function PlanYearCalendar({
         <div>
           <p className="eyebrow">Year at a glance</p>
           <h2 id="calendar-heading">January–December 2027</h2>
-          <p>Only confirmed layers and the meeting group you are planning now are shown.</p>
+          <p>Confirmed layers remain visible while you shape the active layer.</p>
         </div>
         <div className="calendar-legend" aria-label="Calendar legend">
-          <span><i className="legend-dot board" />Board</span>
-          <span><i className="legend-dot committee" />Committee</span>
-          <span><i className="legend-dot executive" />Executive</span>
-          <span><i className="legend-dot organization" />Organization</span>
-          <span><i className="legend-dot outlook" />Existing Outlook</span>
+          <div className="legend-colors">
+            <span><i className="legend-dot board" />Board</span>
+            <span><i className="legend-dot committee" />Committee</span>
+            <span><i className="legend-dot executive" />Executive</span>
+            <span><i className="legend-dot organization" />Organization</span>
+            <span><i className="legend-dot outlook" />Outlook</span>
+          </div>
+          <div className="legend-status">
+            <span><i className="legend-state working" />Working</span>
+            <span><i className="legend-state confirmed" />Confirmed</span>
+            <span><i className="legend-state override" />Override</span>
+          </div>
         </div>
       </div>
       <div
@@ -240,7 +248,7 @@ export function PlanYearCalendar({
         <span>
           {moveModeEventId
             ? "Choose a destination day on the calendar."
-            : moveNotice?.message ?? "Drag an active meeting to another day."}
+            : moveNotice?.message ?? "Drag a meeting dot to another day."}
         </span>
         {selectedCanMove && (
           <button
@@ -267,6 +275,7 @@ export function PlanYearCalendar({
               state={state}
               draggingEventId={draggingEventId}
               moveModeEventId={moveModeEventId}
+              selectedEventId={selectedEventId}
               onSelectEvent={onSelectEvent}
               onSelectImported={onSelectImported}
               onMoveEvent={onMoveEvent}

@@ -2,52 +2,43 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { PlanYearAgent } from "@/app/components/PlanYearAgent";
 import { PlanYearCalendar } from "@/app/components/PlanYearCalendar";
 import {
-  PlanYearContext,
-  type ImportedDisposition,
-} from "@/app/components/PlanYearContext";
-import type {
-  CalendarImportResult,
-  ImportedCalendarEvent,
-} from "@/lib/calendar-import";
+  PlanningCockpit,
+  type PendingCalendarMove,
+  type PendingFormatConversion,
+} from "@/app/components/PlanningCockpit";
+import type { CalendarImportResult, ImportedCalendarEvent } from "@/lib/calendar-import";
 import {
-  advancePlanStep,
   applyManualEventMove,
   applyPlanProposal,
-  bulkUpdateByExactTitle,
-  clearActivePhase,
   confirmActivePhase,
   createPlanYearState,
+  navigateToPhase,
+  PLAN_STEPS,
   PHASE_LABELS,
   PHASE_ORDER,
-  proposeEventMove,
-  regenerateActivePhase,
-  reopenPhase,
   resolvePlanEvent,
   updateWorkingRule,
   visiblePlanEvents,
   type PlanChangeProposal,
-  type PlanEventOverride,
+  type PlanPhase,
   type PlanYearState,
   type WorkingMeetingRule,
 } from "@/lib/plan-year";
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
-const STORAGE_KEY = "lss-plan-year-2027-v1";
-const IMPORT_KEY = "lss-plan-year-outlook-v1";
+const STORAGE_KEY = "lss-plan-year-2027-v3";
 const DEFAULT_SETTINGS: ScenarioSettings = {
-  boardScenario: "continuity",
+  boardScenario: "recent_direction",
   allStaffPattern: "detailed_calendar",
 };
 
 interface StoredPlanYear {
-  version: 1;
+  version: 3;
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
-  importedDispositions: Record<string, ImportedDisposition>;
 }
 
 function initialState(settings: ScenarioSettings = DEFAULT_SETTINGS): PlanYearState {
@@ -72,17 +63,7 @@ function csvCell(value: unknown): string {
 }
 
 function workingCsv(state: PlanYearState, importedEvents: ImportedCalendarEvent[]): string {
-  const header = [
-    "Date",
-    "Time",
-    "Duration",
-    "Meeting",
-    "Category",
-    "Location",
-    "Attendees",
-    "Source",
-  ];
-  const planRows = state.plan.events
+  const rows = state.plan.events
     .filter((event) => !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder)
     .map((event) => {
       const resolved = resolvePlanEvent(state, event.id);
@@ -94,10 +75,10 @@ function workingCsv(state: PlanYearState, importedEvents: ImportedCalendarEvent[
         resolved.category,
         resolved.location,
         resolved.attendees.join("; "),
-        "Plan Year",
+        state.eventOverrides[event.id]?.date ? "2027 override" : "Plan Year rule",
       ];
     });
-  const importedRows = importedEvents.map((event) => [
+  const imported = importedEvents.map((event) => [
     event.date,
     event.startTime ?? "All day",
     event.durationMinutes,
@@ -107,24 +88,71 @@ function workingCsv(state: PlanYearState, importedEvents: ImportedCalendarEvent[
     event.attendees?.join("; ") ?? "",
     event.sourceLabel,
   ]);
-  return [header, ...planRows, ...importedRows]
-    .map((row) => row.map(csvCell).join(","))
-    .join("\n");
+  return [
+    ["Date", "Time", "Duration", "Meeting", "Category", "Location", "Attendees", "Source"],
+    ...rows,
+    ...imported,
+  ].map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+function scenarioState(
+  current: PlanYearState,
+  boardScenario: ScenarioSettings["boardScenario"],
+): PlanYearState {
+  const generated = createPlanYearState(
+    generateCalendarPlan({ ...current.plan.settings, boardScenario }),
+  );
+  const validIds = new Set(generated.plan.events.map((event) => event.id));
+  return navigateToPhase(
+    {
+      ...generated,
+      confirmedPhases: current.confirmedPhases,
+      workingRules: current.workingRules,
+      eventOverrides: Object.fromEntries(
+        Object.entries(current.eventOverrides).filter(([eventId]) => validIds.has(eventId)),
+      ),
+      hiddenEventIds: current.hiddenEventIds.filter((eventId) => validIds.has(eventId)),
+    },
+    current.activePhase,
+  );
+}
+
+function phaseTemplateIds(state: PlanYearState, phase: PlanPhase): Set<string> {
+  return new Set(PLAN_STEPS[phase].flatMap((step) => step.templateIds));
+}
+
+function ruleHolidayConflict(
+  state: PlanYearState,
+  templateId: string,
+  patch: WorkingMeetingRule,
+): { next: PlanYearState; message: string | null } {
+  const next = updateWorkingRule(state, templateId, patch);
+  if (patch.weekday === undefined) return { next, message: null };
+  const conflict = next.plan.events
+    .filter((event) => event.templateId === templateId && !event.isPlaceholder)
+    .map((event) => resolvePlanEvent(next, event.id))
+    .find((event) =>
+      next.plan.holidays.some(
+        (holiday) => holiday.status === "verified_federal" && holiday.date === event.date,
+      ),
+    );
+  if (!conflict) return { next, message: null };
+  const holiday = next.plan.holidays.find((item) => item.date === conflict.date);
+  return {
+    next: state,
+    message: `${conflict.title} would land on ${holiday?.name ?? "a federal holiday"}. Choose another preferred day.`,
+  };
 }
 
 export function CalendarPlanner() {
   const [state, setState] = useState<PlanYearState>(() => initialState());
+  const [history, setHistory] = useState<PlanYearState[]>([]);
   const [importedEvents, setImportedEvents] = useState<ImportedCalendarEvent[]>([]);
-  const [importedDispositions, setImportedDispositions] = useState<
-    Record<string, ImportedDisposition>
-  >({});
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedImportedId, setSelectedImportedId] = useState<string | null>(null);
-  const [pendingChange, setPendingChange] = useState<PlanChangeProposal | null>(null);
-  const [calendarMoveNotice, setCalendarMoveNotice] = useState<{
-    valid: boolean;
-    message: string;
-  } | null>(null);
+  const [selectedImportedEventId, setSelectedImportedEventId] = useState<string | null>(null);
+  const [pendingMove, setPendingMove] = useState<PendingCalendarMove | null>(null);
+  const [pendingConversion, setPendingConversion] = useState<PendingFormatConversion | null>(null);
+  const [calendarMoveNotice, setCalendarMoveNotice] = useState<{ valid: boolean; message: string } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -132,11 +160,10 @@ export function CalendarPlanner() {
     if (saved) {
       try {
         const stored = JSON.parse(saved) as StoredPlanYear;
-        if (stored.version === 1 && stored.state?.plan?.year === 2027) {
+        if (stored.version === 3 && stored.state?.plan?.year === 2027) {
           queueMicrotask(() => {
             setState(stored.state);
             setImportedEvents(stored.importedEvents ?? []);
-            setImportedDispositions(stored.importedDispositions ?? {});
           });
         }
       } catch {
@@ -148,90 +175,98 @@ export function CalendarPlanner() {
 
   useEffect(() => {
     if (!loaded) return;
-    const stored: StoredPlanYear = {
-      version: 1,
-      state,
-      importedEvents,
-      importedDispositions,
-    };
+    const stored: StoredPlanYear = { version: 3, state, importedEvents };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-  }, [state, importedEvents, importedDispositions, loaded]);
+  }, [state, importedEvents, loaded]);
+
+  const commitState = (next: PlanYearState) => {
+    setHistory((current) => [...current.slice(-29), state]);
+    setState(next);
+  };
 
   const visibleEvents = useMemo(() => visiblePlanEvents(state), [state]);
-  const activeStep = state.phaseSteps[state.activeStepIndex];
-  const currentStepEvents = visibleEvents.filter((event) =>
-    activeStep.templateIds.includes(event.templateId),
-  );
+  const activeIds = phaseTemplateIds(state, state.activePhase);
   const selectedStillVisible = selectedEventId
     ? visibleEvents.some((event) => event.id === selectedEventId)
     : false;
   const effectiveSelectedEventId = selectedStillVisible
     ? selectedEventId
-    : currentStepEvents[0]?.id ?? visibleEvents[0]?.id ?? null;
+    : visibleEvents.find((event) => activeIds.has(event.templateId))?.id ?? visibleEvents[0]?.id ?? null;
 
-  const handleProposeMeeting = (eventId: string, patch: PlanEventOverride) => {
-    const event = resolvePlanEvent(state, eventId);
-    const move = proposeEventMove(state, eventId, patch.date ?? event.date);
-    if (!move.valid) {
-      setPendingChange(move);
-      return;
-    }
-    setPendingChange({
-      valid: true,
-      summary: `Update ${event.title}.`,
-      changes: [{ eventId, patch }],
-    });
-  };
-
-  const handleCalendarMove = (eventId: string, date: string) => {
-    const result = applyManualEventMove(state, eventId, date);
-    if (!result.proposal.valid) {
-      setPendingChange(result.proposal);
-      setCalendarMoveNotice({
-        valid: false,
-        message: result.proposal.reason ?? result.proposal.summary,
-      });
-      return;
-    }
-    const moved = resolvePlanEvent(result.state, eventId);
-    setState(result.state);
+  const handleCalendarMove = (eventId: string, targetDate: string) => {
+    const dragged = resolvePlanEvent(state, eventId);
+    const regularAtTarget = dragged.templateId === "board-retreat"
+      ? visibleEvents
+          .map((event) => resolvePlanEvent(state, event.id))
+          .find((event) => event.templateId === "full-board" && event.date === targetDate)
+      : null;
     setSelectedEventId(eventId);
-    setSelectedImportedId(null);
-    setPendingChange(null);
-    setCalendarMoveNotice({
+    setCalendarMoveNotice(null);
+    if (regularAtTarget) {
+      setPendingConversion({
+        retreatEventId: eventId,
+        regularEventId: regularAtTarget.id,
+        targetDate,
+      });
+      setPendingMove(null);
+      return;
+    }
+    const check = applyManualEventMove(state, eventId, targetDate);
+    if (!check.proposal.valid) {
+      setCalendarMoveNotice({ valid: false, message: check.proposal.reason ?? check.proposal.summary });
+      return;
+    }
+    setPendingMove({ eventId, targetDate });
+    setPendingConversion(null);
+  };
+
+  const resolveMove = (choice: "rule" | "override") => {
+    if (!pendingMove) return;
+    if (choice === "rule") {
+      const event = resolvePlanEvent(state, pendingMove.eventId);
+      const weekday = new Date(`${pendingMove.targetDate}T12:00:00Z`).getUTCDay();
+      const result = ruleHolidayConflict(state, event.templateId, { weekday });
+      if (result.message) {
+        setCalendarMoveNotice({ valid: false, message: result.message });
+        setPendingMove(null);
+        return;
+      }
+      commitState(result.next);
+      setCalendarMoveNotice({ valid: true, message: `${WEEKDAY_LABELS[weekday]} is now the working rule for this meeting type.` });
+    } else {
+      const result = applyManualEventMove(state, pendingMove.eventId, pendingMove.targetDate);
+      if (result.proposal.valid) {
+        commitState(result.state);
+        setCalendarMoveNotice({ valid: true, message: `Saved as a 2027-only override for ${pendingMove.targetDate}.` });
+      }
+    }
+    setPendingMove(null);
+  };
+
+  const applyConversion = () => {
+    if (!pendingConversion) return;
+    const retreat = resolvePlanEvent(state, pendingConversion.retreatEventId);
+    const proposal: PlanChangeProposal = {
       valid: true,
-      message: `${moved.title} moved to ${date}.`,
-    });
+      summary: "Convert the regular Board slot to a retreat.",
+      changes: [
+        { eventId: pendingConversion.retreatEventId, patch: { date: pendingConversion.targetDate } },
+        { eventId: pendingConversion.regularEventId, patch: { date: retreat.date } },
+      ],
+    };
+    commitState(applyPlanProposal(state, proposal));
+    setPendingConversion(null);
+    setCalendarMoveNotice({ valid: true, message: "Regular meeting and retreat formats were exchanged." });
   };
 
-  const handleBulkUpdate = (exactTitle: string, patch: PlanEventOverride) => {
-    try {
-      const result = bulkUpdateByExactTitle(state, exactTitle, patch);
-      const confirmed = window.confirm(
-        `Update ${result.includedEventIds.length} meeting${result.includedEventIds.length === 1 ? "" : "s"} titled “${exactTitle}”? ${result.excludedEventIds.length} custom-title meeting${result.excludedEventIds.length === 1 ? " is" : "s are"} excluded.`,
-      );
-      if (confirmed) setState(result.state);
-    } catch (error) {
-      setPendingChange({
-        valid: false,
-        summary: "The bulk update cannot be applied.",
-        reason: error instanceof Error ? error.message : "The layer is locked.",
-        changes: [],
-      });
+  const updateRule = (templateId: string, patch: WorkingMeetingRule) => {
+    const result = ruleHolidayConflict(state, templateId, patch);
+    if (result.message) {
+      setCalendarMoveNotice({ valid: false, message: result.message });
+      return;
     }
-  };
-
-  const handleUpdateRule = (templateId: string, rule: WorkingMeetingRule) => {
-    try {
-      setState((current) => updateWorkingRule(current, templateId, rule));
-    } catch (error) {
-      setPendingChange({
-        valid: false,
-        summary: "The working rule could not be saved.",
-        reason: error instanceof Error ? error.message : "The layer is locked.",
-        changes: [],
-      });
-    }
+    commitState(result.next);
+    setCalendarMoveNotice({ valid: true, message: "Calendar updated from the working rule." });
   };
 
   const importSnapshot = (result: CalendarImportResult) => {
@@ -245,39 +280,33 @@ export function CalendarPlanner() {
   const reset = () => {
     if (!window.confirm("Start Plan Year over? This clears browser-local planning changes and imported snapshots.")) return;
     setState(initialState());
+    setHistory([]);
     setImportedEvents([]);
-    setImportedDispositions({});
     setSelectedEventId(null);
-    setSelectedImportedId(null);
-    setPendingChange(null);
+    setSelectedImportedEventId(null);
+    setPendingMove(null);
+    setPendingConversion(null);
     setCalendarMoveNotice(null);
     window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(IMPORT_KEY);
-  };
-
-  const changeBoardScenario = (value: ScenarioSettings["boardScenario"]) => {
-    if (!window.confirm("Changing the Board baseline restarts the local Plan Year meeting plan. Continue?")) return;
-    setState(initialState({ ...state.plan.settings, boardScenario: value }));
-    setPendingChange(null);
-    setCalendarMoveNotice(null);
   };
 
   const activePhaseIndex = PHASE_ORDER.indexOf(state.activePhase);
   const confirmedCount = state.confirmedPhases.length;
+  const maxAvailablePhase = Math.min(
+    Math.max(activePhaseIndex, confirmedCount),
+    PHASE_ORDER.length - 1,
+  );
 
   return (
     <main className="plan-shell">
       <header className="app-header">
         <div className="brand-lockup">
           <div className="brand-mark" aria-hidden="true">LSS</div>
-          <div>
-            <p className="eyebrow">Annual calendar planning</p>
-            <h1>Plan Year 2027</h1>
-          </div>
+          <div><p className="eyebrow">Annual calendar planning</p><h1>Plan Year 2027</h1></div>
         </div>
         <div className="header-status">
-          <span><i /> Working plan · saved in this browser</span>
-          <strong>{confirmedCount} of 4 layers confirmed</strong>
+          <span><i /> Changes apply live · undo available</span>
+          <strong>{confirmedCount} layers confirmed</strong>
         </div>
         <div className="header-actions">
           <button className="button ghost" type="button" onClick={() => window.print()}>Print</button>
@@ -285,102 +314,37 @@ export function CalendarPlanner() {
         </div>
       </header>
 
-      <section className="scope-banner">
-        <div>
-          <strong>Build the year in layers</strong>
-          <span>Earlier decisions stay visible as protected anchors while you plan the next meeting group.</span>
-        </div>
-        <label>
-          <span>Board starting point</span>
-          <select value={state.plan.settings.boardScenario} onChange={(event) => changeBoardScenario(event.target.value as ScenarioSettings["boardScenario"])}>
-            <option value="continuity">2026 continuity baseline</option>
-            <option value="recent_direction">Four meetings + two retreats</option>
-          </select>
-        </label>
-      </section>
-
-      <div className="plan-layout">
-        <nav className="phase-rail" aria-label="Plan Year phases">
-          <div className="phase-rail-heading">
-            <span>Plan Year</span>
-            <strong>{Math.round(((activePhaseIndex + state.activeStepIndex / Math.max(state.phaseSteps.length, 1)) / PHASE_ORDER.length) * 100)}%</strong>
-          </div>
+      <div className="plan-layout cockpit-layout">
+        <nav className="phase-rail" aria-label="Plan Year layers">
+          <div className="phase-rail-heading"><span>Plan Year</span><strong>{Math.round((confirmedCount / 3) * 100)}%</strong></div>
           <div className="phase-list">
             {PHASE_ORDER.map((phase, index) => {
               const confirmed = state.confirmedPhases.includes(phase);
               const active = state.activePhase === phase;
-              const future = index > activePhaseIndex && !confirmed;
+              const unavailable = index > maxAvailablePhase;
               return (
                 <button
                   type="button"
                   className={`${active ? "active" : ""}${confirmed ? " confirmed" : ""}`}
                   key={phase}
-                  disabled={future || active}
+                  disabled={unavailable || active}
                   onClick={() => {
-                    if (confirmed && window.confirm(`Reopen ${PHASE_LABELS[phase]}? Later layers will require review again.`)) {
-                      setState((current) => reopenPhase(current, phase));
-                    }
+                    setState((current) => navigateToPhase(current, phase));
+                    setSelectedEventId(null);
+                    setPendingMove(null);
+                    setPendingConversion(null);
                   }}
                 >
                   <i>{confirmed ? "✓" : index + 1}</i>
-                  <span><strong>{PHASE_LABELS[phase]}</strong><small>{active ? "Planning now" : confirmed ? "Confirmed · click to reopen" : "Waiting"}</small></span>
+                  <span><strong>{PHASE_LABELS[phase]}</strong><small>{active ? "Shaping now" : confirmed ? "Confirmed · revisit" : unavailable ? "Follows prior layer" : "Ready"}</small></span>
                 </button>
               );
             })}
           </div>
-          <div className="step-list">
-            <span>{PHASE_LABELS[state.activePhase]} steps</span>
-            {state.phaseSteps.map((step, index) => (
-              <div key={step.id} className={`${index === state.activeStepIndex ? "active" : ""}${index < state.activeStepIndex ? " complete" : ""}`}>
-                <i>{index < state.activeStepIndex ? "✓" : index + 1}</i>
-                <span>{step.label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="phase-help">
-            <strong>Calendar controls</strong>
-            <p>Drag an active meeting to a new day, click it to edit details, or ask the agent.</p>
-          </div>
+          <div className="phase-help"><strong>Immovable rocks first</strong><p>Earlier layers stay visible. Revisit them at any time; downstream effects will be surfaced here.</p></div>
         </nav>
 
-        <div className="planning-canvas">
-          <PlanYearAgent
-            state={state}
-            pendingChange={pendingChange}
-            onPendingChange={setPendingChange}
-            onApplyChange={(proposal) => {
-              setState((current) => applyPlanProposal(current, proposal));
-              setPendingChange(null);
-            }}
-            onAdvance={() => {
-              setState((current) => advancePlanStep(current));
-              setSelectedEventId(null);
-              setPendingChange(null);
-              setCalendarMoveNotice(null);
-            }}
-            onConfirm={() => {
-              try {
-                setState((current) => confirmActivePhase(current));
-                setSelectedEventId(null);
-                setPendingChange(null);
-                setCalendarMoveNotice(null);
-              } catch (error) {
-                setPendingChange({
-                  valid: false,
-                  summary: "This layer is not ready to confirm.",
-                  reason: error instanceof Error ? error.message : "Finish the current steps first.",
-                  changes: [],
-                });
-              }
-            }}
-            onClear={() => {
-              if (window.confirm(`Clear all unconfirmed ${PHASE_LABELS[state.activePhase]} meetings from the working view?`)) {
-                setState((current) => clearActivePhase(current));
-              }
-            }}
-            onRegenerate={() => setState((current) => regenerateActivePhase(current))}
-          />
-
+        <div className="planning-canvas calendar-canvas">
           <PlanYearCalendar
             state={state}
             importedEvents={importedEvents}
@@ -388,38 +352,65 @@ export function CalendarPlanner() {
             moveNotice={calendarMoveNotice}
             onSelectEvent={(eventId) => {
               setSelectedEventId(eventId);
-              setSelectedImportedId(null);
+              setSelectedImportedEventId(null);
             }}
             onSelectImported={(eventId) => {
-              setSelectedImportedId(eventId);
-              setSelectedEventId(null);
+              setSelectedImportedEventId(eventId);
+              setCalendarMoveNotice({ valid: true, message: "Existing Outlook meeting selected. Details are open at right." });
             }}
             onMoveEvent={handleCalendarMove}
           />
         </div>
 
-        <PlanYearContext
-          key={`${effectiveSelectedEventId ?? "none"}-${selectedImportedId ?? "none"}-${state.activeStepId}`}
+        <PlanningCockpit
+          key={`${effectiveSelectedEventId ?? "none"}-${state.activePhase}`}
           state={state}
           selectedEventId={effectiveSelectedEventId}
-          selectedImportedId={selectedImportedId}
+          pendingMove={pendingMove}
+          pendingConversion={pendingConversion}
           importedEvents={importedEvents}
-          importedDispositions={importedDispositions}
-          onProposeMeeting={handleProposeMeeting}
-          onBulkUpdate={handleBulkUpdate}
-          onUpdateRule={handleUpdateRule}
+          selectedImportedEventId={selectedImportedEventId}
+          canUndo={history.length > 0}
+          onRuleChange={updateRule}
+          onSharedAttendeesChange={(templateIds, attendees) => {
+            let next = state;
+            for (const templateId of templateIds) {
+              next = updateWorkingRule(next, templateId, { attendees });
+            }
+            commitState(next);
+            setCalendarMoveNotice({ valid: true, message: "Shared attendees updated for this meeting group." });
+          }}
+          onBoardScenarioChange={(scenario) => commitState(scenarioState(state, scenario))}
+          onResolveMove={resolveMove}
+          onCancelMove={() => setPendingMove(null)}
+          onApplyConversion={applyConversion}
+          onCancelConversion={() => setPendingConversion(null)}
+          onUndo={() => {
+            const previous = history.at(-1);
+            if (!previous) return;
+            setState(previous);
+            setHistory((current) => current.slice(0, -1));
+            setPendingMove(null);
+            setPendingConversion(null);
+            setCalendarMoveNotice({ valid: true, message: "Last change undone." });
+          }}
+          onConfirmPhase={() => {
+            commitState(confirmActivePhase(state));
+            setSelectedEventId(null);
+            setPendingMove(null);
+            setPendingConversion(null);
+          }}
           onImport={importSnapshot}
-          onDisposition={(eventId, value) =>
-            setImportedDispositions((current) => ({ ...current, [eventId]: value }))
-          }
         />
       </div>
 
       <footer className="app-footer">
-        <span>Historical inputs: 2026 Board Calendar, LSS Meetings Calendar, Meeting Matrix, and MVP 1 Rulebook.</span>
-        <strong>No Outlook connection · No autonomous calendar changes</strong>
+        <span>Historical evidence remains separate from 2027 working rules and one-year overrides.</span>
+        <strong>No Outlook writes · Human confirmation required</strong>
         <button type="button" onClick={reset}>Start over</button>
       </footer>
     </main>
   );
 }
+
+const WEEKDAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

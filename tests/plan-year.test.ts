@@ -14,6 +14,7 @@ import {
   clearActivePhase,
   confirmActivePhase,
   createPlanYearState,
+  navigateToPhase,
   proposeEventMove,
   regenerateActivePhase,
   reopenPhase,
@@ -30,7 +31,7 @@ const baseline: ScenarioSettings = {
   allStaffPattern: "detailed_calendar",
 };
 
-test("starts with the Board calendar and hides later meeting layers", () => {
+test("starts with the complete Board layer and hides later layers", () => {
   const state = createPlanYearState(generateCalendarPlan(baseline));
   const visible = visiblePlanEvents(state);
 
@@ -39,33 +40,21 @@ test("starts with the Board calendar and hides later meeting layers", () => {
   assert.ok(visible.some((event) => event.templateId === "full-board"));
   assert.ok(visible.some((event) => event.templateId === "board-retreat"));
   assert.ok(visible.some((event) => event.templateId === "critical-checkin"));
-  assert.ok(!visible.some((event) => event.templateId === "executive-committee"));
+  assert.ok(visible.some((event) => event.templateId === "executive-committee"));
+  assert.ok(visible.some((event) => event.templateId === "finance-committee"));
   assert.ok(!visible.some((event) => event.templateId === "executive-team"));
   assert.ok(!visible.some((event) => event.templateId === "all-staff"));
 });
 
-test("reveals Board committee meetings in rulebook order", () => {
-  const initial = createPlanYearState(generateCalendarPlan(baseline));
-  const executiveCommittee = advancePlanStep(initial);
-  const finance = advancePlanStep(executiveCommittee);
+test("Board governance groups are visible together as one planning layer", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const templateIds = new Set(visiblePlanEvents(state).map((event) => event.templateId));
 
-  assert.equal(executiveCommittee.activeStepId, "executive-committee");
-  assert.ok(
-    visiblePlanEvents(executiveCommittee).some(
-      (event) => event.templateId === "executive-committee",
-    ),
-  );
-  assert.ok(
-    !visiblePlanEvents(executiveCommittee).some(
-      (event) => event.templateId === "finance-committee",
-    ),
-  );
-  assert.equal(finance.activeStepId, "finance-committee");
-  assert.ok(
-    visiblePlanEvents(finance).some(
-      (event) => event.templateId === "finance-committee",
-    ),
-  );
+  assert.ok(templateIds.has("full-board"));
+  assert.ok(templateIds.has("executive-committee"));
+  assert.ok(templateIds.has("finance-committee"));
+  assert.ok(templateIds.has("health-programs"));
+  assert.ok(templateIds.has("talent-risk"));
 });
 
 test("confirming Board unlocks Executive and preserves locked Board anchors", () => {
@@ -84,13 +73,12 @@ test("confirming Board unlocks Executive and preserves locked Board anchors", ()
   assert.ok(!visible.some((event) => event.templateId === "all-staff"));
 });
 
-test("does not confirm a phase before its final scheduling step", () => {
+test("confirms the complete active layer without artificial substep gates", () => {
   const state = createPlanYearState(generateCalendarPlan(baseline));
+  const executive = confirmActivePhase(state);
 
-  assert.throws(
-    () => confirmActivePhase(state),
-    /finish the Board & Governance steps before confirming/i,
-  );
+  assert.equal(executive.activePhase, "executive");
+  assert.deepEqual(executive.confirmedPhases, ["board"]);
 });
 
 test("bulk title and message updates exclude a custom-title instance", () => {
@@ -205,6 +193,38 @@ test("confirmed Board meetings cannot be edited without reopening the layer", ()
   );
 });
 
+test("a confirmed layer becomes editable again when revisited without losing confirmation", () => {
+  let state = createPlanYearState(generateCalendarPlan(baseline));
+  const event = visiblePlanEvents(state).find((item) => item.templateId === "full-board");
+  assert.ok(event);
+  state = confirmActivePhase(state);
+
+  const revisited = navigateToPhase(state, "board");
+  const updated = updateEvent(revisited, event.id, { startTime: "16:30" });
+
+  assert.deepEqual(updated.confirmedPhases, ["board"]);
+  assert.equal(resolvePlanEvent(updated, event.id).startTime, "16:30");
+});
+
+test("a working weekday rule regenerates the group without becoming a 2027 override", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const updated = updateWorkingRule(state, "full-board", { weekday: 3 });
+  const boardMeetings = visiblePlanEvents(updated).filter(
+    (event) => event.templateId === "full-board",
+  );
+
+  assert.ok(boardMeetings.length > 0);
+  assert.ok(
+    boardMeetings.every(
+      (event) => new Date(`${resolvePlanEvent(updated, event.id).date}T12:00:00Z`).getUTCDay() === 3,
+    ),
+  );
+  assert.deepEqual(updated.eventOverrides, {});
+  assert.ok(
+    boardMeetings.every((event) => resolvePlanEvent(updated, event.id).ruleStatus === "needs_validation"),
+  );
+});
+
 test("interprets the golden Board check-in command without applying it", () => {
   const state = createPlanYearState(generateCalendarPlan(baseline));
   const proposal = interpretDemoRequest(
@@ -243,7 +263,9 @@ test("interprets a combined Board structure and weekday request", () => {
   assert.equal(validation.changes.length, 12);
 
   const applied = applyPlanProposal(state, validation);
-  const boardLayer = visiblePlanEvents(applied);
+  const boardLayer = visiblePlanEvents(applied).filter((event) =>
+    ["full-board", "board-retreat", "critical-checkin"].includes(event.templateId),
+  );
   assert.equal(applied.plan.settings.boardScenario, "recent_direction");
   assert.equal(boardLayer.filter((event) => event.templateId === "full-board").length, 4);
   assert.equal(boardLayer.filter((event) => event.templateId === "board-retreat").length, 2);

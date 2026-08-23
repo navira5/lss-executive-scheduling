@@ -39,6 +39,7 @@ export interface PlanEventOverride {
 
 export interface WorkingMeetingRule {
   cadence?: string;
+  weekday?: number;
   owner?: string;
   startTime?: string | null;
   durationMinutes?: number;
@@ -249,11 +250,6 @@ export function previousPlanStep(state: PlanYearState): PlanYearState {
 }
 
 export function confirmActivePhase(state: PlanYearState): PlanYearState {
-  if (state.activeStepIndex < state.phaseSteps.length - 1) {
-    throw new Error(
-      `Finish the ${PHASE_LABELS[state.activePhase]} steps before confirming.`,
-    );
-  }
   const phaseIndex = PHASE_ORDER.indexOf(state.activePhase);
   const nextPhase = PHASE_ORDER[Math.min(phaseIndex + 1, PHASE_ORDER.length - 1)];
   const confirmedPhases = state.confirmedPhases.includes(state.activePhase)
@@ -274,7 +270,7 @@ function templateIdsForPhase(phase: PlanPhase): Set<string> {
   return new Set(PLAN_STEPS[phase].flatMap((step) => step.templateIds));
 }
 
-function isConfirmedEvent(state: PlanYearState, event: ProposedEvent): boolean {
+export function isEventConfirmed(state: PlanYearState, event: ProposedEvent): boolean {
   return state.confirmedPhases.some((phase) =>
     templateIdsForPhase(phase).has(event.templateId),
   );
@@ -282,15 +278,11 @@ function isConfirmedEvent(state: PlanYearState, event: ProposedEvent): boolean {
 
 export function visiblePlanEvents(state: PlanYearState): ProposedEvent[] {
   if (state.activePhase === "review") return state.plan.events;
-  const activeTemplateIds = new Set(
-    state.phaseSteps
-      .slice(0, state.activeStepIndex + 1)
-      .flatMap((step) => step.templateIds),
-  );
+  const activeTemplateIds = templateIdsForPhase(state.activePhase);
   return state.plan.events.filter(
     (event) =>
       !state.hiddenEventIds.includes(event.id) &&
-      (isConfirmedEvent(state, event) || activeTemplateIds.has(event.templateId)),
+      (isEventConfirmed(state, event) || activeTemplateIds.has(event.templateId)),
   );
 }
 
@@ -298,7 +290,8 @@ export function isEventLocked(
   state: PlanYearState,
   event: ProposedEvent,
 ): boolean {
-  return isConfirmedEvent(state, event);
+  const eventPhase = phaseForTemplate(event.templateId);
+  return isEventConfirmed(state, event) && eventPhase !== state.activePhase;
 }
 
 function eventById(state: PlanYearState, eventId: string): ProposedEvent {
@@ -321,16 +314,32 @@ export function resolvePlanEvent(
   eventId: string,
 ): ResolvedPlanEvent {
   const event = eventById(state, eventId);
+  const workingRule = state.workingRules[event.templateId] ?? {};
+  const rulePatch = eventPatchForRule(workingRule);
   const override = state.eventOverrides[eventId] ?? {};
+  const ruleDate = workingRule.weekday === undefined
+    ? event.date
+    : dateOnPreferredWeekday(event.date, workingRule.weekday);
   return {
     ...event,
+    ...rulePatch,
     ...override,
-    title: override.title ?? event.name,
-    message: override.message ?? event.purpose,
-    attendees: override.attendees ?? [event.attendeeGroup],
-    distributionLists: override.distributionLists ?? [],
+    date: override.date ?? ruleDate,
+    title: override.title ?? rulePatch.title ?? event.name,
+    message: override.message ?? rulePatch.message ?? event.purpose,
+    attendees: override.attendees ?? rulePatch.attendees ?? [event.attendeeGroup],
+    distributionLists: override.distributionLists ?? rulePatch.distributionLists ?? [],
     locked: isEventLocked(state, event),
   };
+}
+
+function dateOnPreferredWeekday(date: string, weekday: number): string {
+  const target = new Date(`${date}T12:00:00Z`);
+  let offset = weekday - target.getUTCDay();
+  if (offset > 3) offset -= 7;
+  if (offset < -3) offset += 7;
+  target.setUTCDate(target.getUTCDate() + offset);
+  return target.toISOString().slice(0, 10);
 }
 
 export function updateEvent(
@@ -431,23 +440,31 @@ export function reopenPhase(
   });
 }
 
+export function navigateToPhase(
+  state: PlanYearState,
+  phase: PlanPhase,
+): PlanYearState {
+  return stateAt({
+    plan: state.plan,
+    activePhase: phase,
+    activeStepIndex: 0,
+    confirmedPhases: state.confirmedPhases,
+    eventOverrides: state.eventOverrides,
+    workingRules: state.workingRules,
+    hiddenEventIds: state.hiddenEventIds,
+  });
+}
+
 export function updateWorkingRule(
   state: PlanYearState,
   templateId: string,
   patch: WorkingMeetingRule,
 ): PlanYearState {
   const nextRule = { ...state.workingRules[templateId], ...patch };
-  let updated: PlanYearState = {
+  return {
     ...state,
     workingRules: { ...state.workingRules, [templateId]: nextRule },
   };
-  const eventPatch = eventPatchForRule(nextRule);
-  for (const event of state.plan.events.filter(
-    (item) => item.templateId === templateId && !isEventLocked(state, item),
-  )) {
-    updated = updateEvent(updated, event.id, eventPatch);
-  }
-  return updated;
 }
 
 export interface BulkUpdateResult {
