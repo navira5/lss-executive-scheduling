@@ -186,7 +186,8 @@ export function PlanningCockpit({
     ? state.plan.events.find((event) => event.id === selectedEventId)?.templateId
     : null;
   const selectedTemplateId = explicitlySelectedTemplateId ?? eventTemplateId;
-  const showCommitteeOverview = state.activePhase === "committee" && !explicitlySelectedTemplateId;
+  const rosterPhase = ["committee", "executive", "organization"].includes(state.activePhase);
+  const showLayerOverview = rosterPhase && !explicitlySelectedTemplateId;
   const fallbackTemplateId = state.phaseSteps.flatMap((step) => step.templateIds)[0] ?? null;
   const group = groupFor(selectedTemplateId ?? fallbackTemplateId ?? "full-board");
   const groupTemplates = group.templateIds
@@ -273,8 +274,10 @@ export function PlanningCockpit({
       : "";
   const phaseEvents = state.plan.events.filter((event) => {
     const phaseTemplateIds = new Set(state.phaseSteps.flatMap((step) => step.templateIds));
-    const belongsToCustomCommittee = state.activePhase === "committee" && (state.customTemplates ?? []).some((template) => template.id === event.templateId);
-    return (phaseTemplateIds.has(event.templateId) || belongsToCustomCommittee) && !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder;
+    const belongsToCustomLayer = (state.customTemplates ?? []).some(
+      (template) => template.id === event.templateId && template.category === state.activePhase,
+    );
+    return (phaseTemplateIds.has(event.templateId) || belongsToCustomLayer) && !state.hiddenEventIds.includes(event.id) && !event.isPlaceholder;
   });
   const phaseSummary = state.activePhase === "board"
     ? `You're confirming ${phaseEvents.filter((event) => event.templateId === "full-board").length} board meetings and ${phaseEvents.filter((event) => event.templateId === "board-retreat").length} retreats for 2027. Board Committee planning will work around these dates.`
@@ -292,31 +295,51 @@ export function PlanningCockpit({
     ? importedEvents.find((event) => event.id === selectedImportedEventId) ?? null
     : null;
 
-  const committeeTemplates = templates.filter((template) => template.category === "committee");
-  const committeeRows = committeeTemplates.map((template) => {
+  const activeLayerTemplateIds = [
+    ...state.phaseSteps.flatMap((step) => step.templateIds),
+    ...(state.customTemplates ?? [])
+      .filter((template) => template.category === state.activePhase)
+      .map((template) => template.id),
+  ];
+  const activeLayerGroups = activeLayerTemplateIds.reduce<MeetingGroup[]>((groups, templateId) => {
+    const candidate = groupFor(templateId);
+    if (!groups.some((item) => item.id === candidate.id)) groups.push(candidate);
+    return groups;
+  }, []);
+  const layerRows = activeLayerGroups.map((meetingGroup) => {
+    const rowTemplates = meetingGroup.templateIds
+      .map((templateId) => templates.find((template) => template.id === templateId))
+      .filter((template): template is MeetingTemplate => Boolean(template));
     const count = state.plan.events.filter(
-      (event) => event.templateId === template.id && !event.isPlaceholder && !state.hiddenEventIds.includes(event.id),
+      (event) => meetingGroup.templateIds.includes(event.templateId) && !event.isPlaceholder && !state.hiddenEventIds.includes(event.id),
     ).length;
-    return { template, count };
-  });
-  const scheduledCommitteeRows = committeeRows.filter((row) => row.count > 0);
-  const committeeTotal = scheduledCommitteeRows.reduce((sum, row) => sum + row.count, 0);
+    return {
+      group: meetingGroup,
+      templates: rowTemplates,
+      template: rowTemplates[0],
+      count,
+      label: meetingGroup.label || rowTemplates[0]?.name || "Meeting group",
+      cadence: rowTemplates.map((template) => template.cadence).join(" · "),
+    };
+  }).filter((row) => Boolean(row.template));
+  const scheduledLayerRows = layerRows.filter((row) => row.count > 0);
+  const layerTotal = scheduledLayerRows.reduce((sum, row) => sum + row.count, 0);
 
   return (
     <aside className="cockpit" aria-label="Selected meeting group settings">
       <div className="cockpit-scroll">
-        {showCommitteeOverview ? (
+        {showLayerOverview ? (
           <>
             <section className="committee-overview-header">
-              <p className="eyebrow">Committee layer</p>
-              <h2>{committeeTotal} sessions across {scheduledCommitteeRows.length} scheduled groups</h2>
+              <p className="eyebrow">{PHASE_LABELS[state.activePhase]} layer</p>
+              <h2>{layerTotal} sessions across {scheduledLayerRows.length} scheduled groups</h2>
               <p>Open one group to adjust its provisional rule. Unscheduled groups remain honest blanks until leadership confirms them.</p>
             </section>
-            <section className="committee-group-list" aria-label="Board committee meeting groups">
-              {committeeRows.map(({ template, count }) => (
-                <button type="button" key={template.id} onClick={() => onOpenMeetingGroup(template.id)}>
-                  <i className={`committee-swatch committee-${template.id}`} aria-hidden="true" />
-                  <span><strong>{template.name}</strong><small>{count > 0 ? template.cadence : "Awaiting confirmation"}</small></span>
+            <section className="committee-group-list" aria-label={`${PHASE_LABELS[state.activePhase]} meeting groups`}>
+              {layerRows.map(({ group: layerGroup, template, label, cadence, count }) => (
+                <button type="button" key={layerGroup.id} onClick={() => onOpenMeetingGroup(template.id)}>
+                  <i className={`committee-swatch ${template.category} committee-${template.id}`} aria-hidden="true" />
+                  <span><strong>{label}</strong><small>{count > 0 ? cadence : "Awaiting confirmation"}</small></span>
                   <em className={count > 0 ? "scheduled" : "unscheduled"}>{count > 0 ? `${count} sessions` : "Not scheduled"}</em>
                   <b aria-hidden="true">›</b>
                 </button>
@@ -337,8 +360,8 @@ export function PlanningCockpit({
                   setNewGroupName("");
                   setNewGroupAttendees("");
                 }}>
-                  <h3>Add a committee group</h3>
-                  <label><span>Group name</span><input autoFocus value={newGroupName} onChange={(event) => setNewGroupName(event.target.value)} placeholder="e.g., Nominations Committee" /></label>
+                  <h3>Add a {PHASE_LABELS[state.activePhase]} group</h3>
+                  <label><span>Group name</span><input autoFocus value={newGroupName} onChange={(event) => setNewGroupName(event.target.value)} placeholder="New meeting group" /></label>
                   <label><span>Attendees <i>one per line</i></span><textarea rows={3} value={newGroupAttendees} onChange={(event) => setNewGroupAttendees(event.target.value)} placeholder="Names or distribution lists" /></label>
                   <p>The group starts unscheduled. Open it next to choose a cadence or place meetings manually.</p>
                   <div><button type="button" onClick={() => setAddingGroup(false)}>Cancel</button><button type="submit">Add group</button></div>
@@ -348,8 +371,8 @@ export function PlanningCockpit({
           </>
         ) : (
           <>
-        {state.activePhase === "committee" && (
-          <button className="back-to-groups" type="button" onClick={onBackToMeetingGroups}>← All committee groups</button>
+        {rosterPhase && (
+          <button className="back-to-groups" type="button" onClick={onBackToMeetingGroups}>← All {PHASE_LABELS[state.activePhase]} groups</button>
         )}
         {selectedImported && (
           <section className="imported-snapshot-card">

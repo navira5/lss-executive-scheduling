@@ -284,9 +284,9 @@ export function meetingTemplatesForState(state: PlanYearState): MeetingTemplate[
   return [...buildMeetingTemplates(state.plan.settings), ...(state.customTemplates ?? [])];
 }
 
-export function addCommitteeMeetingGroup(
+export function addLayerMeetingGroup(
   state: PlanYearState,
-  input: { name: string; attendees: string[] },
+  input: { name: string; attendees: string[]; phase: "committee" | "executive" | "organization" },
 ): { state: PlanYearState; templateId: string } {
   const name = input.name.trim();
   if (!name) throw new Error("Meeting group name is required.");
@@ -310,7 +310,7 @@ export function addCommitteeMeetingGroup(
       .slice(0, 7)
       .toUpperCase(),
     name,
-    category: "committee",
+    category: input.phase,
     purpose: "Purpose needs confirmation.",
     owner: "To confirm",
     attendeeGroup: name,
@@ -343,6 +343,13 @@ export function addCommitteeMeetingGroup(
       },
     },
   };
+}
+
+export function addCommitteeMeetingGroup(
+  state: PlanYearState,
+  input: { name: string; attendees: string[] },
+): { state: PlanYearState; templateId: string } {
+  return addLayerMeetingGroup(state, { ...input, phase: "committee" });
 }
 
 export function addCalendarClosure(
@@ -473,8 +480,8 @@ export function confirmActivePhase(state: PlanYearState): PlanYearState {
 
 function templateIdsForPhase(phase: PlanPhase, state?: PlanYearState): Set<string> {
   const ids = PLAN_STEPS[phase].flatMap((step) => step.templateIds);
-  if (phase === "committee" && state) {
-    ids.push(...(state.customTemplates ?? []).filter((template) => template.category === "committee").map((template) => template.id));
+  if (["committee", "executive", "organization"].includes(phase) && state) {
+    ids.push(...(state.customTemplates ?? []).filter((template) => template.category === phase).map((template) => template.id));
   }
   return new Set(ids);
 }
@@ -513,7 +520,9 @@ function eventById(state: PlanYearState, eventId: string): ProposedEvent {
 
 function phaseForTemplate(templateId: string, state?: PlanYearState): PlanPhase | null {
   const customTemplate = state?.customTemplates?.find((template) => template.id === templateId);
-  if (customTemplate?.category === "committee") return "committee";
+  if (customTemplate && ["committee", "executive", "organization"].includes(customTemplate.category)) {
+    return customTemplate.category as PlanPhase;
+  }
   for (const phase of PHASE_ORDER) {
     if (PLAN_STEPS[phase].some((step) => step.templateIds.includes(templateId))) {
       return phase;

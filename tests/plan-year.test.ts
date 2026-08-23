@@ -11,6 +11,7 @@ import {
   addCommitteeMeetingGroup,
   addAdHocEvent,
   addCalendarClosure,
+  addLayerMeetingGroup,
   approveTemplateForPlan,
   applyManualEventMove,
   applyPlanProposal,
@@ -482,6 +483,35 @@ test("a user-created committee group begins unscheduled and can receive its own 
   });
   assert.equal(scheduled.plan.events.filter((event) => event.templateId === added.templateId).length, 4);
   assert.equal(visiblePlanEvents(scheduled).some((event) => event.templateId === added.templateId), true);
+});
+
+test("Executive and Organization layers accept their own independent meeting groups", () => {
+  let state = createPlanYearState(generateCalendarPlan(baseline));
+  state = confirmActivePhase(state);
+  state = confirmActivePhase(state);
+  assert.equal(state.activePhase, "executive");
+  const executiveGroup = addLayerMeetingGroup(state, {
+    name: "COO Strategy Review",
+    attendees: ["COO", "Executive Team"],
+    phase: "executive",
+  });
+  let scheduled = updateTemplateSchedule(executiveGroup.state, executiveGroup.templateId, {
+    cadencePreset: "quarterly",
+    annualCount: 4,
+  });
+  assert.equal(visiblePlanEvents(scheduled).filter((event) => event.templateId === executiveGroup.templateId).length, 4);
+  scheduled = confirmActivePhase(scheduled);
+  assert.equal(scheduled.activePhase, "organization");
+  const organizationGroup = addLayerMeetingGroup(scheduled, {
+    name: "Regional Operations Review",
+    attendees: ["COO", "Program Directors"],
+    phase: "organization",
+  });
+  const organizationScheduled = updateTemplateSchedule(organizationGroup.state, organizationGroup.templateId, {
+    cadencePreset: "semiannual",
+    annualCount: 2,
+  });
+  assert.equal(visiblePlanEvents(organizationScheduled).filter((event) => event.templateId === organizationGroup.templateId).length, 2);
 });
 
 test("calendar export contains only approved placements and excludes open-question groups", () => {

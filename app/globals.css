@@ -436,6 +436,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .committee-group-list em.unscheduled { border: 1px dashed #b5bdb9; color: #6f7d81; }
 .committee-group-list b { color: #8c989b; font-size: 1rem; }
 .committee-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--committee); }
+.committee-swatch.executive { background: var(--executive); }
+.committee-swatch.organization { background: var(--organization); }
 .committee-swatch.committee-executive-committee { background: #A6532D; }
 .committee-swatch.committee-finance-committee { background: #176B73; }
 .committee-swatch.committee-health-programs { background: #568A55; }

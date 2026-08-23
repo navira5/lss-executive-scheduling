@@ -15,7 +15,7 @@ import {
   applyPlanProposal,
   addAdHocEvent,
   addCalendarClosure,
-  addCommitteeMeetingGroup,
+  addLayerMeetingGroup,
   approveTemplateForPlan,
   confirmActivePhase,
   createPlanYearState,
@@ -128,6 +128,7 @@ export function CalendarPlanner() {
   const effectiveSelectedEventId = selectedStillVisible
     ? selectedEventId
     : visibleEvents.find((event) => activeIds.has(event.templateId))?.id ?? visibleEvents[0]?.id ?? null;
+  const activeUsesGroupRoster = ["committee", "executive", "organization"].includes(state.activePhase);
 
   const handleCalendarMove = (eventId: string, targetDate: string) => {
     const dragged = resolvePlanEvent(state, eventId);
@@ -296,7 +297,7 @@ export function CalendarPlanner() {
           <PlanYearCalendar
             state={state}
             importedEvents={importedEvents}
-            selectedEventId={state.activePhase === "committee" && !selectedTemplateId ? null : effectiveSelectedEventId}
+            selectedEventId={activeUsesGroupRoster && !selectedTemplateId ? null : effectiveSelectedEventId}
             moveNotice={calendarMoveNotice}
             previewMove={pendingMove}
             onSelectEvent={(eventId) => {
@@ -358,7 +359,12 @@ export function CalendarPlanner() {
             setSelectedEventId(null);
           }}
           onAddMeetingGroup={(name, attendees) => {
-            const added = addCommitteeMeetingGroup(state, { name, attendees });
+            if (!["committee", "executive", "organization"].includes(state.activePhase)) return;
+            const added = addLayerMeetingGroup(state, {
+              name,
+              attendees,
+              phase: state.activePhase as "committee" | "executive" | "organization",
+            });
             commitState(added.state);
             setSelectedTemplateId(added.templateId);
             setSelectedEventId(null);
