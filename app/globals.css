@@ -8,11 +8,11 @@
   --surface-soft: #fafaf7;
   --line: #d9dfdc;
   --line-dark: #c6cfcb;
-  --board: #173f4d;
-  --committee: #42668e;
-  --executive: #197f78;
-  --organization: #7b5ca7;
-  --outlook: #78868b;
+  --board: #491f50;
+  --committee: #bd5129;
+  --executive: #287a6c;
+  --organization: #994074;
+  --outlook: #706f6f;
   --amber: #bd6c12;
   --amber-soft: #fff2dc;
   --red: #a64034;
@@ -332,7 +332,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .meeting-chip.executive { color: var(--executive); }
 .meeting-chip.organization { color: var(--organization); }
 .meeting-chip.outlook { color: var(--outlook); }
-.meeting-chip.confirmed { background: currentColor; color: white; }
+.meeting-chip.confirmed.board { background: var(--board); color: white; }
+.meeting-chip.confirmed.committee { background: var(--committee); color: white; }
+.meeting-chip.confirmed.executive { background: var(--executive); color: white; }
+.meeting-chip.confirmed.organization { background: var(--organization); color: white; }
+.meeting-chip.confirmed.outlook { background: var(--outlook); color: white; }
 .meeting-chip.unconfirmed { background: white; }
 .meeting-chip.retreat { min-height: 18px; border-width: 2px; }
 .meeting-chip.override { box-shadow: 0 0 0 2px white, 0 0 0 3px currentColor; }
