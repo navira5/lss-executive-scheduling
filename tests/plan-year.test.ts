@@ -11,6 +11,7 @@ import {
   addCommitteeMeetingGroup,
   addAdHocEvent,
   addCalendarClosure,
+  approveTemplateForPlan,
   applyManualEventMove,
   applyPlanProposal,
   bulkUpdateByExactTitle,
@@ -500,6 +501,11 @@ test("calendar export contains only approved placements and excludes open-questi
   assert.equal(
     confirmedCalendarEvents(committeeConfirmed).some((event) => event.templateId === "nominations-committee"),
     false,
+  );
+  const approved = approveTemplateForPlan(committeeConfirmed, "nominations-committee");
+  assert.equal(
+    confirmedCalendarEvents(approved).filter((event) => event.templateId === "nominations-committee").length,
+    2,
   );
 });
 

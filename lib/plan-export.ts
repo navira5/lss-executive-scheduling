@@ -13,7 +13,7 @@ export function confirmedCalendarEvents(state: PlanYearState): ResolvedPlanEvent
       !event.isPlaceholder &&
       !state.hiddenEventIds.includes(event.id) &&
       isEventConfirmed(state, event) &&
-      event.ruleStatus !== "open_question" &&
+      (event.ruleStatus !== "open_question" || state.approvedTemplateIds.includes(event.templateId)) &&
       !event.conflicts.some((conflict) => conflict.severity === "blocked"),
     )
     .map((event) => resolvePlanEvent(state, event.id))
@@ -227,7 +227,9 @@ export async function downloadPlanPdf(
 
   const unresolvedTemplates = meetingTemplatesForState(state).filter((template) => {
     const events = state.plan.events.filter((event) => event.templateId === template.id && !event.isPlaceholder);
-    return events.length === 0 || events.some((event) => !isEventConfirmed(state, event));
+    return events.length === 0 ||
+      events.some((event) => !isEventConfirmed(state, event)) ||
+      (template.ruleStatus === "open_question" && !state.approvedTemplateIds.includes(template.id));
   });
   if (unresolvedTemplates.length) {
     ensure(44);

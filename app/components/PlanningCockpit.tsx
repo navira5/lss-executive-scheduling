@@ -133,6 +133,7 @@ interface PlanningCockpitProps {
   onOpenMeetingGroup: (templateId: string) => void;
   onBackToMeetingGroups: () => void;
   onAddMeetingGroup: (name: string, attendees: string[]) => void;
+  onApproveTemplateForPlan: (templateId: string) => void;
   onSharedAttendeesChange: (templateIds: string[], attendees: string[]) => void;
   onScheduleChange: (
     templateId: string,
@@ -163,6 +164,7 @@ export function PlanningCockpit({
   onOpenMeetingGroup,
   onBackToMeetingGroups,
   onAddMeetingGroup,
+  onApproveTemplateForPlan,
   onSharedAttendeesChange,
   onScheduleChange,
   onApplyConversion,
@@ -248,6 +250,10 @@ export function PlanningCockpit({
   });
   const showFinanceQuestion = group.id === "finance-committee" && financeLeadDays === undefined && !financeQuestionDismissed;
   const showFinanceRisk = ["finance-committee", "full-board"].includes(group.id) && financeLeadRisks.length > 0;
+  const openQuestionTemplate = groupTemplates.find(
+    (template) => template.ruleStatus === "open_question" && !state.approvedTemplateIds.includes(template.id),
+  );
+  const showPlanApproval = Boolean(openQuestionTemplate && plannedTotal > 0);
   const prompt = !editingAllowed
     ? `Return to ${PHASE_LABELS[groupPhase]} to change this group.`
     : holidayAdjustments.length > 0
@@ -256,6 +262,8 @@ export function PlanningCockpit({
       ? `${financeLeadRisks[0].financeEvent.date} Finance review leaves ${financeLeadRisks[0].gap} day${financeLeadRisks[0].gap === 1 ? "" : "s"} before the ${financeLeadRisks[0].boardEvent.date} Board meeting; the working minimum is ${financeLeadDays} days.`
     : showFinanceQuestion
       ? "How much review time should Finance have before a related Board decision?"
+    : showPlanApproval
+      ? "This group now has 2027 placements, but its source rule is still an open question. Mark the 2027 plan ready only after the team decides."
     : downstreamConfirmed && (overrides.length > 0 || group.templateIds.some((id) => state.workingRules[id]))
       ? "This earlier-layer change may affect placements in a downstream layer that was already confirmed."
       : state.activePhase === "board" && group.id === "full-board" && state.plan.settings.boardScenario === "continuity"
@@ -496,6 +504,9 @@ export function PlanningCockpit({
                 <button type="button" onClick={() => onRuleChange("finance-committee", { minimumLeadDays: 14 })}>At least 14 days</button>
                 <button type="button" onClick={() => setFinanceQuestionDismissed(true)}>Decide later</button>
               </div>
+            )}
+            {showPlanApproval && openQuestionTemplate && (
+              <div><button type="button" onClick={() => onApproveTemplateForPlan(openQuestionTemplate.id)}>Mark 2027 plan ready</button></div>
             )}
           </section>
         )}

@@ -30,6 +30,7 @@ export interface PlanYearState {
   hiddenEventIds: string[];
   customTemplates: MeetingTemplate[];
   calendarClosures: CalendarClosure[];
+  approvedTemplateIds: string[];
 }
 
 export interface CalendarClosure {
@@ -275,6 +276,7 @@ export function createPlanYearState(plan: CalendarPlan): PlanYearState {
     hiddenEventIds: [],
     customTemplates: [],
     calendarClosures: [],
+    approvedTemplateIds: [],
   });
 }
 
@@ -429,6 +431,7 @@ export function advancePlanStep(state: PlanYearState): PlanYearState {
     hiddenEventIds: state.hiddenEventIds,
     customTemplates: state.customTemplates,
     calendarClosures: state.calendarClosures,
+    approvedTemplateIds: state.approvedTemplateIds,
   });
 }
 
@@ -444,6 +447,7 @@ export function previousPlanStep(state: PlanYearState): PlanYearState {
     hiddenEventIds: state.hiddenEventIds,
     customTemplates: state.customTemplates,
     calendarClosures: state.calendarClosures,
+    approvedTemplateIds: state.approvedTemplateIds,
   });
 }
 
@@ -463,6 +467,7 @@ export function confirmActivePhase(state: PlanYearState): PlanYearState {
     hiddenEventIds: state.hiddenEventIds,
     customTemplates: state.customTemplates,
     calendarClosures: state.calendarClosures,
+    approvedTemplateIds: state.approvedTemplateIds,
   });
 }
 
@@ -650,6 +655,7 @@ export function reopenPhase(
     hiddenEventIds: state.hiddenEventIds,
     customTemplates: state.customTemplates,
     calendarClosures: state.calendarClosures,
+    approvedTemplateIds: state.approvedTemplateIds,
   });
 }
 
@@ -667,6 +673,7 @@ export function navigateToPhase(
     hiddenEventIds: state.hiddenEventIds,
     customTemplates: state.customTemplates,
     calendarClosures: state.calendarClosures,
+    approvedTemplateIds: state.approvedTemplateIds,
   });
 }
 
@@ -680,6 +687,11 @@ export function updateWorkingRule(
     ...state,
     workingRules: { ...state.workingRules, [templateId]: nextRule },
   };
+}
+
+export function approveTemplateForPlan(state: PlanYearState, templateId: string): PlanYearState {
+  if (state.approvedTemplateIds.includes(templateId)) return state;
+  return { ...state, approvedTemplateIds: [...state.approvedTemplateIds, templateId] };
 }
 
 const CADENCE_COUNTS: Record<Exclude<CadencePreset, "custom">, number> = {

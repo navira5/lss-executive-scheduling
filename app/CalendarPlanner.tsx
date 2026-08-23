@@ -16,6 +16,7 @@ import {
   addAdHocEvent,
   addCalendarClosure,
   addCommitteeMeetingGroup,
+  approveTemplateForPlan,
   confirmActivePhase,
   createPlanYearState,
   navigateToPhase,
@@ -353,6 +354,10 @@ export function CalendarPlanner() {
             setSelectedTemplateId(added.templateId);
             setSelectedEventId(null);
             setCalendarMoveNotice({ valid: true, message: `${name} added without inventing a cadence. Choose a schedule when ready.` });
+          }}
+          onApproveTemplateForPlan={(templateId) => {
+            commitState(approveTemplateForPlan(state, templateId));
+            setCalendarMoveNotice({ valid: true, message: "This 2027 meeting plan is ready for calendar export; the underlying source-rule status remains unchanged." });
           }}
           onSharedAttendeesChange={(templateIds, attendees) => {
             let next = state;
