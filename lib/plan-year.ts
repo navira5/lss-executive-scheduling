@@ -48,6 +48,8 @@ export interface WorkingMeetingRule {
   cadence?: string;
   cadencePreset?: CadencePreset;
   annualCount?: number;
+  startMonth?: number;
+  ordinal?: number;
   weekday?: number;
   owner?: string;
   startTime?: string | null;
@@ -504,11 +506,18 @@ const CADENCE_LABELS: Record<CadencePreset, string> = {
   custom: "Custom annual count",
 };
 
-function monthsForCount(count: number): number[] {
+function monthsForCount(count: number, startMonth: number): number[] {
   if (count <= 0) return [];
-  return Array.from({ length: Math.min(count, 12) }, (_, index) =>
-    Math.min(12, Math.floor((index * 12) / count) + 1),
-  );
+  return Array.from({ length: Math.min(count, 12) }, (_, index) => {
+    const offset = Math.floor((index * 12) / count);
+    return ((startMonth - 1 + offset) % 12) + 1;
+  }).sort((left, right) => left - right);
+}
+
+function intervalMonths(startMonth: number, interval: number, count: number): number[] {
+  return Array.from({ length: count }, (_, index) =>
+    ((startMonth - 1 + index * interval) % 12) + 1,
+  ).sort((left, right) => left - right);
 }
 
 function dateSequence(count: number, weekday: number, everyDays?: number): string[] {
@@ -533,12 +542,12 @@ function templateWeekday(template: MeetingTemplate, rule: WorkingMeetingRule): n
 }
 
 function scheduleGeneration(
-  template: MeetingTemplate,
   preset: CadencePreset,
   count: number,
   weekday: number,
+  startMonth: number,
+  ordinal: number,
 ): GenerationRule {
-  const ordinal = "ordinal" in template.generation ? template.generation.ordinal : 2;
   if (preset === "weekly") {
     return { type: "fixed_dates", dates: dateSequence(count, weekday, 7) };
   }
@@ -548,12 +557,12 @@ function scheduleGeneration(
   const months = preset === "monthly"
     ? Array.from({ length: 12 }, (_, index) => index + 1)
     : preset === "every_other_month"
-      ? [1, 3, 5, 7, 9, 11]
+      ? intervalMonths(startMonth, 2, 6)
       : preset === "quarterly"
-        ? [1, 4, 7, 10]
+        ? intervalMonths(startMonth, 3, 4)
         : preset === "semiannual"
-          ? [1, 7]
-          : monthsForCount(count);
+          ? intervalMonths(startMonth, 6, 2)
+          : monthsForCount(count, startMonth);
   if (count <= 12) {
     return { type: "nth_weekday", months: months.slice(0, count), ordinal, weekday };
   }
@@ -563,7 +572,12 @@ function scheduleGeneration(
 export function updateTemplateSchedule(
   state: PlanYearState,
   templateId: string,
-  patch: { cadencePreset?: CadencePreset; annualCount?: number },
+  patch: {
+    cadencePreset?: CadencePreset;
+    annualCount?: number;
+    startMonth?: number;
+    ordinal?: number;
+  },
 ): PlanYearState {
   const template = buildMeetingTemplates(state.plan.settings).find(
     (item) => item.id === templateId,
@@ -585,7 +599,21 @@ export function updateTemplateSchedule(
     ? "custom"
     : requestedPreset;
   const weekday = templateWeekday(template, currentRule);
-  const generation = scheduleGeneration(template, cadencePreset, annualCount, weekday);
+  const templateMonths = "months" in template.generation ? template.generation.months : [];
+  const startMonth = Math.max(
+    1,
+    Math.min(12, patch.startMonth ?? currentRule.startMonth ?? templateMonths[0] ?? 1),
+  );
+  const ordinal = patch.ordinal ?? currentRule.ordinal ?? (
+    "ordinal" in template.generation ? template.generation.ordinal : 2
+  );
+  const generation = scheduleGeneration(
+    cadencePreset,
+    annualCount,
+    weekday,
+    startMonth,
+    ordinal,
+  );
   const generated = generateEventsForTemplate({
     ...template,
     generation,
@@ -612,6 +640,8 @@ export function updateTemplateSchedule(
         cadencePreset,
         annualCount: generated.length,
         cadence: CADENCE_LABELS[cadencePreset],
+        startMonth,
+        ordinal,
       },
     },
     eventOverrides: Object.fromEntries(

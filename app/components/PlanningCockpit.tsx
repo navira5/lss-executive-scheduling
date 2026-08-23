@@ -28,6 +28,17 @@ const WEEKDAYS = [
   "Friday",
   "Saturday",
 ];
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const ORDINALS = [
+  { value: 1, label: "First" },
+  { value: 2, label: "Second" },
+  { value: 3, label: "Third" },
+  { value: 4, label: "Fourth" },
+  { value: -1, label: "Last" },
+];
 
 const CADENCE_OPTIONS: Array<{ value: CadencePreset; label: string; count?: number }> = [
   { value: "weekly", label: "Weekly", count: 52 },
@@ -127,7 +138,12 @@ interface PlanningCockpitProps {
   onSharedAttendeesChange: (templateIds: string[], attendees: string[]) => void;
   onScheduleChange: (
     templateId: string,
-    patch: { cadencePreset?: CadencePreset; annualCount?: number },
+    patch: {
+      cadencePreset?: CadencePreset;
+      annualCount?: number;
+      startMonth?: number;
+      ordinal?: number;
+    },
   ) => void;
   onResolveMove: (choice: "rule" | "override") => void;
   onCancelMove: () => void;
@@ -272,6 +288,10 @@ export function PlanningCockpit({
           {variants.map(({ template, planned, rule }) => {
             const weekday = rule.weekday ?? defaultWeekday(template);
             const cadence = rule.cadencePreset ?? defaultCadence(template);
+            const templateMonths = "months" in template.generation ? template.generation.months : [];
+            const startMonth = rule.startMonth ?? templateMonths[0] ?? 1;
+            const ordinal = rule.ordinal ?? ("ordinal" in template.generation ? template.generation.ordinal : 2);
+            const monthBased = !["weekly", "biweekly"].includes(cadence);
             return (
               <article className="format-row" key={template.id}>
                 <header>
@@ -310,6 +330,22 @@ export function PlanningCockpit({
                       {CADENCE_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
                     </select>
                   </label>
+                  {monthBased && (
+                    <>
+                      <label>
+                        <span>Starting month</span>
+                        <select disabled={!editingAllowed} value={startMonth} onChange={(event) => onScheduleChange(template.id, { startMonth: Number(event.target.value) })}>
+                          {MONTHS.map((month, index) => <option value={index + 1} key={month}>{month}</option>)}
+                        </select>
+                      </label>
+                      <label>
+                        <span>Week of month</span>
+                        <select disabled={!editingAllowed} value={ordinal} onChange={(event) => onScheduleChange(template.id, { ordinal: Number(event.target.value) })}>
+                          {ORDINALS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+                        </select>
+                      </label>
+                    </>
+                  )}
                   <label><span>Duration</span><div className="input-with-unit"><input disabled={!editingAllowed} type="number" min="15" step="15" value={rule.durationMinutes ?? template.durationMinutes} onChange={(event) => onRuleChange(template.id, { durationMinutes: Number(event.target.value) })} /><i>min</i></div></label>
                   <label><span>Time</span><input disabled={!editingAllowed} type="time" value={timeValue(rule.startTime ?? template.startTime)} onChange={(event) => onRuleChange(template.id, { startTime: event.target.value || null })} /></label>
                   <label>

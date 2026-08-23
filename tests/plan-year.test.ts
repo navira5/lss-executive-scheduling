@@ -256,6 +256,17 @@ test("cadence and annual count regenerate actual meeting occurrences", () => {
     8,
   );
   assert.equal(custom.workingRules["full-board"].cadencePreset, "custom");
+
+  const evenMonths = updateTemplateSchedule(state, "full-board", {
+    cadencePreset: "every_other_month",
+    startMonth: 2,
+  });
+  assert.deepEqual(
+    evenMonths.plan.events
+      .filter((event) => event.templateId === "full-board")
+      .map((event) => Number(event.date.slice(5, 7))),
+    [2, 4, 6, 8, 10, 12],
+  );
 });
 
 test("interprets the golden Board check-in command without applying it", () => {

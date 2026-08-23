@@ -360,7 +360,7 @@ export function CalendarPlanner() {
             commitState(next);
             setCalendarMoveNotice({ valid: true, message: "Shared attendees updated for this meeting group." });
           }}
-          onScheduleChange={(templateId, patch: { cadencePreset?: CadencePreset; annualCount?: number }) => {
+          onScheduleChange={(templateId, patch: { cadencePreset?: CadencePreset; annualCount?: number; startMonth?: number; ordinal?: number }) => {
             commitState(updateTemplateSchedule(state, templateId, patch));
             setCalendarMoveNotice({ valid: true, message: "Calendar regenerated from the updated cadence." });
           }}
