@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildAgentContext,
+  interpretDemoRequest,
+  validateAgentProposal,
+} from "@/lib/plan-agent";
+import {
   advancePlanStep,
   applyPlanProposal,
   bulkUpdateByExactTitle,
@@ -167,4 +172,53 @@ test("confirmed Board meetings cannot be edited without reopening the layer", ()
     () => updateEvent(state, event.id, { startTime: "16:30" }),
     /reopen Board & Governance/i,
   );
+});
+
+test("interprets the golden Board check-in command without applying it", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const proposal = interpretDemoRequest(
+    "Move all Board check-ins to 4:30 and keep them virtual",
+    buildAgentContext(state),
+  );
+
+  assert.equal(proposal.kind, "bulk_update");
+  if (proposal.kind !== "bulk_update") return;
+  assert.equal(proposal.patch.startTime, "16:30");
+  assert.equal(proposal.patch.modality, "Virtual");
+  assert.ok(proposal.eventIds.length > 1);
+  assert.ok(
+    proposal.eventIds.every((id) =>
+      id.startsWith("critical-checkin-"),
+    ),
+  );
+  assert.deepEqual(state.eventOverrides, {});
+});
+
+test("agent proposals cannot bypass federal-holiday validation", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const event = visiblePlanEvents(state).find(
+    (item) => item.templateId === "full-board",
+  );
+  assert.ok(event);
+  const result = validateAgentProposal(state, {
+    kind: "move",
+    eventIds: [event.id],
+    date: "2027-01-18",
+  });
+
+  assert.equal(result.valid, false);
+  assert.match(result.reason ?? "", /federal holiday/i);
+});
+
+test("ambiguous demo requests ask a question instead of inventing a change", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+  const proposal = interpretDemoRequest(
+    "Make the Board meetings better",
+    buildAgentContext(state),
+  );
+
+  assert.equal(proposal.kind, "clarify");
+  if (proposal.kind === "clarify") {
+    assert.match(proposal.question, /what would you like to change/i);
+  }
 });
