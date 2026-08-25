@@ -129,6 +129,8 @@ interface PlanningCockpitProps {
   importedEvents: ImportedCalendarEvent[];
   selectedImportedEventId: string | null;
   canUndo: boolean;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
   onRuleChange: (templateId: string, patch: WorkingMeetingRule) => void;
   onOpenMeetingGroup: (templateId: string) => void;
   onBackToMeetingGroups: () => void;
@@ -160,6 +162,8 @@ export function PlanningCockpit({
   importedEvents,
   selectedImportedEventId,
   canUndo,
+  collapsed,
+  onToggleCollapsed,
   onRuleChange,
   onOpenMeetingGroup,
   onBackToMeetingGroups,
@@ -325,8 +329,23 @@ export function PlanningCockpit({
   const scheduledLayerRows = layerRows.filter((row) => row.count > 0);
   const layerTotal = scheduledLayerRows.reduce((sum, row) => sum + row.count, 0);
 
+  if (collapsed) {
+    return (
+      <aside className="cockpit cockpit-collapsed" aria-label="Meeting details hidden">
+        <button className="cockpit-show-details" type="button" onClick={onToggleCollapsed}>
+          <span aria-hidden="true">‹</span>
+          Show details
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className="cockpit" aria-label="Selected meeting group settings">
+      <div className="cockpit-toolbar">
+        <span>Meeting details</span>
+        <button type="button" onClick={onToggleCollapsed}>Hide details <i aria-hidden="true">›</i></button>
+      </div>
       <div className="cockpit-scroll">
         {showLayerOverview ? (
           <>

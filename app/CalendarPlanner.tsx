@@ -89,6 +89,7 @@ export function CalendarPlanner() {
   const [pendingConversion, setPendingConversion] = useState<PendingFormatConversion | null>(null);
   const [calendarMoveNotice, setCalendarMoveNotice] = useState<{ valid: boolean; message: string } | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [detailsCollapsed, setDetailsCollapsed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -262,10 +263,13 @@ export function CalendarPlanner() {
         </div>
       </header>
 
-      <div className="plan-layout cockpit-layout">
-        <nav className="phase-rail" aria-label="Plan Year layers">
-          <div className="phase-rail-heading"><span>Plan Year</span><strong>{Math.round((confirmedCount / 4) * 100)}%</strong></div>
-          <div className="phase-list">
+      <nav className="phase-progress" aria-label="Plan Year stages">
+        <div className="phase-progress-inner">
+          <div className="phase-progress-summary">
+            <span>Plan Year</span>
+            <strong>{confirmedCount} of 4 layers confirmed</strong>
+          </div>
+          <div className="phase-progress-list">
             {PHASE_ORDER.map((phase, index) => {
               const confirmed = state.confirmedPhases.includes(phase);
               const active = state.activePhase === phase;
@@ -285,13 +289,15 @@ export function CalendarPlanner() {
                   }}
                 >
                   <i>{confirmed ? "✓" : index + 1}</i>
-                  <span><strong>{PHASE_LABELS[phase]}</strong><small>{active ? "Shaping now" : confirmed ? "Confirmed · revisit" : unavailable ? "Follows prior layer" : "Ready"}</small></span>
+                  <span><strong>{PHASE_LABELS[phase]}</strong><small>{active ? "Planning now" : confirmed ? "Confirmed" : unavailable ? "Follows prior stage" : "Ready"}</small></span>
                 </button>
               );
             })}
           </div>
-          <div className="phase-help"><strong>Immovable rocks first</strong><p>Earlier layers stay visible. Revisit them at any time; downstream effects will be surfaced here.</p></div>
-        </nav>
+        </div>
+      </nav>
+
+      <div className={`plan-layout cockpit-layout${detailsCollapsed ? " details-collapsed" : ""}`}>
 
         <div className="planning-canvas calendar-canvas">
           <PlanYearCalendar
@@ -304,9 +310,11 @@ export function CalendarPlanner() {
               setSelectedEventId(eventId);
               setSelectedTemplateId(state.plan.events.find((event) => event.id === eventId)?.templateId ?? null);
               setSelectedImportedEventId(null);
+              setDetailsCollapsed(false);
             }}
             onSelectImported={(eventId) => {
               setSelectedImportedEventId(eventId);
+              setDetailsCollapsed(false);
               setCalendarMoveNotice({ valid: true, message: "Existing Outlook meeting selected. Details are open at right." });
             }}
             onMoveEvent={handleCalendarMove}
@@ -331,6 +339,7 @@ export function CalendarPlanner() {
                 setSelectedTemplateId(added.templateId);
                 setSelectedEventId(added.eventId);
                 setSelectedImportedEventId(null);
+                setDetailsCollapsed(false);
                 setCalendarMoveNotice({ valid: true, message: `${title} added on ${date}. Complete details in the meeting cockpit.` });
               } catch (error) {
                 setCalendarMoveNotice({ valid: false, message: error instanceof Error ? error.message : "The event could not be added." });
@@ -348,6 +357,8 @@ export function CalendarPlanner() {
           importedEvents={importedEvents}
           selectedImportedEventId={selectedImportedEventId}
           canUndo={history.length > 0}
+          collapsed={detailsCollapsed}
+          onToggleCollapsed={() => setDetailsCollapsed((current) => !current)}
           onRuleChange={updateRule}
           onOpenMeetingGroup={(templateId) => {
             setSelectedTemplateId(templateId);

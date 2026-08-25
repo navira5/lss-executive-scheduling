@@ -14,14 +14,15 @@ The planning workspace follows LSS's annual planning sequence instead of present
 
 Each active layer combines a 3 x 4 year view with:
 
+- a compact horizontal stage bar that keeps the planning sequence visible while maximizing calendar space;
 - rule-generated meeting dates;
 - immediate drag-and-drop changes with deterministic holiday and lock validation;
-- a select-and-click move fallback for browsers and touch devices without reliable drag support;
 - a short, context-aware planning question;
 - natural-language change proposals that require human approval;
 - contextual meeting, rules, and attendees editors;
 - exact-title bulk updates that leave customized meetings alone;
-- explicit confirmation and reopening of completed layers; and
+- explicit confirmation and reopening of completed layers;
+- a collapsible meeting-details panel for full-calendar review; and
 - CSV export and browser-local working state.
 
 ## Outlook snapshot for the POC

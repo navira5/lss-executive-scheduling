@@ -138,68 +138,76 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .plan-layout {
   display: grid;
-  grid-template-columns: 218px minmax(760px, 1fr) 390px;
+  grid-template-columns: minmax(760px, 1fr) 390px;
   gap: 18px;
   max-width: 1780px;
   margin: 0 auto;
   padding: 18px 20px 12px;
   align-items: start;
 }
-.cockpit-layout { grid-template-columns: 218px minmax(740px, 1fr) 390px; }
-.phase-rail, .agent-card, .calendar-section, .context-panel, .cockpit {
+.cockpit-layout { grid-template-columns: minmax(740px, 1fr) 390px; }
+.cockpit-layout.details-collapsed { grid-template-columns: minmax(740px, 1fr) 108px; }
+.agent-card, .calendar-section, .context-panel, .cockpit {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: var(--shadow);
 }
-.phase-rail {
+.phase-progress {
   position: sticky;
-  top: 86px;
-  overflow: hidden;
-}
-.phase-rail-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 17px 16px 14px;
+  top: 72px;
+  z-index: 40;
   border-bottom: 1px solid var(--line);
+  background: rgba(245, 246, 247, .97);
 }
-.phase-rail-heading span { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; }
-.phase-rail-heading strong { color: var(--executive); font-size: .82rem; }
-.phase-list { padding: 10px 8px; }
-.phase-list button {
+.phase-progress-inner {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 18px;
+  max-width: 1780px;
+  margin: 0 auto;
+  padding: 9px 20px;
+}
+.phase-progress-summary { flex: 0 0 142px; }
+.phase-progress-summary span { display: block; color: var(--ink); font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; }
+.phase-progress-summary strong { display: block; margin-top: 2px; color: var(--muted); font-size: .65rem; font-weight: 650; }
+.phase-progress-list { display: grid; grid-template-columns: repeat(5, minmax(118px, 1fr)); flex: 1 1 auto; min-width: 0; border: 1px solid var(--line); border-radius: 7px; background: white; }
+.phase-progress-list button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   width: 100%;
-  padding: 11px 9px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 7px 10px;
   border: 0;
-  border-radius: 6px;
+  border-right: 1px solid var(--line);
   background: transparent;
   text-align: left;
 }
-.phase-list button:not(:disabled) { cursor: pointer; }
-.phase-list button.active { background: #f0f2f4; box-shadow: inset 2px 0 0 var(--board); }
-.phase-list button.confirmed { color: var(--green); }
-.phase-list button:disabled:not(.active) { opacity: .46; }
-.phase-list button > i {
+.phase-progress-list button:last-child { border-right: 0; }
+.phase-progress-list button:not(:disabled) { cursor: pointer; }
+.phase-progress-list button.active { background: var(--blue-soft); box-shadow: inset 0 -3px 0 var(--board); }
+.phase-progress-list button.confirmed { color: var(--green); }
+.phase-progress-list button:disabled:not(.active) { opacity: .46; }
+.phase-progress-list button > i {
   display: grid;
   place-items: center;
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
   border-radius: 5px;
   border: 1px solid var(--line-dark);
   background: white;
   font-style: normal;
-  font-size: .72rem;
+  font-size: .68rem;
   font-weight: 800;
 }
-.phase-list button.active > i { background: var(--board); color: white; border-color: var(--board); }
-.phase-list button.confirmed > i { background: var(--green-soft); border-color: #b9d9c6; }
-.phase-list button span { min-width: 0; }
-.phase-list button strong { display: block; color: var(--ink); font-size: .8rem; }
-.phase-list button small { display: block; margin-top: 2px; color: var(--muted); font-size: .66rem; }
+.phase-progress-list button.active > i { background: var(--board); color: white; border-color: var(--board); }
+.phase-progress-list button.confirmed > i { background: var(--green-soft); border-color: #b9d9c6; }
+.phase-progress-list button span { min-width: 0; }
+.phase-progress-list button strong { display: block; overflow: hidden; color: var(--ink); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.phase-progress-list button small { display: block; margin-top: 1px; overflow: hidden; color: var(--muted); font-size: .6rem; text-overflow: ellipsis; white-space: nowrap; }
 .step-list { padding: 13px 16px 15px; border-top: 1px solid var(--line); background: var(--surface-soft); }
 .step-list > span { display: block; margin-bottom: 9px; color: var(--muted); font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
 .step-list > div { display: flex; align-items: center; gap: 7px; margin: 7px 0; color: #829095; font-size: .7rem; }
@@ -417,7 +425,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .context-panel { position: sticky; top: 108px; overflow: hidden; }
 
-.cockpit { position: sticky; top: 86px; display: flex; flex-direction: column; overflow: hidden; height: calc(100vh - 100px); max-height: calc(100vh - 100px); box-shadow: none; }
+.cockpit { position: sticky; top: 150px; display: flex; flex-direction: column; overflow: hidden; height: calc(100vh - 164px); max-height: calc(100vh - 164px); box-shadow: none; }
+.cockpit-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; min-height: 36px; padding: 6px 12px; border-bottom: 1px solid var(--line); background: var(--surface-soft); }
+.cockpit-toolbar > span { color: var(--muted); font-size: var(--text-meta); font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+.cockpit-toolbar button, .cockpit-show-details { border: 0; background: transparent; color: var(--board); font-size: var(--text-meta); font-weight: 750; cursor: pointer; }
+.cockpit-toolbar button i { margin-left: 3px; font-style: normal; font-size: .9rem; }
+.cockpit-collapsed { height: auto; max-height: none; }
+.cockpit-show-details { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 8px 10px; white-space: nowrap; }
+.cockpit-show-details span { font-size: 1rem; }
 .cockpit-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: thin; }
 .committee-overview-header { padding: 22px 20px 18px; border-bottom: 1px solid var(--line); background: #fff; }
 .committee-overview-header h2 { margin: 0; font-size: var(--text-heading); font-weight: 650; line-height: 1.25; letter-spacing: -.02em; }
@@ -591,14 +606,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .app-footer button { border: 0; background: transparent; color: var(--red); font-size: .67rem; font-weight: 750; cursor: pointer; }
 
 @media (max-width: 1450px) {
-  .plan-layout { grid-template-columns: 190px minmax(760px, 1fr) 340px; }
-  .cockpit-layout { grid-template-columns: 185px minmax(720px, 1fr) 350px; }
+  .cockpit-layout { grid-template-columns: minmax(720px, 1fr) 350px; }
+  .cockpit-layout.details-collapsed { grid-template-columns: minmax(720px, 1fr) 108px; }
   .header-status span { display: none; }
 }
 @media (max-width: 1180px) {
-  .plan-layout { grid-template-columns: 185px minmax(0, 1fr); }
-  .context-panel { position: static; grid-column: 2; }
-  .cockpit { position: static; grid-column: 2; max-height: none; }
+  .phase-progress-inner { grid-template-columns: 1fr; }
+  .phase-progress-summary { display: none; }
+  .plan-layout, .cockpit-layout, .cockpit-layout.details-collapsed { grid-template-columns: minmax(0, 1fr); }
+  .context-panel { position: static; }
+  .cockpit { position: static; max-height: none; }
   .cockpit { height: auto; }
   .cockpit-scroll { max-height: none; }
   .cockpit-footer { max-height: none; }
@@ -607,12 +624,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 @media (max-width: 820px) {
   .app-header { position: static; grid-template-columns: 1fr auto; }
+  .phase-progress { position: static; }
+  .phase-progress-inner { padding: 8px 10px; overflow-x: auto; }
+  .phase-progress-list { min-width: 640px; }
   .header-actions .ghost { display: none; }
   .scope-banner { align-items: flex-start; flex-direction: column; gap: 10px; }
   .scope-banner > div { align-items: flex-start; flex-direction: column; gap: 3px; }
   .plan-layout { display: block; padding: 10px; }
-  .phase-rail { position: static; margin-bottom: 10px; }
-  .phase-list { display: grid; grid-template-columns: 1fr 1fr; }
   .step-list, .phase-help { display: none; }
   .planning-canvas { gap: 10px; }
   .context-panel { margin-top: 10px; }
@@ -628,7 +646,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 @media print {
   .app-header { position: static; }
-  .header-actions, .scope-banner, .phase-rail, .agent-card, .context-panel, .app-footer { display: none !important; }
+  .header-actions, .scope-banner, .phase-progress, .agent-card, .context-panel, .cockpit, .app-footer { display: none !important; }
   .plan-layout { display: block; padding: 0; }
   .calendar-section { border: 0; box-shadow: none; }
   .year-grid { min-width: 0; grid-template-columns: repeat(3, 1fr); }
