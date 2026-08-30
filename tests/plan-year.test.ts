@@ -23,6 +23,7 @@ import {
   proposeEventMove,
   regenerateActivePhase,
   reopenPhase,
+  removePlanEvent,
   resolvePlanEvent,
   updateEvent,
   updateTemplateSchedule,
@@ -568,4 +569,16 @@ test("ad hoc events are immediately visible, editable, and eligible for the cale
   }), added.eventId);
   assert.equal(resolved.location, "Downtown Columbus");
   assert.ok(confirmedCalendarEvents(added.state).some((event) => event.id === added.eventId));
+});
+
+test("any planner meeting can be removed from the working calendar and Outlook export", () => {
+  const initial = createPlanYearState(generateCalendarPlan(baseline));
+  const event = visiblePlanEvents(initial).find((item) => item.templateId === "full-board");
+  assert.ok(event);
+  const removed = removePlanEvent(initial, event.id);
+
+  assert.ok(removed.hiddenEventIds.includes(event.id));
+  assert.ok(!visiblePlanEvents(removed).some((item) => item.id === event.id));
+  const confirmed = confirmActivePhase(removed);
+  assert.ok(!confirmedCalendarEvents(confirmed).some((item) => item.id === event.id));
 });

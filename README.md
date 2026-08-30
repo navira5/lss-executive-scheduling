@@ -31,13 +31,14 @@ The repository includes optional server-side Microsoft Graph adapters that can:
 
 - load meeting rules and holidays from SharePoint/Microsoft Lists;
 - load existing 2027 Outlook events as planning context; and
-- create confirmed, export-eligible planner events in a configured Outlook test calendar after explicit human confirmation.
+- preview and then create, update, or delete events in one configured Outlook test calendar after explicit human confirmation; and
+- write confirmed meeting-rule changes back to the SharePoint meeting-type list.
 
-The adapters are covered by local contract tests and were authenticated against Navira's isolated Microsoft 365 trial tenant on 2026-08-30. The live verification loaded the SharePoint meeting and holiday lists, read the dedicated `LSS 2027 Demo Calendar`, created one attendee-free connection-test event, and read it back. This receipt proves the trial path only; it is not evidence of access to LSS's tenant. No Microsoft credentials are committed to this repository.
+The adapters are covered by local contract tests and were authenticated against Navira's isolated Microsoft 365 trial tenant on 2026-08-30. The live verification loaded the SharePoint meeting and holiday lists and read the dedicated `LSS 2027 Demo Calendar`. A full Outlook sync check previewed, created, updated, and deleted one attendee-free verification event, then proved that it no longer remained. This receipt proves the trial path only; it is not evidence of access to LSS's tenant. No Microsoft credentials are committed to this repository.
 
-Outlook publishing fails closed unless `OUTLOOK_PUBLISH_ENABLED=true`. Keep that switch off except during an approved test against a non-production mailbox. The current adapter creates new events; it does not yet update existing events or perform Graph-backed duplicate detection.
+Outlook synchronization fails closed unless `OUTLOOK_PUBLISH_ENABLED=true`. The browser first requests a server-computed review containing every create, update, and delete; a second explicit Upload action is required to apply it. Only planner-managed events or Outlook events a user explicitly queues can be deleted. Unrelated Outlook events remain untouched.
 
-Planner rule edits do not yet write back to SharePoint. SharePoint-to-planner loading is currently one-way.
+Planner rule edits write back only when the user confirms the active planning layer. The Entra application needs the Microsoft Graph application permission `Sites.ReadWrite.All` with admin consent before this route can update the trial list.
 
 ## Hosted feedback access
 
@@ -46,10 +47,10 @@ The Sites-hosted prototype uses a temporary username and access code during the 
 This is intentionally a trial boundary:
 
 - Microsoft data comes only from Navira's isolated trial tenant.
-- Hosted Outlook publishing stays disabled during open feedback testing.
+- Hosted Outlook writes are constrained to Navira's isolated mailbox and dedicated `LSS 2027 Demo Calendar`, with a mandatory review step.
 - Each tester's planning changes are stored only in that browser; testers are not editing one shared plan.
-- Power Apps and Microsoft Lists own the editable rule data, while the custom planner reads the resulting SharePoint lists.
-- LSS Microsoft Entra login, shared durable plan state, and planner-to-SharePoint write-back remain production follow-on work.
+- Power Apps and Microsoft Lists own the editable rule data; the custom planner reads it and writes confirmed rule changes back.
+- LSS Microsoft Entra login and shared durable plan state remain production follow-on work.
 
 ## Outlook snapshot fallback for the POC
 
@@ -104,9 +105,7 @@ The prototype does not:
 - infer missing attendees or organizational authority;
 - send raw Outlook event descriptions to the planning agent;
 - include the day-to-day Executive Scheduling Advisor; or
-- replace LSS's final review and approval;
-- update existing Outlook events in place; or
-- write planner rule edits back to SharePoint.
+- replace LSS's final review and approval.
 
 ## Evidence and implementation
 

@@ -8,6 +8,7 @@ import type {
   RuleStatus,
   ScenarioSettings,
 } from "@/lib/types";
+import type { WorkingMeetingRule } from "@/lib/plan-year";
 
 export type SharePointFields = Record<string, unknown>;
 
@@ -45,6 +46,22 @@ const WEEKDAYS = [
   "Friday",
   "Saturday",
 ];
+
+const SHAREPOINT_CADENCE: Record<string, string> = {
+  weekly: "Weekly",
+  biweekly: "Bi-Weekly",
+  monthly: "Monthly",
+  every_other_month: "Every other month",
+  quarterly: "Quarterly",
+  semiannual: "Semi-Annual",
+};
+
+const SHAREPOINT_RULE_STATUS: Record<RuleStatus, string> = {
+  confirmed: "Confirmed",
+  "2026_baseline": "2026 baseline",
+  needs_validation: "Needs validation",
+  open_question: "Open Question",
+};
 
 function text(fields: SharePointFields, ...names: string[]): string {
   for (const name of names) {
@@ -304,5 +321,113 @@ export function calendarPlanFromSharePoint(
       label: "2027 Working Draft — SharePoint rules",
     },
     warnings,
+  };
+}
+
+function cadenceForWrite(rule: WorkingMeetingRule, fallback: string): string {
+  if (rule.cadencePreset && rule.cadencePreset !== "custom") {
+    return SHAREPOINT_CADENCE[rule.cadencePreset] ?? fallback;
+  }
+  if (rule.annualCount === 1) return "Annual";
+  if (rule.annualCount === 2) return "Semi-Annual";
+  if (rule.annualCount === 3) return "3x/Year";
+  if (rule.annualCount === 4) return "Quarterly";
+  if (rule.annualCount === 6) return "Every other month";
+  if (rule.annualCount === 12) return "Monthly";
+  if (rule.annualCount === 26) return "Bi-Weekly";
+  if (rule.annualCount === 52) return "Weekly";
+  return rule.cadence || fallback;
+}
+
+function ordinalForWrite(value: number | undefined): string | undefined {
+  if (value === -1) return "Last";
+  if (value && value >= 1 && value <= 4) return `${value}${value === 1 ? "st" : value === 2 ? "nd" : value === 3 ? "rd" : "th"}`;
+  return undefined;
+}
+
+function modalityForWrite(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const normalized = value.toLowerCase().replaceAll(" ", "-");
+  if (normalized === "in-person" || normalized === "virtual" || normalized === "hybrid") {
+    return normalized === "in-person" ? "In-person" : normalized[0].toUpperCase() + normalized.slice(1);
+  }
+  return undefined;
+}
+
+function plannedMonthsForWrite(rule: WorkingMeetingRule): number[] | null {
+  const count = rule.annualCount;
+  const startMonth = Math.max(1, Math.min(12, rule.startMonth ?? 1));
+  if (!count || count > 12 || rule.cadencePreset === "weekly" || rule.cadencePreset === "biweekly") {
+    return count ? MONTHS.map((_, index) => index + 1) : null;
+  }
+  const interval = rule.cadencePreset === "monthly" ? 1
+    : rule.cadencePreset === "every_other_month" ? 2
+      : rule.cadencePreset === "quarterly" ? 3
+        : rule.cadencePreset === "semiannual" ? 6
+          : null;
+  return Array.from({ length: Math.min(count, 12) }, (_, index) => {
+    const offset = interval === null ? Math.floor((index * 12) / count) : index * interval;
+    return ((startMonth - 1 + offset) % 12) + 1;
+  }).sort((left, right) => left - right);
+}
+
+function replaceNoteSegment(notes: string, label: string, value: string): string {
+  const segments = notes.split(" | ").map((segment) => segment.trim()).filter(Boolean);
+  const next = `${label}: ${value}`;
+  const index = segments.findIndex((segment) => segment.startsWith(`${label}:`));
+  if (index >= 0) segments[index] = next;
+  else segments.push(next);
+  return segments.join(" | ");
+}
+
+export function sharePointRuleFields(
+  template: MeetingTemplate,
+  rule: WorkingMeetingRule,
+  currentNotes?: string,
+): SharePointFields {
+  const fields: SharePointFields = {
+    Cadence: cadenceForWrite(rule, template.cadence),
+  };
+  if (rule.weekday !== undefined && rule.weekday >= 1 && rule.weekday <= 5) fields.DayOfWeek = WEEKDAYS[rule.weekday];
+  const week = ordinalForWrite(rule.ordinal);
+  if (week) fields.WeekOfMonth = week;
+  if (rule.startTime !== undefined) fields.PreferredTime = rule.startTime ? `2027-01-01 ${rule.startTime}` : "";
+  if (rule.durationMinutes !== undefined) fields.Duration = rule.durationMinutes;
+  if (rule.location !== undefined) fields.Location = rule.location;
+  const modality = modalityForWrite(rule.modality);
+  if (modality) fields.Modality = modality;
+  if (rule.attendees !== undefined) fields.Attendees = rule.attendees.join("; ");
+  if (rule.owner !== undefined) fields.Leader = rule.owner;
+  if (rule.minimumLeadDays !== undefined) {
+    fields.MeetingDependency = `At least ${rule.minimumLeadDays} calendar days before the related Board decision.`;
+  }
+  const plannedMonths = plannedMonthsForWrite(rule);
+  if (currentNotes !== undefined && plannedMonths) {
+    const monthLabel = plannedMonths.length === 12
+      ? "All months"
+      : plannedMonths.map((month) => MONTHS[month - 1]).join("; ");
+    fields.Notes = replaceNoteSegment(currentNotes, "Default month(s)", monthLabel);
+  }
+  return fields;
+}
+
+export function newSharePointMeetingFields(
+  template: MeetingTemplate,
+  rule: WorkingMeetingRule,
+): SharePointFields {
+  return {
+    Title: template.name,
+    Category: template.category[0].toUpperCase() + template.category.slice(1),
+    MeetingCategory: template.purpose,
+    Leader: rule.owner ?? template.owner,
+    Attendees: (rule.attendees ?? [template.attendeeGroup]).join("; "),
+    Cadence: cadenceForWrite(rule, template.cadence),
+    Duration: rule.durationMinutes ?? template.durationMinutes,
+    PreferredTime: (rule.startTime ?? template.startTime) ? `2027-01-01 ${rule.startTime ?? template.startTime}` : "",
+    Location: rule.location ?? template.location,
+    ...(modalityForWrite(rule.modality ?? template.modality) ? { Modality: modalityForWrite(rule.modality ?? template.modality) } : {}),
+    RuleStatus: SHAREPOINT_RULE_STATUS[template.ruleStatus],
+    Notes: "Created from the LSS 2027 Calendar Planner after human confirmation.",
+    ...sharePointRuleFields(template, rule),
   };
 }

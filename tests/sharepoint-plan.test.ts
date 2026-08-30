@@ -6,6 +6,8 @@ import {
   calendarPlanFromSharePoint,
   holidaysFromSharePoint,
   meetingTemplatesFromSharePoint,
+  newSharePointMeetingFields,
+  sharePointRuleFields,
 } from "@/lib/sharepoint-plan";
 import type { SharePointFields } from "@/lib/sharepoint-plan";
 
@@ -95,6 +97,40 @@ test("builds a calendar plan from SharePoint rows using the supplied holiday set
   assert.equal(plan.holidays.some((holiday) => holiday.date === "2027-02-15"), false);
   assert.ok(executiveHoliday);
   assert.equal(executiveHoliday.date, "2027-02-15");
+});
+
+test("maps a confirmed working rule back to the existing SharePoint column choices", () => {
+  const template = meetingTemplatesFromSharePoint(meetingRows).templates[0];
+  const fields = sharePointRuleFields(template, {
+    cadencePreset: "biweekly",
+    annualCount: 26,
+    weekday: 3,
+    ordinal: 4,
+    startTime: "16:30",
+    durationMinutes: 75,
+    location: "Main office",
+    modality: "In person",
+    attendees: ["Board", "CEO"],
+    startMonth: 2,
+    minimumLeadDays: 14,
+  }, "Frequency detail: Existing source | Default month(s): January; March | Assumptions: A-BOARD");
+  assert.deepEqual(fields, {
+    Cadence: "Bi-Weekly",
+    DayOfWeek: "Wednesday",
+    WeekOfMonth: "4th",
+    PreferredTime: "2027-01-01 16:30",
+    Duration: 75,
+    Location: "Main office",
+    Modality: "In-person",
+    Attendees: "Board; CEO",
+    MeetingDependency: "At least 14 calendar days before the related Board decision.",
+    Notes: "Frequency detail: Existing source | Default month(s): All months | Assumptions: A-BOARD",
+  });
+
+  const created = newSharePointMeetingFields({ ...template, name: "New Governance Group" }, { cadencePreset: "quarterly" });
+  assert.equal(created.Title, "New Governance Group");
+  assert.equal(created.Cadence, "Quarterly");
+  assert.equal(created.RuleStatus, "Needs validation");
 });
 
 test("SharePoint API route fails clearly when credentials are absent", async () => {

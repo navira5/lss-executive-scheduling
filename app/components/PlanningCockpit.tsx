@@ -152,6 +152,8 @@ interface PlanningCockpitProps {
   onUndo: () => void;
   onConfirmPhase: () => void;
   onImport: (result: CalendarImportResult) => void;
+  onDeletePlanEvent: (eventId: string) => void;
+  onDeleteImportedEvent: (event: ImportedCalendarEvent) => void;
 }
 
 export function PlanningCockpit({
@@ -176,6 +178,8 @@ export function PlanningCockpit({
   onUndo,
   onConfirmPhase,
   onImport,
+  onDeletePlanEvent,
+  onDeleteImportedEvent,
 }: PlanningCockpitProps) {
   const [confirming, setConfirming] = useState(false);
   const [addingGroup, setAddingGroup] = useState(false);
@@ -298,6 +302,9 @@ export function PlanningCockpit({
   const selectedImported = selectedImportedEventId
     ? importedEvents.find((event) => event.id === selectedImportedEventId) ?? null
     : null;
+  const selectedPlanEvent = selectedEventId
+    ? groupEvents.find((event) => event.id === selectedEventId) ?? null
+    : null;
 
   const activeLayerTemplateIds = [
     ...state.phaseSteps.flatMap((step) => step.templateIds),
@@ -403,7 +410,15 @@ export function PlanningCockpit({
               <div><dt>Duration</dt><dd>{selectedImported.durationMinutes} min</dd></div>
               <div><dt>Location</dt><dd>{selectedImported.location || "Not provided"}</dd></div>
             </dl>
-            <p>Read-only snapshot · used as scheduling context</p>
+            <p>Live Outlook event · used as scheduling context</p>
+            <button
+              className="button danger full"
+              type="button"
+              disabled={!selectedImported.outlookEventId}
+              onClick={() => onDeleteImportedEvent(selectedImported)}
+            >
+              {selectedImported.outlookEventId ? "Queue deletion from Outlook" : "Snapshot events cannot be deleted"}
+            </button>
           </section>
         )}
         <section className="cockpit-summary">
@@ -415,6 +430,11 @@ export function PlanningCockpit({
             <span className={`group-color ${groupTemplates[0]?.category ?? "board"}`} aria-hidden="true" />
           </div>
           <p>{variantSummary ? `${variantSummary}.` : "No meetings planned."}</p>
+          {selectedPlanEvent && !selectedImported && (
+            <button className="button danger" type="button" onClick={() => onDeletePlanEvent(selectedPlanEvent.id)}>
+              Remove {selectedPlanEvent.title} on {selectedPlanEvent.date}
+            </button>
+          )}
         </section>
 
         <section className="quick-compare" aria-label="2026 and 2027 meeting counts">

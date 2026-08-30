@@ -4,6 +4,7 @@ import test from "node:test";
 import { GET } from "@/app/api/outlook-events/route";
 import { POST } from "@/app/api/outlook-publish/route";
 import {
+  buildOutlookSyncPreview,
   graphEventBody,
   importedEventFromOutlook,
   type OutlookPublishEventInput,
@@ -81,6 +82,49 @@ test("builds a Microsoft Graph create-event body from an approved planner event"
   assert.equal(body.transactionId, "lss-2027-full-board-2027-01-13-1");
 });
 
+test("previews creates, updates, deletes, and unchanged Outlook events without touching unrelated meetings", () => {
+  const matching = {
+    id: "outlook-matching",
+    subject: publishEvent.title,
+    start: { dateTime: `${publishEvent.date}T${publishEvent.startTime}:00` },
+    end: { dateTime: "2027-01-13T19:00:00" },
+    location: { displayName: publishEvent.location },
+    body: { content: `LSS planning event ID: ${publishEvent.id}` },
+  };
+  const changed = {
+    id: "outlook-changed",
+    subject: "Old title",
+    start: { dateTime: "2027-03-01T09:00:00" },
+    end: { dateTime: "2027-03-01T10:00:00" },
+    location: { displayName: "Old room" },
+    body: { content: "LSS planning event ID: plan-update" },
+  };
+  const deleted = {
+    id: "outlook-delete",
+    subject: "Cancelled hold",
+    start: { dateTime: "2027-04-01T09:00:00" },
+    end: { dateTime: "2027-04-01T10:00:00" },
+    body: { content: "LSS planning event ID: plan-delete" },
+  };
+  const unrelated = {
+    id: "outlook-unrelated",
+    subject: "Mayor meeting",
+    start: { dateTime: "2027-05-01T09:00:00" },
+    end: { dateTime: "2027-05-01T10:00:00" },
+  };
+  const preview = buildOutlookSyncPreview([
+    publishEvent,
+    { ...publishEvent, id: "plan-update", title: "Updated title", date: "2027-03-02" },
+    { ...publishEvent, id: "plan-create", title: "New planner meeting", date: "2027-06-01" },
+  ], [matching, changed, deleted, unrelated], ["plan-delete"]);
+
+  assert.equal(preview.unchanged, 1);
+  assert.equal(preview.createCount, 1);
+  assert.equal(preview.updateCount, 1);
+  assert.equal(preview.deleteCount, 1);
+  assert.ok(!preview.changes.some((change) => change.outlookEventId === "outlook-unrelated"));
+});
+
 test("Outlook read route fails clearly when credentials are absent", async () => {
   const previous = clearMicrosoftEnv();
   try {
@@ -100,43 +144,14 @@ test("Outlook read route fails clearly when credentials are absent", async () =>
   }
 });
 
-test("Outlook publish route requires explicit confirmation", async () => {
+test("legacy direct Outlook publishing is retired in favor of reviewed synchronization", async () => {
   const previous = clearMicrosoftEnv();
-  process.env.MICROSOFT_TENANT_ID = "tenant";
-  process.env.MICROSOFT_CLIENT_ID = "client";
-  process.env.MICROSOFT_CLIENT_SECRET = "secret";
-  process.env.OUTLOOK_TARGET_USER = "felise@example.org";
   try {
-    const response = await POST(new Request("http://localhost/api/outlook-publish", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ events: [publishEvent] }),
-    }));
+    const response = await POST();
     const payload = await response.json() as { error?: string };
 
-    assert.equal(response.status, 400);
-    assert.match(payload.error ?? "", /explicit confirmation/i);
-  } finally {
-    restoreEnv(previous);
-  }
-});
-
-test("Outlook publish stays disabled unless the demo write switch is explicit", async () => {
-  const previous = clearMicrosoftEnv();
-  process.env.MICROSOFT_TENANT_ID = "tenant";
-  process.env.MICROSOFT_CLIENT_ID = "client";
-  process.env.MICROSOFT_CLIENT_SECRET = "secret";
-  process.env.OUTLOOK_TARGET_USER = "demo@example.org";
-  try {
-    const response = await POST(new Request("http://localhost/api/outlook-publish", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ confirm: true, events: [publishEvent] }),
-    }));
-    const payload = await response.json() as { error?: string };
-
-    assert.equal(response.status, 403);
-    assert.match(payload.error ?? "", /publishing is disabled/i);
+    assert.equal(response.status, 410);
+    assert.match(payload.error ?? "", /change review/i);
   } finally {
     restoreEnv(previous);
   }

@@ -47,7 +47,7 @@ test("server-renders the LSS annual planning workbench", async () => {
   assert.match(html, /meeting-chip board regular unconfirmed/);
   assert.doesNotMatch(html, /Ask the planning agent|Plan Year scheduling agent/);
   assert.doesNotMatch(html, /Discovery session|Decision Queue/);
-  assert.match(html, /Demo Outlook publishing is locked|Outlook writes require human confirmation/);
+  assert.match(html, /Demo Outlook uploading is locked|Outlook changes require review and confirmation/);
   assert.match(html, /Private feedback workspace/);
   assert.match(html, /changes save only in this browser/i);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);

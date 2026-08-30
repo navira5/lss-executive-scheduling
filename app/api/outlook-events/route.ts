@@ -83,7 +83,7 @@ function calendarViewPath(settings: ReturnType<typeof config>): string {
     startDateTime: "2027-01-01T00:00:00",
     endDateTime: "2028-01-01T00:00:00",
     "$top": "50",
-    "$select": "id,iCalUId,subject,isAllDay,start,end,location,organizer,attendees,bodyPreview,recurrence",
+    "$select": "id,iCalUId,subject,isAllDay,start,end,location,organizer,attendees,body,bodyPreview,recurrence",
     "$orderby": "start/dateTime",
   });
   return `/users/${user}${calendarPart}/calendarView?${params.toString()}`;

@@ -30,6 +30,10 @@ export interface OutlookEventFields {
     };
   }[];
   bodyPreview?: string;
+  body?: {
+    contentType?: string;
+    content?: string;
+  };
   recurrence?: unknown;
 }
 
@@ -49,6 +53,32 @@ export interface OutlookPublishEventInput {
 export interface OutlookPublishPayload {
   events?: OutlookPublishEventInput[];
   confirm?: boolean;
+}
+
+export interface OutlookSyncRequest {
+  events?: OutlookPublishEventInput[];
+  cancelledPlannerEventIds?: string[];
+  deleteOutlookEventIds?: string[];
+  confirm?: boolean;
+}
+
+export type OutlookSyncAction = "create" | "update" | "delete";
+
+export interface OutlookSyncChange {
+  action: OutlookSyncAction;
+  title: string;
+  date: string;
+  plannerEventId?: string;
+  outlookEventId?: string;
+  detail: string;
+}
+
+export interface OutlookSyncPreview {
+  changes: OutlookSyncChange[];
+  unchanged: number;
+  createCount: number;
+  updateCount: number;
+  deleteCount: number;
 }
 
 export interface GraphCalendarEventBody {
@@ -120,6 +150,12 @@ function emailAddress(value: string): string | null {
   return match?.[0] ?? null;
 }
 
+export function plannerEventIdFromOutlook(event: OutlookEventFields): string | undefined {
+  const content = event.body?.content ?? event.bodyPreview ?? "";
+  const match = content.match(/LSS planning event ID:\s*([^<\s]+)/i);
+  return match?.[1]?.trim();
+}
+
 export function importedEventFromOutlook(
   event: OutlookEventFields,
   sourceLabel = "Live Outlook",
@@ -129,6 +165,8 @@ export function importedEventFromOutlook(
   const isAllDay = event.isAllDay === true;
   return {
     id: `outlook-live-${event.id ?? event.iCalUId ?? startDate}`,
+    outlookEventId: event.id,
+    plannerEventId: plannerEventIdFromOutlook(event),
     sourceLabel,
     sourceUid: event.iCalUId ?? event.id ?? `missing-uid-${startDate}`,
     title: event.subject ?? "Untitled Outlook event",
@@ -202,5 +240,119 @@ export function graphEventBody(
       : {}),
     categories: ["LSS 2027 Planning", event.category],
     transactionId: `lss-2027-${event.id}`.slice(0, 150),
+  };
+}
+
+export function graphEventPatchBody(
+  event: OutlookPublishEventInput,
+  timeZone: string,
+): Omit<GraphCalendarEventBody, "transactionId"> {
+  const body = graphEventBody(event, timeZone);
+  return {
+    subject: body.subject,
+    body: body.body,
+    start: body.start,
+    end: body.end,
+    ...(body.location ? { location: body.location } : {}),
+    ...(body.attendees ? { attendees: body.attendees } : {}),
+    ...(body.categories ? { categories: body.categories } : {}),
+  };
+}
+
+function comparablePlannerEvent(event: OutlookPublishEventInput) {
+  return {
+    title: event.title.trim(),
+    date: event.date,
+    startTime: event.startTime ?? "09:00",
+    durationMinutes: event.durationMinutes || 60,
+    location: event.location.trim(),
+  };
+}
+
+function comparableOutlookEvent(event: OutlookEventFields) {
+  return {
+    title: (event.subject ?? "").trim(),
+    date: datePart(event.start?.dateTime),
+    startTime: event.isAllDay ? "09:00" : (timePart(event.start?.dateTime) ?? "09:00"),
+    durationMinutes: event.isAllDay ? 1440 : minutesBetween(event.start?.dateTime, event.end?.dateTime),
+    location: (event.location?.displayName ?? "").trim(),
+  };
+}
+
+function sameComparable(left: ReturnType<typeof comparablePlannerEvent>, right: ReturnType<typeof comparableOutlookEvent>): boolean {
+  return left.title === right.title &&
+    left.date === right.date &&
+    left.startTime === right.startTime &&
+    left.durationMinutes === right.durationMinutes &&
+    left.location === right.location;
+}
+
+export function buildOutlookSyncPreview(
+  desiredEvents: OutlookPublishEventInput[],
+  existingEvents: OutlookEventFields[],
+  cancelledPlannerEventIds: string[] = [],
+  deleteOutlookEventIds: string[] = [],
+): OutlookSyncPreview {
+  const existingByPlannerId = new Map<string, OutlookEventFields>();
+  const existingByOutlookId = new Map<string, OutlookEventFields>();
+  for (const event of existingEvents) {
+    if (event.id) existingByOutlookId.set(event.id, event);
+    const plannerId = plannerEventIdFromOutlook(event);
+    if (plannerId) existingByPlannerId.set(plannerId, event);
+  }
+
+  const changes: OutlookSyncChange[] = [];
+  let unchanged = 0;
+  for (const desired of desiredEvents) {
+    const existing = existingByPlannerId.get(desired.id);
+    if (!existing) {
+      changes.push({
+        action: "create",
+        plannerEventId: desired.id,
+        title: desired.title,
+        date: desired.date,
+        detail: "Create this confirmed planner meeting in the demo Outlook calendar.",
+      });
+      continue;
+    }
+    if (sameComparable(comparablePlannerEvent(desired), comparableOutlookEvent(existing))) {
+      unchanged += 1;
+      continue;
+    }
+    changes.push({
+      action: "update",
+      plannerEventId: desired.id,
+      outlookEventId: existing.id,
+      title: desired.title,
+      date: desired.date,
+      detail: "Update the existing planner-managed Outlook event to match this approved placement.",
+    });
+  }
+
+  const deletionIds = new Set(deleteOutlookEventIds);
+  for (const plannerId of cancelledPlannerEventIds) {
+    const existing = existingByPlannerId.get(plannerId);
+    if (existing?.id) deletionIds.add(existing.id);
+  }
+  for (const outlookId of deletionIds) {
+    const existing = existingByOutlookId.get(outlookId);
+    if (!existing) continue;
+    changes.push({
+      action: "delete",
+      plannerEventId: plannerEventIdFromOutlook(existing),
+      outlookEventId: outlookId,
+      title: existing.subject ?? "Untitled Outlook event",
+      date: datePart(existing.start?.dateTime),
+      detail: "Delete this event from the dedicated demo Outlook calendar after confirmation.",
+    });
+  }
+
+  changes.sort((left, right) => `${left.date}-${left.action}-${left.title}`.localeCompare(`${right.date}-${right.action}-${right.title}`));
+  return {
+    changes,
+    unchanged,
+    createCount: changes.filter((change) => change.action === "create").length,
+    updateCount: changes.filter((change) => change.action === "update").length,
+    deleteCount: changes.filter((change) => change.action === "delete").length,
   };
 }

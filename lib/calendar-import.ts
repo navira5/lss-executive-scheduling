@@ -5,6 +5,8 @@ const RANGE_END = new Date("2028-01-02T00:00:00.000Z");
 
 export interface ImportedCalendarEvent {
   id: string;
+  outlookEventId?: string;
+  plannerEventId?: string;
   sourceLabel: string;
   sourceUid: string;
   title: string;

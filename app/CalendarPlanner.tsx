@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { PlanYearCalendar } from "@/app/components/PlanYearCalendar";
+import { OutlookSyncReview } from "@/app/components/OutlookSyncReview";
 import type { PendingCalendarMove } from "@/app/components/PlanYearCalendar";
 import {
   PlanningCockpit,
@@ -19,11 +20,13 @@ import {
   approveTemplateForPlan,
   confirmActivePhase,
   createPlanYearState,
+  meetingTemplatesForState,
   navigateToPhase,
   PLAN_STEPS,
   PHASE_LABELS,
   PHASE_ORDER,
   resolvePlanEvent,
+  removePlanEvent,
   removeCalendarClosure,
   updateTemplateSchedule,
   updateWorkingRule,
@@ -34,7 +37,7 @@ import {
   type PlanYearState,
   type WorkingMeetingRule,
 } from "@/lib/plan-year";
-import { toOutlookPublishInput } from "@/lib/outlook-sync";
+import { toOutlookPublishInput, type OutlookSyncPreview } from "@/lib/outlook-sync";
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
@@ -45,9 +48,12 @@ const DEFAULT_SETTINGS: ScenarioSettings = {
 };
 
 interface StoredPlanYear {
-  version: 6;
+  version: 6 | 7;
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
+  pendingOutlookDeletionIds?: string[];
+  cancelledPlannerEventIds?: string[];
+  dirtyRuleTemplateIds?: string[];
 }
 
 type SourceStatus =
@@ -99,20 +105,31 @@ async function fetchLiveOutlookEvents(): Promise<ImportedCalendarEvent[]> {
   return payload?.events ?? [];
 }
 
-async function publishApprovedToOutlook(state: PlanYearState): Promise<{ count: number; failed: number }> {
+interface OutlookSyncResponse {
+  error?: string;
+  preview?: OutlookSyncPreview;
+  count?: number;
+  failed?: unknown[];
+}
+
+async function syncApprovedWithOutlook(
+  state: PlanYearState,
+  cancelledPlannerEventIds: string[],
+  deleteOutlookEventIds: string[],
+  confirm: boolean,
+): Promise<OutlookSyncResponse> {
   const events = confirmedCalendarEvents(state).map(toOutlookPublishInput);
-  if (!events.length) return { count: 0, failed: 0 };
-  const response = await fetch("/api/outlook-publish", {
+  const response = await fetch("/api/outlook-sync", {
     method: "POST",
     headers: {
       accept: "application/json",
       "content-type": "application/json",
     },
-    body: JSON.stringify({ confirm: true, events }),
+    body: JSON.stringify({ confirm, events, cancelledPlannerEventIds, deleteOutlookEventIds }),
   });
-  const payload = await response.json().catch(() => null) as { error?: string; count?: number; failed?: unknown[] } | null;
-  if (!response.ok) throw new Error(payload?.error ?? "Approved meetings could not be published to Outlook.");
-  return { count: payload?.count ?? 0, failed: payload?.failed?.length ?? 0 };
+  const payload = await response.json().catch(() => null) as OutlookSyncResponse | null;
+  if (!response.ok) throw new Error(payload?.error ?? "Outlook changes could not be synchronized.");
+  return payload ?? {};
 }
 
 function download(filename: string, contents: string) {
@@ -155,6 +172,11 @@ export function CalendarPlanner({
     kind: "idle",
     message: "Outlook sync not run",
   });
+  const [outlookReview, setOutlookReview] = useState<OutlookSyncPreview | null>(null);
+  const [outlookSyncBusy, setOutlookSyncBusy] = useState(false);
+  const [pendingOutlookDeletionIds, setPendingOutlookDeletionIds] = useState<string[]>([]);
+  const [cancelledPlannerEventIds, setCancelledPlannerEventIds] = useState<string[]>([]);
+  const [dirtyRuleTemplateIds, setDirtyRuleTemplateIds] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [hasStoredPlan, setHasStoredPlan] = useState(false);
   const [sourceStatus, setSourceStatus] = useState<SourceStatus>({
@@ -168,11 +190,14 @@ export function CalendarPlanner({
     if (saved) {
       try {
         const stored = JSON.parse(saved) as StoredPlanYear;
-        if (stored.version === 6 && stored.state?.plan?.year === 2027) {
+        if ([6, 7].includes(stored.version) && stored.state?.plan?.year === 2027) {
           loadedSavedPlan = true;
           queueMicrotask(() => {
             setState(normalizeStoredState(stored.state));
             setImportedEvents(stored.importedEvents ?? []);
+            setPendingOutlookDeletionIds(stored.pendingOutlookDeletionIds ?? []);
+            setCancelledPlannerEventIds(stored.cancelledPlannerEventIds ?? []);
+            setDirtyRuleTemplateIds(stored.dirtyRuleTemplateIds ?? []);
             setSourceStatus({
               kind: "local",
               message: "Using browser-local planning state",
@@ -215,16 +240,31 @@ export function CalendarPlanner({
 
   useEffect(() => {
     if (!loaded) return;
-    const stored: StoredPlanYear = { version: 6, state, importedEvents };
+    const stored: StoredPlanYear = {
+      version: 7,
+      state,
+      importedEvents,
+      pendingOutlookDeletionIds,
+      cancelledPlannerEventIds,
+      dirtyRuleTemplateIds,
+    };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-  }, [state, importedEvents, loaded]);
+  }, [state, importedEvents, pendingOutlookDeletionIds, cancelledPlannerEventIds, dirtyRuleTemplateIds, loaded]);
 
   const commitState = (next: PlanYearState) => {
     setHistory((current) => [...current.slice(-29), state]);
     setState(next);
   };
 
+  const markRuleDirty = (templateIds: string | string[]) => {
+    const ids = Array.isArray(templateIds) ? templateIds : [templateIds];
+    setDirtyRuleTemplateIds((current) => [...new Set([...current, ...ids])]);
+  };
+
   const visibleEvents = useMemo(() => visiblePlanEvents(state), [state]);
+  const visibleImportedEvents = importedEvents.filter(
+    (event) => !event.outlookEventId || !pendingOutlookDeletionIds.includes(event.outlookEventId),
+  );
   const activeIds = phaseTemplateIds(state, state.activePhase);
   const selectedStillVisible = selectedEventId
     ? visibleEvents.some((event) => event.id === selectedEventId)
@@ -268,6 +308,7 @@ export function CalendarPlanner({
       const event = resolvePlanEvent(state, pendingMove.eventId);
       const weekday = new Date(`${pendingMove.targetDate}T12:00:00Z`).getUTCDay();
       commitState(updateTemplateSchedule(state, event.templateId, { weekday }));
+      markRuleDirty(event.templateId);
       setCalendarMoveNotice({ valid: true, message: `${WEEKDAY_LABELS[weekday]} is now the working rule. Holiday occurrences use the recommended business day.` });
     } else {
       const result = applyManualEventMove(state, pendingMove.eventId, pendingMove.targetDate);
@@ -296,6 +337,7 @@ export function CalendarPlanner({
   };
 
   const updateRule = (templateId: string, patch: WorkingMeetingRule) => {
+    markRuleDirty(templateId);
     if (patch.weekday !== undefined) {
       commitState(updateTemplateSchedule(state, templateId, { weekday: patch.weekday }));
       setCalendarMoveNotice({ valid: true, message: "Preferred day updated. Holiday occurrences use the recommended business day." });
@@ -317,11 +359,10 @@ export function CalendarPlanner({
     setOutlookStatus({ kind: "loading", message: "Loading Outlook events" });
     try {
       const events = await fetchLiveOutlookEvents();
-      setImportedEvents((current) => {
-        const byId = new Map(current.map((event) => [event.id, event]));
-        for (const event of events) byId.set(event.id, event);
-        return [...byId.values()];
-      });
+      setImportedEvents((current) => [
+        ...current.filter((event) => event.sourceLabel !== "Live Outlook"),
+        ...events,
+      ]);
       setOutlookStatus({
         kind: "ready",
         message: `Loaded ${events.length} Outlook event${events.length === 1 ? "" : "s"}`,
@@ -338,30 +379,42 @@ export function CalendarPlanner({
     }
   };
 
-  const publishToOutlook = async () => {
-    const approved = confirmedCalendarEvents(state);
-    if (!approved.length) {
-      window.alert("No meetings are ready for Outlook yet. Confirm at least one planning layer first.");
-      return;
-    }
-    if (!window.confirm(`Publish ${approved.length} approved meeting${approved.length === 1 ? "" : "s"} to Outlook? This will create calendar events in the configured mailbox.`)) return;
-    setOutlookStatus({ kind: "loading", message: "Publishing approved meetings to Outlook" });
+  const reviewOutlookChanges = async () => {
+    setOutlookStatus({ kind: "loading", message: "Comparing the approved plan with Outlook" });
     try {
-      const result = await publishApprovedToOutlook(state);
-      const failed = result.failed ? ` · ${result.failed} failed` : "";
+      const result = await syncApprovedWithOutlook(state, cancelledPlannerEventIds, pendingOutlookDeletionIds, false);
+      if (!result.preview) throw new Error("Outlook did not return a change review.");
+      setOutlookReview(result.preview);
       setOutlookStatus({
-        kind: result.failed ? "error" : "published",
-        message: `Published ${result.count} approved meeting${result.count === 1 ? "" : "s"}${failed}`,
-      });
-      setCalendarMoveNotice({
-        valid: result.failed === 0,
-        message: `Outlook publish complete: ${result.count} created${failed}.`,
+        kind: "ready",
+        message: `${result.preview.changes.length} Outlook change${result.preview.changes.length === 1 ? "" : "s"} ready for review`,
       });
     } catch (error) {
       setOutlookStatus({
         kind: "error",
-        message: error instanceof Error ? error.message : "Approved meetings could not be published to Outlook.",
+        message: error instanceof Error ? error.message : "Outlook changes could not be reviewed.",
       });
+    }
+  };
+
+  const uploadOutlookChanges = async () => {
+    setOutlookSyncBusy(true);
+    setOutlookStatus({ kind: "loading", message: "Uploading approved changes to Outlook" });
+    try {
+      const result = await syncApprovedWithOutlook(state, cancelledPlannerEventIds, pendingOutlookDeletionIds, true);
+      const failed = result.failed?.length ?? 0;
+      if (failed) throw new Error(`${failed} Outlook change${failed === 1 ? "" : "s"} failed. No failed item was hidden.`);
+      setPendingOutlookDeletionIds([]);
+      setCancelledPlannerEventIds([]);
+      setOutlookReview(null);
+      setOutlookStatus({ kind: "published", message: `Uploaded ${result.count ?? 0} approved change${result.count === 1 ? "" : "s"} to Outlook` });
+      setCalendarMoveNotice({ valid: true, message: `Outlook is current. ${result.count ?? 0} approved change${result.count === 1 ? "" : "s"} applied.` });
+      const events = await fetchLiveOutlookEvents();
+      setImportedEvents((current) => [...current.filter((event) => event.sourceLabel !== "Live Outlook"), ...events]);
+    } catch (error) {
+      setOutlookStatus({ kind: "error", message: error instanceof Error ? error.message : "Outlook upload failed." });
+    } finally {
+      setOutlookSyncBusy(false);
     }
   };
 
@@ -376,6 +429,8 @@ export function CalendarPlanner({
       setSelectedImportedEventId(null);
       setPendingMove(null);
       setPendingConversion(null);
+      setDirtyRuleTemplateIds([]);
+      setCancelledPlannerEventIds([]);
       setCalendarMoveNotice({ valid: true, message: "SharePoint meeting rules and holidays loaded." });
       setSourceStatus({ kind: "sharepoint", message: "Loaded from SharePoint lists" });
     } catch (error) {
@@ -384,6 +439,65 @@ export function CalendarPlanner({
         message: error instanceof Error ? error.message : "SharePoint rules could not be loaded.",
       });
     }
+  };
+
+  const saveConfirmedRulesToSharePoint = async (): Promise<boolean> => {
+    if (state.activePhase === "review") return true;
+    const templates = meetingTemplatesForState(state);
+    const rules = dirtyRuleTemplateIds
+      .map((templateId) => {
+        const template = templates.find((item) => item.id === templateId);
+        if (!template || template.category !== state.activePhase) return null;
+        return { template, rule: state.workingRules[templateId] ?? {} };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    if (!rules.length) return true;
+    setSourceStatus({ kind: "loading", message: "Saving confirmed rules to SharePoint" });
+    try {
+      const response = await fetch("/api/sharepoint-rules", {
+        method: "POST",
+        headers: { accept: "application/json", "content-type": "application/json" },
+        body: JSON.stringify({ confirm: true, rules }),
+      });
+      const payload = await response.json().catch(() => null) as { error?: string; permission?: string; count?: number } | null;
+      if (!response.ok) throw new Error([payload?.error, payload?.permission].filter(Boolean).join(" ") || "Confirmed rules could not be saved to SharePoint.");
+      const savedIds = new Set(rules.map((item) => item.template.id));
+      setDirtyRuleTemplateIds((current) => current.filter((id) => !savedIds.has(id)));
+      setSourceStatus({ kind: "sharepoint", message: `Saved ${payload?.count ?? rules.length} confirmed rule${rules.length === 1 ? "" : "s"} to SharePoint` });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Confirmed rules could not be saved to SharePoint.";
+      setSourceStatus({ kind: "error", message });
+      setCalendarMoveNotice({ valid: false, message });
+      return false;
+    }
+  };
+
+  const confirmPhaseAndSyncRules = async () => {
+    if (!await saveConfirmedRulesToSharePoint()) return;
+    commitState(confirmActivePhase(state));
+    setSelectedEventId(null);
+    setSelectedTemplateId(null);
+    setPendingMove(null);
+    setPendingConversion(null);
+  };
+
+  const deletePlanMeeting = (eventId: string) => {
+    const event = resolvePlanEvent(state, eventId);
+    if (!window.confirm(`Remove ${event.title} on ${event.date} from the 2027 plan? If it already exists in the demo Outlook calendar, the deletion will appear in Outlook Change Review.`)) return;
+    commitState(removePlanEvent(state, eventId));
+    setCancelledPlannerEventIds((current) => [...new Set([...current, eventId])]);
+    setSelectedEventId(null);
+    setSelectedTemplateId(null);
+    setCalendarMoveNotice({ valid: true, message: `${event.title} removed from the plan. Review Outlook changes before deleting any published copy.` });
+  };
+
+  const deleteImportedOutlookMeeting = (event: ImportedCalendarEvent) => {
+    if (!event.outlookEventId) return;
+    if (!window.confirm(`Queue “${event.title}” on ${event.date} for deletion from the dedicated demo Outlook calendar? Nothing is deleted until Outlook Change Review is uploaded.`)) return;
+    setPendingOutlookDeletionIds((current) => [...new Set([...current, event.outlookEventId as string])]);
+    setSelectedImportedEventId(null);
+    setCalendarMoveNotice({ valid: true, message: `${event.title} is queued for Outlook deletion. Review and upload changes to apply it.` });
   };
 
   const reset = () => {
@@ -397,6 +511,10 @@ export function CalendarPlanner({
     setPendingMove(null);
     setPendingConversion(null);
     setCalendarMoveNotice(null);
+    setOutlookReview(null);
+    setPendingOutlookDeletionIds([]);
+    setCancelledPlannerEventIds([]);
+    setDirtyRuleTemplateIds([]);
     window.localStorage.removeItem(STORAGE_KEY);
     setHasStoredPlan(false);
     setSourceStatus({ kind: "fallback", message: "Using built-in POC baseline" });
@@ -432,15 +550,15 @@ export function CalendarPlanner({
             className="button primary"
             type="button"
             disabled={outlookStatus.kind === "loading" || !outlookPublishEnabled}
-            title={outlookPublishEnabled ? "Publish confirmed meetings to the configured demo calendar" : "Publishing is locked during feedback testing"}
-            onClick={() => void publishToOutlook()}
+            title={outlookPublishEnabled ? "Review creates, updates, and deletions before changing the demo calendar" : "Outlook uploading is locked"}
+            onClick={() => void reviewOutlookChanges()}
           >
-            {outlookPublishEnabled ? "Publish Approved to Outlook" : "Outlook Publishing Locked"}
+            {outlookPublishEnabled ? "Review Outlook Changes" : "Outlook Upload Locked"}
           </button>
           <button className="button ghost" type="button" disabled={pdfBusy} onClick={async () => {
             setPdfBusy(true);
             try {
-              await downloadPlanPdf(state, importedEvents);
+              await downloadPlanPdf(state, visibleImportedEvents);
             } finally {
               setPdfBusy(false);
             }
@@ -524,7 +642,7 @@ export function CalendarPlanner({
         <div className="planning-canvas calendar-canvas">
           <PlanYearCalendar
             state={state}
-            importedEvents={importedEvents}
+            importedEvents={visibleImportedEvents}
             selectedEventId={activeUsesGroupRoster && !selectedTemplateId ? null : effectiveSelectedEventId}
             moveNotice={calendarMoveNotice}
             previewMove={pendingMove}
@@ -576,7 +694,7 @@ export function CalendarPlanner({
           selectedEventId={effectiveSelectedEventId}
           selectedTemplateId={selectedTemplateId}
           pendingConversion={pendingConversion}
-          importedEvents={importedEvents}
+          importedEvents={visibleImportedEvents}
           selectedImportedEventId={selectedImportedEventId}
           canUndo={history.length > 0}
           collapsed={detailsCollapsed}
@@ -599,6 +717,7 @@ export function CalendarPlanner({
               phase: state.activePhase as "committee" | "executive" | "organization",
             });
             commitState(added.state);
+            markRuleDirty(added.templateId);
             setSelectedTemplateId(added.templateId);
             setSelectedEventId(null);
             setCalendarMoveNotice({ valid: true, message: `${name} added without inventing a cadence. Choose a schedule when ready.` });
@@ -613,10 +732,12 @@ export function CalendarPlanner({
               next = updateWorkingRule(next, templateId, { attendees });
             }
             commitState(next);
+            markRuleDirty(templateIds);
             setCalendarMoveNotice({ valid: true, message: "Shared attendees updated for this meeting group." });
           }}
           onScheduleChange={(templateId, patch: { cadencePreset?: CadencePreset; annualCount?: number; startMonth?: number; ordinal?: number; weekday?: number }) => {
             commitState(updateTemplateSchedule(state, templateId, patch));
+            markRuleDirty(templateId);
             setCalendarMoveNotice({ valid: true, message: "Calendar regenerated from the updated cadence." });
           }}
           onApplyConversion={applyConversion}
@@ -630,20 +751,25 @@ export function CalendarPlanner({
             setPendingConversion(null);
             setCalendarMoveNotice({ valid: true, message: "Last change undone." });
           }}
-          onConfirmPhase={() => {
-            commitState(confirmActivePhase(state));
-            setSelectedEventId(null);
-            setSelectedTemplateId(null);
-            setPendingMove(null);
-            setPendingConversion(null);
-          }}
+          onConfirmPhase={() => void confirmPhaseAndSyncRules()}
           onImport={importSnapshot}
+          onDeletePlanEvent={deletePlanMeeting}
+          onDeleteImportedEvent={deleteImportedOutlookMeeting}
         />
       </div>
 
+      {outlookReview && (
+        <OutlookSyncReview
+          preview={outlookReview}
+          busy={outlookSyncBusy}
+          onClose={() => setOutlookReview(null)}
+          onPublish={() => void uploadOutlookChanges()}
+        />
+      )}
+
       <footer className="app-footer">
         <span>Historical evidence remains separate from 2027 working rules and one-year overrides.</span>
-        <strong>{outlookPublishEnabled ? "Outlook writes require human confirmation" : "Demo Outlook publishing is locked"}</strong>
+        <strong>{outlookPublishEnabled ? "Outlook changes require review and confirmation" : "Demo Outlook uploading is locked"}</strong>
         <a href="/api/demo-logout">Sign out</a>
         <button type="button" onClick={reset}>Start over</button>
       </footer>

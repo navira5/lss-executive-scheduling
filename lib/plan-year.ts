@@ -426,6 +426,17 @@ export function addAdHocEvent(
   };
 }
 
+export function removePlanEvent(
+  state: PlanYearState,
+  eventId: string,
+): PlanYearState {
+  eventById(state, eventId);
+  return {
+    ...state,
+    hiddenEventIds: [...new Set([...state.hiddenEventIds, eventId])],
+  };
+}
+
 export function advancePlanStep(state: PlanYearState): PlanYearState {
   if (state.activeStepIndex >= state.phaseSteps.length - 1) return state;
   return stateAt({

@@ -100,23 +100,26 @@ Implemented:
 
 - SharePoint to planner: `Load SharePoint Rules`
 - Outlook to planner: `Load Outlook Events`
-- Planner to Outlook: `Publish Approved to Outlook`
+- Planner to Outlook: `Review Outlook Changes` then explicit `Upload to Outlook`
+- Planner to SharePoint: confirmed dirty rules are written when the active layer is confirmed
+- Manual ad-hoc planner event creation
+- Planner-event removal and explicit Outlook-event deletion, both reviewed before Outlook upload
 
 Not implemented:
 
-- Planner write-back to SharePoint rule rows.
-- Updating existing Outlook events in place.
-- De-duplicating already published Outlook events by existing Graph event lookup.
+- Shared durable planner state across testers.
+- LSS Entra login and per-user audit attribution.
+- Production tenant deployment or LSS mailbox access.
 
-Current Outlook publish code creates events in the configured mailbox/calendar only when the UI confirmation is accepted and `OUTLOOK_PUBLISH_ENABLED=true`. It uses a Graph `transactionId`, which helps make create retries safer, but the integration has not yet been authenticated against Graph from this repository. The demo must use a test calendar first.
+The Outlook sync route recomputes the requested change set on the server, compares planner-managed event markers against the configured calendar, and applies creates, updates, and explicitly requested deletions only when the UI confirmation is accepted and `OUTLOOK_PUBLISH_ENABLED=true`. The retired direct-publish route now returns 410. The demo remains scoped to Navira's dedicated test calendar.
 
 Live trial receipt on 2026-08-30:
 
 - Microsoft client-credentials authentication succeeded.
 - `/api/sharepoint-plan` loaded both SharePoint lists and generated 139 2027 occurrences with no import warnings.
 - `/api/outlook-events` read the dedicated `LSS 2027 Demo Calendar`.
-- One attendee-free 15-minute connection-test event was created on 2027-01-06 and read back through the application route.
-- The publish switch was returned to `false` and a subsequent publish attempt was correctly rejected with 403.
+- A full sync check previewed, created, updated, and deleted one attendee-free verification event.
+- The final verification found zero remaining copies of that event.
 
 This proves only Navira's isolated Microsoft trial tenant. It does not prove access to LSS's tenant.
 
@@ -149,6 +152,7 @@ For the demo, likely Graph application permissions:
 
 - `Sites.Read.All`
 - `Calendars.ReadWrite`
+- `Sites.ReadWrite.All` (still needs to be added and admin-consented before app-to-SharePoint rule updates work)
 
 The client secret exists only in ignored local configuration and the hosted runtime environment.
 
@@ -160,11 +164,11 @@ For production, ask Chad about least-privilege site-specific permissions and Exc
 2. Click `Load SharePoint Rules`.
 3. Click `Load Outlook Events`.
 4. Show that existing Outlook events appear as context on the calendar.
-5. Make planning changes in the custom calendar UI.
-6. Confirm the relevant layer.
-7. Export the working plan as PDF or the confirmed meetings as ICS.
-
-For a controlled owner-led write demonstration only, temporarily enable Outlook publishing, publish to the dedicated demo calendar, verify the result, and disable publishing again. Hosted feedback users do not receive Outlook write access.
+5. Make planning changes, create an ad-hoc event, or remove an event in the custom calendar UI.
+6. Confirm the relevant layer; confirmed dirty rules synchronize to SharePoint.
+7. Click `Review Outlook Changes` and inspect every proposed create, update, and delete.
+8. Explicitly upload the reviewed changes to the dedicated test calendar.
+9. Export the working plan as PDF or the confirmed meetings as ICS.
 
 ## Verification Already Run
 
@@ -219,7 +223,7 @@ The username, access code, Microsoft client secret, target mailbox, and calendar
 During feedback testing:
 
 - The hosted app reads SharePoint and the dedicated trial Outlook calendar.
-- Outlook publishing remains disabled.
+- Outlook writes are enabled only for the dedicated trial calendar and require review plus explicit upload.
 - Each tester's calendar changes remain in that browser's local storage.
-- Power Apps edits the SharePoint-owned rules; the planner reads them one-way.
+- Power Apps edits the SharePoint-owned rules; the planner reads them and writes confirmed rule changes back after the additional Graph permission is granted.
 - True LSS Entra login and shared durable plan state remain later work.

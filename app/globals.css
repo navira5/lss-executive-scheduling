@@ -532,7 +532,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .cockpit-summary { padding: 20px 20px 17px; border-bottom: 1px solid var(--line); background: #fff; }
 .cockpit-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
 .cockpit-summary h2 { margin: 0; font-size: var(--text-heading); font-weight: 650; letter-spacing: -.02em; }
-.cockpit-summary > p:last-child { margin: 9px 0 0; color: var(--muted); font-size: var(--text-body); line-height: 1.48; }
+.cockpit-summary > p { margin: 9px 0 0; color: var(--muted); font-size: var(--text-body); line-height: 1.48; }
 .group-color { width: 12px; height: 12px; flex: 0 0 auto; margin-top: 5px; border-radius: 50%; background: var(--board); }
 .group-color.committee { background: var(--committee); }
 .group-color.executive { background: var(--executive); }
@@ -549,7 +549,34 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .imported-snapshot-card dl div { padding: 8px; border-radius: 8px; background: white; }
 .imported-snapshot-card dt { color: var(--muted); font-size: .55rem; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; }
 .imported-snapshot-card dd { margin: 2px 0 0; font-size: .7rem; font-weight: 750; }
-.imported-snapshot-card > p:last-child { margin: 10px 0 0; color: var(--muted); font-size: .62rem; }
+.imported-snapshot-card > p { margin: 10px 0; color: var(--muted); font-size: .62rem; }
+.button.danger { border-color: #c98e86; background: #fff; color: #9a3429; }
+.button.danger:hover { border-color: #a64236; background: #fff6f4; }
+.cockpit-summary > .button.danger { width: 100%; margin-top: 13px; font-size: .65rem; }
+
+.sync-review-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(23, 35, 40, .48); }
+.sync-review-dialog { display: grid; width: min(760px, 100%); max-height: min(780px, calc(100vh - 48px)); overflow: hidden; border: 1px solid #c9d1ce; border-radius: 8px; background: white; box-shadow: 0 24px 64px rgba(20, 35, 40, .18); }
+.sync-review-dialog > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 24px 26px 19px; border-bottom: 1px solid var(--line); }
+.sync-review-dialog h2 { margin: 2px 0 0; font-size: 1.35rem; letter-spacing: -.025em; }
+.sync-review-dialog header p:last-child { margin: 7px 0 0; color: var(--muted); font-size: .75rem; }
+.sync-review-dialog header > button { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 5px; background: white; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+.sync-review-counts { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); background: #fafbfa; }
+.sync-review-counts div { padding: 15px 18px; border-right: 1px solid var(--line); }
+.sync-review-counts div:last-child { border-right: 0; }
+.sync-review-counts strong, .sync-review-counts span { display: block; }
+.sync-review-counts strong { font-size: 1.45rem; letter-spacing: -.03em; }
+.sync-review-counts span { margin-top: 3px; color: var(--muted); font-size: .62rem; font-weight: 800; letter-spacing: .045em; text-transform: uppercase; }
+.sync-review-list { min-height: 120px; overflow-y: auto; padding: 10px 24px; }
+.sync-change { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: start; gap: 12px; padding: 12px 2px; border-bottom: 1px solid #edf0ee; }
+.sync-change > span { padding: 4px 6px; border-radius: 4px; background: #edf6f2; color: #277253; font-size: .58rem; font-weight: 900; letter-spacing: .04em; text-align: center; text-transform: uppercase; }
+.sync-change.update > span { background: #edf2f8; color: #315f8b; }
+.sync-change.delete > span { background: #fff0ed; color: #a43f32; }
+.sync-change strong, .sync-change small { display: block; }
+.sync-change strong { font-size: .77rem; }
+.sync-change small { margin-top: 4px; color: var(--muted); font-size: .65rem; line-height: 1.4; }
+.sync-review-empty { padding: 32px 10px; color: var(--muted); font-size: .75rem; text-align: center; }
+.sync-delete-note { margin: 0; padding: 12px 26px; border-top: 1px solid #f0d4cf; background: #fff7f5; color: #84392f; font-size: .68rem; }
+.sync-review-dialog > footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--line); background: #fafbfa; }
 .format-settings { padding: 16px; border-bottom: 1px solid var(--line); background: var(--surface-soft); }
 .format-row { padding: 14px; border: 1px solid var(--line); border-radius: 6px; background: white; }
 .format-row + .format-row { margin-top: 11px; }
