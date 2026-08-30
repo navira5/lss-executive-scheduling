@@ -414,10 +414,9 @@ export function PlanningCockpit({
             <button
               className="button danger full"
               type="button"
-              disabled={!selectedImported.outlookEventId}
               onClick={() => onDeleteImportedEvent(selectedImported)}
             >
-              {selectedImported.outlookEventId ? "Queue deletion from Outlook" : "Snapshot events cannot be deleted"}
+              {selectedImported.outlookEventId ? "Queue deletion from Outlook" : "Remove from this snapshot"}
             </button>
           </section>
         )}

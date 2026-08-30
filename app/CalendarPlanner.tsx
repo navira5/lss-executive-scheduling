@@ -493,11 +493,23 @@ export function CalendarPlanner({
   };
 
   const deleteImportedOutlookMeeting = (event: ImportedCalendarEvent) => {
-    if (!event.outlookEventId) return;
-    if (!window.confirm(`Queue “${event.title}” on ${event.date} for deletion from the dedicated demo Outlook calendar? Nothing is deleted until Outlook Change Review is uploaded.`)) return;
-    setPendingOutlookDeletionIds((current) => [...new Set([...current, event.outlookEventId as string])]);
+    const liveOutlook = Boolean(event.outlookEventId);
+    const message = liveOutlook
+      ? `Queue “${event.title}” on ${event.date} for deletion from the dedicated demo Outlook calendar? Nothing is deleted until Outlook Change Review is uploaded.`
+      : `Remove “${event.title}” on ${event.date} from this browser-local Outlook snapshot? This cannot change the source Outlook calendar.`;
+    if (!window.confirm(message)) return;
+    if (event.outlookEventId) {
+      setPendingOutlookDeletionIds((current) => [...new Set([...current, event.outlookEventId as string])]);
+    } else {
+      setImportedEvents((current) => current.filter((candidate) => candidate.id !== event.id));
+    }
     setSelectedImportedEventId(null);
-    setCalendarMoveNotice({ valid: true, message: `${event.title} is queued for Outlook deletion. Review and upload changes to apply it.` });
+    setCalendarMoveNotice({
+      valid: true,
+      message: liveOutlook
+        ? `${event.title} is queued for Outlook deletion. Review and upload changes to apply it.`
+        : `${event.title} was removed from this browser-local snapshot. The source Outlook calendar was not changed.`,
+    });
   };
 
   const reset = () => {
