@@ -9,7 +9,7 @@ import {
   type PendingFormatConversion,
 } from "@/app/components/PlanningCockpit";
 import type { CalendarImportResult, ImportedCalendarEvent } from "@/lib/calendar-import";
-import { calendarIcs, downloadPlanPdf } from "@/lib/plan-export";
+import { calendarIcs, confirmedCalendarEvents, downloadPlanPdf } from "@/lib/plan-export";
 import {
   applyManualEventMove,
   applyPlanProposal,
@@ -34,6 +34,7 @@ import {
   type PlanYearState,
   type WorkingMeetingRule,
 } from "@/lib/plan-year";
+import { toOutlookPublishInput } from "@/lib/outlook-sync";
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
@@ -49,6 +50,20 @@ interface StoredPlanYear {
   importedEvents: ImportedCalendarEvent[];
 }
 
+type SourceStatus =
+  | { kind: "loading"; message: string }
+  | { kind: "sharepoint"; message: string }
+  | { kind: "local"; message: string }
+  | { kind: "fallback"; message: string }
+  | { kind: "error"; message: string };
+
+type OutlookStatus =
+  | { kind: "idle"; message: string }
+  | { kind: "loading"; message: string }
+  | { kind: "ready"; message: string }
+  | { kind: "published"; message: string }
+  | { kind: "error"; message: string };
+
 function initialState(settings: ScenarioSettings = DEFAULT_SETTINGS): PlanYearState {
   return createPlanYearState(generateCalendarPlan(settings));
 }
@@ -60,6 +75,44 @@ function normalizeStoredState(state: PlanYearState): PlanYearState {
     calendarClosures: state.calendarClosures ?? [],
     approvedTemplateIds: state.approvedTemplateIds ?? [],
   };
+}
+
+async function fetchSharePointState(): Promise<PlanYearState> {
+  const response = await fetch("/api/sharepoint-plan", {
+    headers: { accept: "application/json" },
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: string } | null;
+    throw new Error(payload?.error ?? "SharePoint rules could not be loaded.");
+  }
+  const payload = await response.json() as { plan?: Parameters<typeof createPlanYearState>[0] };
+  if (!payload.plan) throw new Error("SharePoint response did not include a calendar plan.");
+  return createPlanYearState(payload.plan);
+}
+
+async function fetchLiveOutlookEvents(): Promise<ImportedCalendarEvent[]> {
+  const response = await fetch("/api/outlook-events", {
+    headers: { accept: "application/json" },
+  });
+  const payload = await response.json().catch(() => null) as { error?: string; events?: ImportedCalendarEvent[] } | null;
+  if (!response.ok) throw new Error(payload?.error ?? "Outlook events could not be loaded.");
+  return payload?.events ?? [];
+}
+
+async function publishApprovedToOutlook(state: PlanYearState): Promise<{ count: number; failed: number }> {
+  const events = confirmedCalendarEvents(state).map(toOutlookPublishInput);
+  if (!events.length) return { count: 0, failed: 0 };
+  const response = await fetch("/api/outlook-publish", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ confirm: true, events }),
+  });
+  const payload = await response.json().catch(() => null) as { error?: string; count?: number; failed?: unknown[] } | null;
+  if (!response.ok) throw new Error(payload?.error ?? "Approved meetings could not be published to Outlook.");
+  return { count: payload?.count ?? 0, failed: payload?.failed?.length ?? 0 };
 }
 
 function download(filename: string, contents: string) {
@@ -90,25 +143,67 @@ export function CalendarPlanner() {
   const [calendarMoveNotice, setCalendarMoveNotice] = useState<{ valid: boolean; message: string } | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [detailsCollapsed, setDetailsCollapsed] = useState(false);
+  const [outlookStatus, setOutlookStatus] = useState<OutlookStatus>({
+    kind: "idle",
+    message: "Outlook sync not run",
+  });
   const [loaded, setLoaded] = useState(false);
+  const [hasStoredPlan, setHasStoredPlan] = useState(false);
+  const [sourceStatus, setSourceStatus] = useState<SourceStatus>({
+    kind: "loading",
+    message: "Checking SharePoint rules",
+  });
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
+    let loadedSavedPlan = false;
     if (saved) {
       try {
         const stored = JSON.parse(saved) as StoredPlanYear;
         if (stored.version === 6 && stored.state?.plan?.year === 2027) {
+          loadedSavedPlan = true;
           queueMicrotask(() => {
             setState(normalizeStoredState(stored.state));
             setImportedEvents(stored.importedEvents ?? []);
+            setSourceStatus({
+              kind: "local",
+              message: "Using browser-local planning state",
+            });
           });
         }
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
     }
-    queueMicrotask(() => setLoaded(true));
+    queueMicrotask(() => {
+      setHasStoredPlan(loadedSavedPlan);
+      setLoaded(true);
+    });
   }, []);
+
+  useEffect(() => {
+    if (!loaded || hasStoredPlan) return;
+    let cancelled = false;
+    void fetchSharePointState()
+      .then((next) => {
+        if (cancelled) return;
+        setState(next);
+        setSourceStatus({
+          kind: "sharepoint",
+          message: "Loaded from SharePoint lists",
+        });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setSourceStatus({
+          kind: error instanceof Error && /not configured/i.test(error.message) ? "fallback" : "error",
+          message: error instanceof Error ? error.message : "Using built-in POC baseline",
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded, hasStoredPlan]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -210,6 +305,79 @@ export function CalendarPlanner() {
     });
   };
 
+  const loadLiveOutlook = async () => {
+    setOutlookStatus({ kind: "loading", message: "Loading Outlook events" });
+    try {
+      const events = await fetchLiveOutlookEvents();
+      setImportedEvents((current) => {
+        const byId = new Map(current.map((event) => [event.id, event]));
+        for (const event of events) byId.set(event.id, event);
+        return [...byId.values()];
+      });
+      setOutlookStatus({
+        kind: "ready",
+        message: `Loaded ${events.length} Outlook event${events.length === 1 ? "" : "s"}`,
+      });
+      setCalendarMoveNotice({
+        valid: true,
+        message: `Retrieved ${events.length} existing Outlook event${events.length === 1 ? "" : "s"} before planning.`,
+      });
+    } catch (error) {
+      setOutlookStatus({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Outlook events could not be loaded.",
+      });
+    }
+  };
+
+  const publishToOutlook = async () => {
+    const approved = confirmedCalendarEvents(state);
+    if (!approved.length) {
+      window.alert("No meetings are ready for Outlook yet. Confirm at least one planning layer first.");
+      return;
+    }
+    if (!window.confirm(`Publish ${approved.length} approved meeting${approved.length === 1 ? "" : "s"} to Outlook? This will create calendar events in the configured mailbox.`)) return;
+    setOutlookStatus({ kind: "loading", message: "Publishing approved meetings to Outlook" });
+    try {
+      const result = await publishApprovedToOutlook(state);
+      const failed = result.failed ? ` · ${result.failed} failed` : "";
+      setOutlookStatus({
+        kind: result.failed ? "error" : "published",
+        message: `Published ${result.count} approved meeting${result.count === 1 ? "" : "s"}${failed}`,
+      });
+      setCalendarMoveNotice({
+        valid: result.failed === 0,
+        message: `Outlook publish complete: ${result.count} created${failed}.`,
+      });
+    } catch (error) {
+      setOutlookStatus({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Approved meetings could not be published to Outlook.",
+      });
+    }
+  };
+
+  const loadSharePointRules = async () => {
+    setSourceStatus({ kind: "loading", message: "Loading SharePoint rules" });
+    try {
+      const next = await fetchSharePointState();
+      commitState(next);
+      setImportedEvents([]);
+      setSelectedEventId(null);
+      setSelectedTemplateId(null);
+      setSelectedImportedEventId(null);
+      setPendingMove(null);
+      setPendingConversion(null);
+      setCalendarMoveNotice({ valid: true, message: "SharePoint meeting rules and holidays loaded." });
+      setSourceStatus({ kind: "sharepoint", message: "Loaded from SharePoint lists" });
+    } catch (error) {
+      setSourceStatus({
+        kind: error instanceof Error && /not configured/i.test(error.message) ? "fallback" : "error",
+        message: error instanceof Error ? error.message : "SharePoint rules could not be loaded.",
+      });
+    }
+  };
+
   const reset = () => {
     if (!window.confirm("Start Plan Year over? This clears browser-local planning changes and imported snapshots.")) return;
     setState(initialState());
@@ -222,6 +390,9 @@ export function CalendarPlanner() {
     setPendingConversion(null);
     setCalendarMoveNotice(null);
     window.localStorage.removeItem(STORAGE_KEY);
+    setHasStoredPlan(false);
+    setSourceStatus({ kind: "fallback", message: "Using built-in POC baseline" });
+    setOutlookStatus({ kind: "idle", message: "Outlook sync not run" });
   };
 
   const activePhaseIndex = PHASE_ORDER.indexOf(state.activePhase);
@@ -243,6 +414,15 @@ export function CalendarPlanner() {
           <strong>{confirmedCount} layers confirmed</strong>
         </div>
         <div className="header-actions">
+          <button className="button ghost" type="button" disabled={sourceStatus.kind === "loading"} onClick={() => void loadSharePointRules()}>
+            {sourceStatus.kind === "loading" ? "Loading Rules" : "Load SharePoint Rules"}
+          </button>
+          <button className="button ghost" type="button" disabled={outlookStatus.kind === "loading"} onClick={() => void loadLiveOutlook()}>
+            {outlookStatus.kind === "loading" ? "Loading Outlook" : "Load Outlook Events"}
+          </button>
+          <button className="button primary" type="button" disabled={outlookStatus.kind === "loading"} onClick={() => void publishToOutlook()}>
+            Publish Approved to Outlook
+          </button>
           <button className="button ghost" type="button" disabled={pdfBusy} onClick={async () => {
             setPdfBusy(true);
             try {
@@ -262,6 +442,22 @@ export function CalendarPlanner() {
           }}>Download Calendar File</button>
         </div>
       </header>
+
+      <section className={`scope-banner data-source-banner ${sourceStatus.kind}`}>
+        <div>
+          <strong>Data source</strong>
+          <span>{sourceStatus.message}</span>
+        </div>
+        <span>{state.plan.label}</span>
+      </section>
+
+      <section className={`scope-banner outlook-sync-banner ${outlookStatus.kind}`}>
+        <div>
+          <strong>Outlook sync</strong>
+          <span>{outlookStatus.message}</span>
+        </div>
+        <span>Read before planning · publish after human approval</span>
+      </section>
 
       <nav className="phase-progress" aria-label="Plan Year stages">
         <div className="phase-progress-inner">
@@ -421,7 +617,7 @@ export function CalendarPlanner() {
 
       <footer className="app-footer">
         <span>Historical evidence remains separate from 2027 working rules and one-year overrides.</span>
-        <strong>No Outlook writes · Human confirmation required</strong>
+        <strong>Outlook writes require human confirmation</strong>
         <button type="button" onClick={reset}>Start over</button>
       </footer>
     </main>

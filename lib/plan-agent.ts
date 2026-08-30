@@ -1,7 +1,7 @@
-import { buildMeetingTemplates } from "@/data/source-data";
 import {
   createPlanYearState,
   isEventLocked,
+  meetingTemplatesForState,
   proposeEventMove,
   resolvePlanEvent,
   visiblePlanEvents,
@@ -77,7 +77,7 @@ export type AgentProposal =
 export function buildAgentContext(state: PlanYearState): PlanAgentContext {
   const activeStep = state.phaseSteps[state.activeStepIndex];
   const templateIds = new Set(activeStep.templateIds);
-  const templates = buildMeetingTemplates(state.plan.settings).filter((template) =>
+  const templates = meetingTemplatesForState(state).filter((template) =>
     templateIds.has(template.id),
   );
   const events = state.plan.events
@@ -244,10 +244,19 @@ export function validateAgentProposal(
       };
     }
     const targetState = createPlanYearState(
-      generateCalendarPlan({
-        ...state.plan.settings,
-        boardScenario: proposal.boardScenario,
-      }),
+      generateCalendarPlan(
+        {
+          ...state.plan.settings,
+          boardScenario: proposal.boardScenario,
+        },
+        [],
+        {},
+        {
+          templates: state.plan.templates,
+          holidays: state.plan.holidays,
+          assumptions: state.plan.assumptions,
+        },
+      ),
     );
     const boardTemplateIds = new Set(
       targetState.phaseSteps[targetState.activeStepIndex].templateIds,

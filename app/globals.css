@@ -135,6 +135,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   color: var(--ink);
   font-size: .78rem;
 }
+.data-source-banner { padding-block: 9px; }
+.data-source-banner.sharepoint { background: var(--green-soft); }
+.data-source-banner.error { background: var(--red-soft); }
+.data-source-banner.loading { background: var(--blue-soft); }
+.data-source-banner.fallback, .data-source-banner.local { background: #f7f8f9; }
+.data-source-banner > span {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.outlook-sync-banner { padding-block: 9px; background: #f7f8f9; }
+.outlook-sync-banner.loading { background: var(--blue-soft); }
+.outlook-sync-banner.ready, .outlook-sync-banner.published { background: var(--green-soft); }
+.outlook-sync-banner.error { background: var(--red-soft); }
+.outlook-sync-banner > span {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+}
 
 .plan-layout {
   display: grid;

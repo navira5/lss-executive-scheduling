@@ -281,7 +281,7 @@ export function createPlanYearState(plan: CalendarPlan): PlanYearState {
 }
 
 export function meetingTemplatesForState(state: PlanYearState): MeetingTemplate[] {
-  return [...buildMeetingTemplates(state.plan.settings), ...(state.customTemplates ?? [])];
+  return [...(state.plan.templates ?? buildMeetingTemplates(state.plan.settings)), ...(state.customTemplates ?? [])];
 }
 
 export function addLayerMeetingGroup(
@@ -890,7 +890,7 @@ export function updateTemplateSchedule(
       ? { durationMinutes: currentRule.durationMinutes }
       : {}),
     ...(currentRule.startTime !== undefined ? { startTime: currentRule.startTime } : {}),
-  }));
+  }, state.plan.holidays));
   const removedIds = new Set(
     state.plan.events.filter((event) => event.templateId === templateId).map((event) => event.id),
   );
@@ -1003,7 +1003,16 @@ export function applyPlanProposal(
   if (!proposal.valid) throw new Error(proposal.reason ?? "The proposal is invalid.");
   const baseState = proposal.settingsPatch
     ? createPlanYearState(
-        generateCalendarPlan({ ...state.plan.settings, ...proposal.settingsPatch }),
+        generateCalendarPlan(
+          { ...state.plan.settings, ...proposal.settingsPatch },
+          [],
+          {},
+          {
+            templates: state.plan.templates,
+            holidays: state.plan.holidays,
+            assumptions: state.plan.assumptions,
+          },
+        ),
       )
     : state;
   return proposal.changes.reduce(

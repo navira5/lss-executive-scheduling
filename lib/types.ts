@@ -165,6 +165,7 @@ export interface CalendarPlan {
   label: string;
   generatedAt: string;
   settings: ScenarioSettings;
+  templates?: MeetingTemplate[];
   assumptions: ScenarioAssumption[];
   holidays: HolidayConstraint[];
   events: ProposedEvent[];

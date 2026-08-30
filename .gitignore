@@ -9,3 +9,6 @@ dist/
 coverage/
 *.log
 .superpowers/
+.env
+.env.local
+.env.*.local

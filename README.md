@@ -25,11 +25,25 @@ Each active layer combines a 3 x 4 year view with:
 - a collapsible meeting-details panel for full-calendar review; and
 - CSV export and browser-local working state.
 
-## Outlook snapshot for the POC
+## Microsoft 365 integration checkpoint
+
+The repository includes optional server-side Microsoft Graph adapters that can:
+
+- load meeting rules and holidays from SharePoint/Microsoft Lists;
+- load existing 2027 Outlook events as planning context; and
+- create confirmed, export-eligible planner events in a configured Outlook test calendar after explicit human confirmation.
+
+These adapters are implemented and covered by local contract tests, but they are not a receipt for a live Microsoft connection. A live connection requires an Entra app registration, Graph application permissions, admin consent, a configured test mailbox, and the variables in `.env.local.example`. No Microsoft credentials are committed to this repository.
+
+Outlook publishing fails closed unless `OUTLOOK_PUBLISH_ENABLED=true`. Keep that switch off except during an approved test against a non-production mailbox. The current adapter creates new events; it does not yet update existing events or perform Graph-backed duplicate detection.
+
+Planner rule edits do not yet write back to SharePoint. SharePoint-to-planner loading is currently one-way.
+
+## Outlook snapshot fallback for the POC
 
 Users can export an Outlook calendar as an `.ics` file and import it from the **Outlook snapshot** tab. Parsing happens in the browser. The prototype displays imported meeting title, date, time, and duration in neutral gray so users can see existing commitments before overriding a generated date.
 
-The raw calendar file is not uploaded to the server or included in agent context. The prototype does not write to Outlook. A later pilot can replace the snapshot with Microsoft Graph read-only availability after LSS approves the access boundary.
+The raw calendar file is not uploaded to the server or included in agent context. This snapshot path remains available when live Microsoft Graph access is not configured.
 
 ## Planning agent
 
@@ -71,12 +85,14 @@ The generated 2027 calendar is a working scenario based on historical 2026 evide
 
 The prototype does not:
 
-- change production calendars;
+- autonomously change a calendar or bypass the explicit publish gate;
 - autonomously approve an exception;
 - infer missing attendees or organizational authority;
 - send raw Outlook event descriptions to the planning agent;
 - include the day-to-day Executive Scheduling Advisor; or
-- replace LSS's final review and approval.
+- replace LSS's final review and approval;
+- update existing Outlook events in place; or
+- write planner rule edits back to SharePoint.
 
 ## Evidence and implementation
 

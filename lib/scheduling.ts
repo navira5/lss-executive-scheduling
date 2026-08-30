@@ -10,10 +10,13 @@ import type {
   Conflict,
   EventStatus,
   GenerationRule,
+  HolidayConstraint,
   LocalDecision,
   MeetingTemplate,
   ProposedEvent,
   ScenarioSettings,
+  ScenarioAssumption,
+  DecisionItem,
   WorkingRuleOverride,
 } from "@/lib/types";
 
@@ -95,8 +98,11 @@ function isYearEndBlackout(date: string): boolean {
   return date >= "2027-12-24" && date <= "2027-12-31";
 }
 
-function holidayFor(date: string) {
-  return holidays2027.find((holiday) => holiday.date === date);
+function holidayFor(
+  date: string,
+  holidays: HolidayConstraint[] = holidays2027,
+) {
+  return holidays.find((holiday) => holiday.date === date);
 }
 
 function isWeekend(date: string): boolean {
@@ -104,22 +110,32 @@ function isWeekend(date: string): boolean {
   return weekday === 0 || weekday === 6;
 }
 
-function isValidBusinessDay(date: string): boolean {
-  return !holidayFor(date) && !isYearEndBlackout(date) && !isWeekend(date);
+function isValidBusinessDay(
+  date: string,
+  holidays: HolidayConstraint[] = holidays2027,
+): boolean {
+  return !holidayFor(date, holidays) && !isYearEndBlackout(date) && !isWeekend(date);
 }
 
-function nearestValidDate(date: string, direction: 1 | -1 = 1): string | null {
+function nearestValidDate(
+  date: string,
+  direction: 1 | -1 = 1,
+  holidays: HolidayConstraint[] = holidays2027,
+): string | null {
   for (let distance = 1; distance <= 10; distance += 1) {
     const candidate = addDays(date, distance * direction);
-    if (isValidBusinessDay(candidate)) return candidate;
+    if (isValidBusinessDay(candidate, holidays)) return candidate;
   }
   return null;
 }
 
-function federalHardStopAlternative(date: string): string | null {
-  const after = nearestValidDate(date, 1);
+function federalHardStopAlternative(
+  date: string,
+  holidays: HolidayConstraint[] = holidays2027,
+): string | null {
+  const after = nearestValidDate(date, 1, holidays);
   if (after?.startsWith(`${YEAR}-`)) return after;
-  return nearestValidDate(date, -1);
+  return nearestValidDate(date, -1, holidays);
 }
 
 function baseStatus(template: MeetingTemplate): EventStatus {
@@ -146,6 +162,7 @@ function initialConflicts(
   template: MeetingTemplate,
   date: string,
   isPlaceholder: boolean,
+  holidays: HolidayConstraint[] = holidays2027,
 ): { conflicts: Conflict[]; alternatives: Alternative[] } {
   const conflicts: Conflict[] = [];
   const alternatives: Alternative[] = [];
@@ -164,9 +181,9 @@ function initialConflicts(
     return { conflicts, alternatives };
   }
 
-  const holiday = holidayFor(date);
+  const holiday = holidayFor(date, holidays);
   if (holiday) {
-    const alternative = nearestValidDate(date, 1);
+    const alternative = nearestValidDate(date, 1, holidays);
     conflicts.push({
       id: `${template.id}-${date}-holiday`,
       type: "holiday",
@@ -248,21 +265,27 @@ function explanationFor(
   return `${primary.summary} ${primary.detail}`;
 }
 
-function makeEvent(template: MeetingTemplate, date: string, index: number): ProposedEvent {
+function makeEvent(
+  template: MeetingTemplate,
+  date: string,
+  index: number,
+  holidays: HolidayConstraint[] = holidays2027,
+): ProposedEvent {
   const isPlaceholder = template.generation.type === "month_placeholder";
   const federalHoliday = !isPlaceholder
-    ? holidays2027.find(
+    ? holidays.find(
         (holiday) =>
           holiday.date === date && holiday.status === "verified_federal",
       )
     : undefined;
   const generatedDate = federalHoliday
-    ? federalHardStopAlternative(date) ?? date
+    ? federalHardStopAlternative(date, holidays) ?? date
     : date;
   const { conflicts, alternatives } = initialConflicts(
     template,
     generatedDate,
     isPlaceholder,
+    holidays,
   );
   if (federalHoliday && generatedDate !== date) {
     conflicts.unshift({
@@ -303,9 +326,12 @@ function makeEvent(template: MeetingTemplate, date: string, index: number): Prop
   };
 }
 
-export function generateEventsForTemplate(template: MeetingTemplate): ProposedEvent[] {
+export function generateEventsForTemplate(
+  template: MeetingTemplate,
+  holidays: HolidayConstraint[] = holidays2027,
+): ProposedEvent[] {
   return datesForRule(template.generation).map((date, index) =>
-    makeEvent(template, date, index),
+    makeEvent(template, date, index, holidays),
   );
 }
 
@@ -408,14 +434,21 @@ export function generateCalendarPlan(
   settings: ScenarioSettings,
   localDecisions: LocalDecision[] = [],
   ruleOverrides: Record<string, WorkingRuleOverride> = {},
+  sourceData: {
+    templates?: MeetingTemplate[];
+    holidays?: HolidayConstraint[];
+    assumptions?: ScenarioAssumption[];
+    decisions?: DecisionItem[];
+  } = {},
 ): CalendarPlan {
-  const templates = buildMeetingTemplates(settings).map((template) => ({
+  const holidays = sourceData.holidays ?? holidays2027;
+  const templates = (sourceData.templates ?? buildMeetingTemplates(settings)).map((template) => ({
     ...template,
     ...(ruleOverrides[template.id] ?? {}),
   }));
   const collisionEvents: CollisionEvent[] = templates.flatMap((template) =>
     datesForRule(template.generation).map((date, index) => ({
-      ...makeEvent(template, date, index),
+      ...makeEvent(template, date, index, holidays),
       priorityForCollision: template.priority,
     })),
   );
@@ -462,10 +495,11 @@ export function generateCalendarPlan(
     label: "2027 Working Draft — POC scenario",
     generatedAt: new Date().toISOString(),
     settings,
-    assumptions: buildAssumptions(settings),
-    holidays: holidays2027,
+    templates: sourceData.templates ? templates : undefined,
+    assumptions: sourceData.assumptions ?? buildAssumptions(settings),
+    holidays,
     events,
-    decisions: [...buildBaseDecisionItems(settings), ...eventDecisions],
+    decisions: [...(sourceData.decisions ?? buildBaseDecisionItems(settings)), ...eventDecisions],
   };
 }
 
