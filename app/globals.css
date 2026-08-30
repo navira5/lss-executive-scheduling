@@ -154,6 +154,46 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   font-size: .72rem;
   font-weight: 700;
 }
+.tester-scope-banner { padding-block: 9px; background: #f3f0f7; }
+.tester-scope-banner > span { font-weight: 700; }
+.data-source-banner a {
+  color: var(--board);
+  font-size: .72rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+.data-source-banner a:hover { text-decoration: underline; }
+
+.demo-login-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: var(--paper);
+}
+.demo-login-card {
+  width: min(100%, 440px);
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.demo-login-card .brand-mark { margin-bottom: 22px; }
+.demo-login-card h1 { margin: 4px 0 10px; font-size: 1.55rem; letter-spacing: -.03em; }
+.demo-login-card > p { margin: 0 0 24px; color: var(--muted); font-size: .86rem; }
+.demo-login-card form { display: grid; gap: 16px; }
+.demo-login-card label span { display: block; margin-bottom: 6px; color: var(--muted); font-size: .72rem; font-weight: 750; }
+.demo-login-card input {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid var(--line-dark);
+  border-radius: 6px;
+  background: white;
+}
+.demo-login-card button { margin-top: 4px; }
+.demo-login-card small { display: block; margin-top: 22px; color: var(--muted); font-size: .7rem; }
+.demo-login-error { margin: -8px 0 18px; padding: 10px 12px; border-left: 3px solid var(--red); background: var(--red-soft); color: var(--red); font-size: .78rem; }
 
 .plan-layout {
   display: grid;
@@ -622,6 +662,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .app-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px clamp(18px, 3vw, 44px) 24px; color: var(--muted); font-size: .67rem; }
 .app-footer strong { color: var(--ink); }
+.app-footer a { color: var(--board); font-weight: 750; text-decoration: none; }
+.app-footer a:hover { text-decoration: underline; }
 .app-footer button { border: 0; background: transparent; color: var(--red); font-size: .67rem; font-weight: 750; cursor: pointer; }
 
 @media (max-width: 1450px) {

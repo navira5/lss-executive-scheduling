@@ -1,4 +1,5 @@
 import { graphEventBody, type OutlookPublishPayload } from "@/lib/outlook-sync";
+import { requireDemoApiSession } from "@/app/demo-auth";
 
 interface PublishedEvent {
   id?: string;
@@ -80,6 +81,8 @@ async function graphPost<T>(path: string, token: string, body: unknown): Promise
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const unauthorized = await requireDemoApiSession();
+  if (unauthorized) return unauthorized;
   const settings = config();
   const missingFields = missing(settings);
   if (missingFields.length) {

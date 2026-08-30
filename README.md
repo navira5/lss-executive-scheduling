@@ -33,11 +33,23 @@ The repository includes optional server-side Microsoft Graph adapters that can:
 - load existing 2027 Outlook events as planning context; and
 - create confirmed, export-eligible planner events in a configured Outlook test calendar after explicit human confirmation.
 
-These adapters are implemented and covered by local contract tests, but they are not a receipt for a live Microsoft connection. A live connection requires an Entra app registration, Graph application permissions, admin consent, a configured test mailbox, and the variables in `.env.local.example`. No Microsoft credentials are committed to this repository.
+The adapters are covered by local contract tests and were authenticated against Navira's isolated Microsoft 365 trial tenant on 2026-08-30. The live verification loaded the SharePoint meeting and holiday lists, read the dedicated `LSS 2027 Demo Calendar`, created one attendee-free connection-test event, and read it back. This receipt proves the trial path only; it is not evidence of access to LSS's tenant. No Microsoft credentials are committed to this repository.
 
 Outlook publishing fails closed unless `OUTLOOK_PUBLISH_ENABLED=true`. Keep that switch off except during an approved test against a non-production mailbox. The current adapter creates new events; it does not yet update existing events or perform Graph-backed duplicate detection.
 
 Planner rule edits do not yet write back to SharePoint. SharePoint-to-planner loading is currently one-way.
+
+## Hosted feedback access
+
+The Sites-hosted prototype uses a temporary username and access code during the 30-day feedback period. The credentials and signed-session key live only in the hosting environment. All Microsoft API routes enforce the same signed session as the browser page.
+
+This is intentionally a trial boundary:
+
+- Microsoft data comes only from Navira's isolated trial tenant.
+- Hosted Outlook publishing stays disabled during open feedback testing.
+- Each tester's planning changes are stored only in that browser; testers are not editing one shared plan.
+- Power Apps and Microsoft Lists own the editable rule data, while the custom planner reads the resulting SharePoint lists.
+- LSS Microsoft Entra login, shared durable plan state, and planner-to-SharePoint write-back remain production follow-on work.
 
 ## Outlook snapshot fallback for the POC
 
@@ -58,6 +70,8 @@ npm run dev
 ```
 
 Without an API key, the interface truthfully labels and uses a limited **Demo interpreter** for the prepared demonstration command. It does not pretend that a live agent responded.
+
+For local testing of the temporary hosted-access gate, configure the `DEMO_*` variables from `.env.local.example`. Keep `DEMO_AUTH_ENABLED=false` for ordinary local development.
 
 ## Run locally
 

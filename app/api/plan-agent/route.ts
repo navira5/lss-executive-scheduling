@@ -1,3 +1,5 @@
+import { requireDemoApiSession } from "@/app/demo-auth";
+
 const TOOL_NAME = "propose_plan_changes";
 
 const proposalParameters = {
@@ -118,6 +120,8 @@ function sanitizeContext(value: unknown) {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const unauthorized = await requireDemoApiSession();
+  if (unauthorized) return unauthorized;
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return Response.json({ error: "Live agent not configured" }, { status: 503 });

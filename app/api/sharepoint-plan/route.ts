@@ -1,5 +1,6 @@
 import { calendarPlanFromSharePoint } from "@/lib/sharepoint-plan";
 import type { SharePointFields } from "@/lib/sharepoint-plan";
+import { requireDemoApiSession } from "@/app/demo-auth";
 
 interface GraphSite {
   id: string;
@@ -118,6 +119,8 @@ async function listFields(siteId: string, listId: string, token: string): Promis
 }
 
 export async function GET(): Promise<Response> {
+  const unauthorized = await requireDemoApiSession();
+  if (unauthorized) return unauthorized;
   const settings = config();
   if (!settings.tenantId || !settings.clientId || !settings.clientSecret) {
     return Response.json({

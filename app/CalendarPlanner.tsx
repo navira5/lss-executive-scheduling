@@ -131,7 +131,15 @@ function phaseTemplateIds(state: PlanYearState, phase: PlanPhase): Set<string> {
   return new Set(PLAN_STEPS[phase].flatMap((step) => step.templateIds));
 }
 
-export function CalendarPlanner() {
+export function CalendarPlanner({
+  viewerName = "Local demo",
+  outlookPublishEnabled = false,
+  powerAppUrl = "",
+}: {
+  viewerName?: string;
+  outlookPublishEnabled?: boolean;
+  powerAppUrl?: string;
+}) {
   const [state, setState] = useState<PlanYearState>(() => initialState());
   const [history, setHistory] = useState<PlanYearState[]>([]);
   const [importedEvents, setImportedEvents] = useState<ImportedCalendarEvent[]>([]);
@@ -420,8 +428,14 @@ export function CalendarPlanner() {
           <button className="button ghost" type="button" disabled={outlookStatus.kind === "loading"} onClick={() => void loadLiveOutlook()}>
             {outlookStatus.kind === "loading" ? "Loading Outlook" : "Load Outlook Events"}
           </button>
-          <button className="button primary" type="button" disabled={outlookStatus.kind === "loading"} onClick={() => void publishToOutlook()}>
-            Publish Approved to Outlook
+          <button
+            className="button primary"
+            type="button"
+            disabled={outlookStatus.kind === "loading" || !outlookPublishEnabled}
+            title={outlookPublishEnabled ? "Publish confirmed meetings to the configured demo calendar" : "Publishing is locked during feedback testing"}
+            onClick={() => void publishToOutlook()}
+          >
+            {outlookPublishEnabled ? "Publish Approved to Outlook" : "Outlook Publishing Locked"}
           </button>
           <button className="button ghost" type="button" disabled={pdfBusy} onClick={async () => {
             setPdfBusy(true);
@@ -443,12 +457,24 @@ export function CalendarPlanner() {
         </div>
       </header>
 
+      <section className="scope-banner tester-scope-banner">
+        <div>
+          <strong>Private feedback workspace</strong>
+          <span>Signed in as {viewerName} · changes save only in this browser</span>
+        </div>
+        <span>SharePoint rules + dedicated demo Outlook calendar</span>
+      </section>
+
       <section className={`scope-banner data-source-banner ${sourceStatus.kind}`}>
         <div>
           <strong>Data source</strong>
           <span>{sourceStatus.message}</span>
         </div>
-        <span>{state.plan.label}</span>
+        {powerAppUrl ? (
+          <a href={powerAppUrl} target="_blank" rel="noreferrer">Open Power Apps rule editor</a>
+        ) : (
+          <span>Rules managed through SharePoint / Power Apps</span>
+        )}
       </section>
 
       <section className={`scope-banner outlook-sync-banner ${outlookStatus.kind}`}>
@@ -617,7 +643,8 @@ export function CalendarPlanner() {
 
       <footer className="app-footer">
         <span>Historical evidence remains separate from 2027 working rules and one-year overrides.</span>
-        <strong>Outlook writes require human confirmation</strong>
+        <strong>{outlookPublishEnabled ? "Outlook writes require human confirmation" : "Demo Outlook publishing is locked"}</strong>
+        <a href="/api/demo-logout">Sign out</a>
         <button type="button" onClick={reset}>Start over</button>
       </footer>
     </main>

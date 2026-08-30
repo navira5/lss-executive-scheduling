@@ -16,7 +16,8 @@
     "test:rule-summaries": "npx -y node@22.13.1 --import tsx --test tests/rule-summaries.test.ts",
     "test:sharepoint-plan": "npx -y node@22.13.1 --import tsx --test tests/sharepoint-plan.test.ts",
     "test:outlook-sync": "npx -y node@22.13.1 --import tsx --test tests/outlook-sync.test.ts",
-    "test": "npm run test:engine && npm run test:plan-year && npm run test:agent-route && npm run test:calendar-import && npm run test:rule-summaries && npm run test:sharepoint-plan && npm run test:outlook-sync && npm run build && npx -y node@22.13.1 --test tests/rendered-html.test.mjs",
+    "test:demo-auth": "npx -y node@22.13.1 --import tsx --test tests/demo-auth.test.ts",
+    "test": "npm run test:engine && npm run test:plan-year && npm run test:agent-route && npm run test:calendar-import && npm run test:rule-summaries && npm run test:sharepoint-plan && npm run test:outlook-sync && npm run test:demo-auth && npm run build && npx -y node@22.13.1 --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

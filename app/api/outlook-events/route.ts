@@ -1,4 +1,5 @@
 import { importedEventFromOutlook, type OutlookEventFields } from "@/lib/outlook-sync";
+import { requireDemoApiSession } from "@/app/demo-auth";
 
 interface GraphCollection<T> {
   value?: T[];
@@ -89,6 +90,8 @@ function calendarViewPath(settings: ReturnType<typeof config>): string {
 }
 
 export async function GET(): Promise<Response> {
+  const unauthorized = await requireDemoApiSession();
+  if (unauthorized) return unauthorized;
   const settings = config();
   const missingFields = missing(settings);
   if (missingFields.length) {

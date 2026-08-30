@@ -1,6 +1,6 @@
 # YOLO Restart Handoff: LSS Executive Scheduling
 
-Date: 2026-08-29
+Date: 2026-08-30
 
 ## Repository
 
@@ -110,7 +110,15 @@ Not implemented:
 
 Current Outlook publish code creates events in the configured mailbox/calendar only when the UI confirmation is accepted and `OUTLOOK_PUBLISH_ENABLED=true`. It uses a Graph `transactionId`, which helps make create retries safer, but the integration has not yet been authenticated against Graph from this repository. The demo must use a test calendar first.
 
-Important wording: SharePoint and Outlook adapters are implemented, not live-connected. There is no `.env.local` in this worktree and no successful live Graph read/write receipt yet.
+Live trial receipt on 2026-08-30:
+
+- Microsoft client-credentials authentication succeeded.
+- `/api/sharepoint-plan` loaded both SharePoint lists and generated 139 2027 occurrences with no import warnings.
+- `/api/outlook-events` read the dedicated `LSS 2027 Demo Calendar`.
+- One attendee-free 15-minute connection-test event was created on 2027-01-06 and read back through the application route.
+- The publish switch was returned to `false` and a subsequent publish attempt was correctly rejected with 403.
+
+This proves only Navira's isolated Microsoft trial tenant. It does not prove access to LSS's tenant.
 
 ## Environment Variables
 
@@ -133,16 +141,16 @@ Required for Outlook:
 - `OUTLOOK_TIME_ZONE=Eastern Standard Time`
 - `OUTLOOK_PUBLISH_ENABLED=false` until an approved test mailbox is ready
 
-## Microsoft Entra Setup Needed
+## Microsoft Entra Trial Setup
 
-Create an Entra App Registration in the same Microsoft tenant.
+The `LSS Calendar Planner Demo` app registration now exists in Navira's trial tenant with admin-consented Microsoft Graph application permissions:
 
 For the demo, likely Graph application permissions:
 
 - `Sites.Read.All`
 - `Calendars.ReadWrite`
 
-Then grant admin consent and create a client secret.
+The client secret exists only in ignored local configuration and the hosted runtime environment.
 
 For production, ask Chad about least-privilege site-specific permissions and Exchange application access policies before granting broad app permissions.
 
@@ -154,8 +162,9 @@ For production, ask Chad about least-privilege site-specific permissions and Exc
 4. Show that existing Outlook events appear as context on the calendar.
 5. Make planning changes in the custom calendar UI.
 6. Confirm the relevant layer.
-7. Click `Publish Approved to Outlook`.
-8. Show that only confirmed/export-eligible meetings are written to Outlook.
+7. Export the working plan as PDF or the confirmed meetings as ICS.
+
+For a controlled owner-led write demonstration only, temporarily enable Outlook publishing, publish to the dedicated demo calendar, verify the result, and disable publishing again. Hosted feedback users do not receive Outlook write access.
 
 ## Verification Already Run
 
@@ -189,11 +198,28 @@ Open:
 http://localhost:3000/
 ```
 
-No server was listening on port 3000 at the 2026-08-30 restart checkpoint. Start it with the command above.
-
-Current endpoint behavior without credentials:
+Current endpoint behavior when credentials are intentionally removed:
 
 - `/api/sharepoint-plan` returns missing Microsoft env vars.
 - `/api/outlook-events` returns missing Microsoft/Outlook env vars.
 
-That is expected until `.env.local` is configured.
+The current ignored `.env.local` is configured for Navira's trial tenant. The missing-credential behavior remains covered by tests.
+
+## Hosted Feedback Boundary
+
+The hosted build now has a temporary signed-session login suitable for the 30-day feedback period. Configuration uses:
+
+- `DEMO_AUTH_ENABLED`
+- `DEMO_USERNAME`
+- `DEMO_ACCESS_CODE`
+- `DEMO_SESSION_SECRET`
+
+The username, access code, Microsoft client secret, target mailbox, and calendar ID must remain in ignored local configuration or Sites runtime environment variables. Never commit them.
+
+During feedback testing:
+
+- The hosted app reads SharePoint and the dedicated trial Outlook calendar.
+- Outlook publishing remains disabled.
+- Each tester's calendar changes remain in that browser's local storage.
+- Power Apps edits the SharePoint-owned rules; the planner reads them one-way.
+- True LSS Entra login and shared durable plan state remain later work.
