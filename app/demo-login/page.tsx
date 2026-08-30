@@ -35,7 +35,7 @@ export default async function DemoLoginPage({
           </label>
           <button className="button primary" type="submit">Enter planning workspace</button>
         </form>
-        <small>Planning changes are saved only in this browser. Outlook publishing is disabled during feedback testing.</small>
+        <small>Planning changes are saved only in this browser. Outlook changes require review and apply only to the isolated demo calendar.</small>
       </section>
     </main>
   );
