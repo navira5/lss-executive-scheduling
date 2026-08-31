@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LSS Plan Year — Power Apps Preview</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="suite-bar">
+        <button class="waffle" aria-label="Microsoft 365 apps">••<br />••</button>
+        <div class="suite-product">Power Apps</div>
+        <div class="suite-title">LSS 2027 Calendar Planner</div>
+        <div class="suite-spacer"></div>
+        <span class="environment">LSS Planning</span>
+        <button class="avatar" aria-label="Account menu">RA</button>
+      </header>
+
+      <nav class="command-bar" aria-label="Application commands">
+        <div>
+          <p class="eyebrow">PLAN YEAR</p>
+          <h1>Build the 2027 calendar</h1>
+        </div>
+        <div class="command-actions">
+          <button class="button secondary" id="saveDraftButton">Save draft</button>
+          <button class="button primary" id="reviewButton">Review Outlook upload</button>
+        </div>
+      </nav>
+
+      <div class="page-grid">
+        <aside class="layer-nav" aria-label="Planning layers">
+          <div class="preview-note">
+            <strong>Pure Power Apps preview</strong>
+            <span>Forms, lists, and approval actions inside Microsoft 365.</span>
+          </div>
+
+          <p class="nav-label">Planning layers</p>
+          <button class="layer active" data-layer="board">
+            <span class="layer-index">1</span>
+            <span><strong>Board &amp; Governance</strong><small>1 of 3 groups confirmed</small></span>
+          </button>
+          <button class="layer" data-layer="committee">
+            <span class="layer-index">2</span>
+            <span><strong>Committees</strong><small>Not started</small></span>
+          </button>
+          <button class="layer" data-layer="executive">
+            <span class="layer-index">3</span>
+            <span><strong>Executive Leadership</strong><small>Not started</small></span>
+          </button>
+          <button class="layer" data-layer="organization">
+            <span class="layer-index">4</span>
+            <span><strong>Organization</strong><small>Not started</small></span>
+          </button>
+          <button class="layer" data-layer="review">
+            <span class="layer-index">5</span>
+            <span><strong>Final Review</strong><small>Waiting on 2 items</small></span>
+          </button>
+
+          <div class="layer-progress">
+            <div class="progress-copy"><span>Plan progress</span><strong id="progressValue">33%</strong></div>
+            <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+          </div>
+        </aside>
+
+        <main class="planner">
+          <div class="view-tabs" role="tablist" aria-label="Planner views">
+            <button class="view-tab active" role="tab" aria-selected="true">Plan meetings</button>
+            <button class="view-tab" role="tab" aria-selected="false">Calendar</button>
+            <button class="view-tab" role="tab" aria-selected="false">Rulebook</button>
+          </div>
+
+          <section class="planner-intro">
+            <div>
+              <p class="eyebrow">BOARD &amp; GOVERNANCE</p>
+              <h2>Match each meeting group to its scheduling rule</h2>
+              <p>Select a group, review the rule beside its proposed meetings, then confirm or mark an exception.</p>
+            </div>
+            <span class="year-chip">Planning year 2027</span>
+          </section>
+
+          <div class="planner-workspace">
+            <section class="group-panel" aria-labelledby="meetingGroupsTitle">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">MEETING GROUPS</p>
+                  <h3 id="meetingGroupsTitle">Board calendar</h3>
+                </div>
+                <button class="icon-button" aria-label="Add meeting group" title="Add meeting group">＋</button>
+              </div>
+              <div id="groupList" class="group-list"></div>
+            </section>
+
+            <section class="detail-panel" aria-live="polite">
+              <div class="detail-heading">
+                <div>
+                  <p class="eyebrow">SELECTED GROUP</p>
+                  <h3 id="groupTitle">Full Board Meetings</h3>
+                  <p id="groupPurpose" class="group-purpose">Governance, key decisions, and organizational oversight.</p>
+                </div>
+                <span id="groupStatus" class="status-badge warning">Needs validation</span>
+              </div>
+
+              <div class="rule-and-meetings">
+                <form class="rule-card" id="ruleForm">
+                  <div class="section-title">
+                    <div>
+                      <p class="eyebrow">SOURCE RULE</p>
+                      <h4>2027 scheduling rule</h4>
+                    </div>
+                    <button type="button" class="text-button" id="viewSourceButton">View source</button>
+                  </div>
+
+                  <label>
+                    <span>Annual count</span>
+                    <input id="countInput" type="number" min="0" max="12" value="4" />
+                  </label>
+
+                  <label>
+                    <span>Cadence</span>
+                    <select id="cadenceInput">
+                      <option value="custom">Custom months</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="every-other-month">Every other month</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="semiannual">Every six months</option>
+                    </select>
+                  </label>
+
+                  <div class="field-row">
+                    <label>
+                      <span>Week of month</span>
+                      <select id="weekInput">
+                        <option value="1">First</option>
+                        <option value="2" selected>Second</option>
+                        <option value="3">Third</option>
+                        <option value="4">Fourth</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Preferred day</span>
+                      <select id="dayInput">
+                        <option value="1">Monday</option>
+                        <option value="2" selected>Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div class="field-row">
+                    <label>
+                      <span>Start time</span>
+                      <input id="timeInput" type="time" value="17:00" />
+                    </label>
+                    <label>
+                      <span>Duration</span>
+                      <select id="durationInput">
+                        <option value="30">30 minutes</option>
+                        <option value="60">1 hour</option>
+                        <option value="90">1.5 hours</option>
+                        <option value="120" selected>2 hours</option>
+                        <option value="300">5 hours</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label>
+                    <span>Attendee group</span>
+                    <input id="attendeesInput" type="text" value="Full Board" />
+                  </label>
+
+                  <label>
+                    <span>Rule status</span>
+                    <select id="statusInput">
+                      <option value="Needs validation">Needs validation</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Open question">Open question</option>
+                    </select>
+                  </label>
+
+                  <div class="rule-actions">
+                    <button type="button" class="button secondary full" id="regenerateButton">Apply rule to meetings</button>
+                  </div>
+                </form>
+
+                <div class="meetings-card">
+                  <div class="section-title">
+                    <div>
+                      <p class="eyebrow">GENERATED MEETINGS</p>
+                      <h4><span id="meetingCount">4</span> proposed for 2027</h4>
+                    </div>
+                    <span class="match-legend"><span></span> Rule match</span>
+                  </div>
+
+                  <div id="insight" class="insight">
+                    <strong>Decision needed</strong>
+                    <span>Confirm which four months should hold regular Full Board meetings.</span>
+                  </div>
+
+                  <div class="meeting-table-head" aria-hidden="true">
+                    <span>Date</span><span>Meeting</span><span>Rule check</span><span></span>
+                  </div>
+                  <div id="meetingRows" class="meeting-rows"></div>
+
+                  <button type="button" class="add-meeting" id="addMeetingButton">＋ Add one-time meeting</button>
+                </div>
+              </div>
+
+              <div class="confirmation-bar">
+                <div>
+                  <strong id="confirmationTitle">Ready to confirm this group?</strong>
+                  <span id="confirmationCopy">The four proposed meetings will become constraints for later planning layers.</span>
+                </div>
+                <button class="button primary" id="confirmButton">Confirm group</button>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <dialog id="sourceDialog">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">RULEBOOK SOURCE</p>
+          <h3 id="sourceTitle">Full Board Meeting</h3>
+        </div>
+        <button class="icon-button" id="closeSourceButton" aria-label="Close">×</button>
+      </div>
+      <dl id="sourceDetails" class="source-details"></dl>
+      <div class="dialog-actions"><button class="button primary" id="doneSourceButton">Done</button></div>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>

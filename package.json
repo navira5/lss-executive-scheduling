@@ -7,6 +7,8 @@
   },
   "scripts": {
     "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log npx -y node@22.13.1 node_modules/vinext/dist/cli.js dev",
+    "preview:power-apps": "node scripts/power-apps-preview-server.mjs",
+    "demo:compare": "node scripts/start-demo-comparison.mjs",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log npx -y node@22.13.1 node_modules/vinext/dist/cli.js build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log npx -y node@22.13.1 node_modules/vinext/dist/cli.js start",
     "test:engine": "npx -y node@22.13.1 --import tsx --test tests/scheduling.test.ts",
