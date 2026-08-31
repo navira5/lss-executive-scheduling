@@ -6,6 +6,7 @@ import {
   interpretDemoRequest,
   validateAgentProposal,
 } from "@/lib/plan-agent";
+import { apply2027PlanningSession } from "@/data/planning-session-2027";
 import {
   advancePlanStep,
   addCommitteeMeetingGroup,
@@ -163,6 +164,39 @@ test("a blocked-date recommendation also skips an LSS closure", () => {
   };
 
   assert.equal(recommendManualEventDate(state, "2027-01-18"), "2027-01-20");
+});
+
+test("the in-person planning snapshot confirms only Board and Committee layers", () => {
+  const state = apply2027PlanningSession(
+    createPlanYearState(generateCalendarPlan(baseline)),
+  );
+  const confirmed = confirmedCalendarEvents(state);
+
+  assert.deepEqual(state.confirmedPhases, ["board", "committee"]);
+  assert.equal(state.activePhase, "executive");
+  assert.equal(confirmed.filter((event) => event.category === "board").length, 17);
+  assert.equal(confirmed.filter((event) => event.category === "committee").length, 14);
+  assert.equal(confirmed.some((event) => event.category === "executive"), false);
+  assert.equal(confirmed.some((event) => event.category === "organization"), false);
+  assert.equal(confirmed.some((event) => event.templateId === "finance-committee"), false);
+  const finance = visiblePlanEvents(state).find((event) => event.templateId === "finance-committee");
+  assert.ok(finance);
+  assert.equal(resolvePlanEvent(state, finance.id).locked, true);
+});
+
+test("the in-person planning snapshot preserves one-offs without the June duplicate", () => {
+  const state = apply2027PlanningSession(
+    createPlanYearState(generateCalendarPlan(baseline)),
+  );
+  const confirmed = confirmedCalendarEvents(state);
+
+  assert.equal(
+    confirmed.filter((event) => event.title === "Full Board Meeting" && event.date === "2027-06-08").length,
+    1,
+  );
+  assert.ok(confirmed.some((event) => event.title === "Board Social" && event.date === "2027-05-11"));
+  assert.ok(confirmed.some((event) => event.title === "New Board Member Orientation Day" && event.date === "2027-10-08"));
+  assert.ok(state.calendarClosures.some((closure) => closure.date === "2027-12-23" && closure.label === "Xmas"));
 });
 
 test("applies a valid move only after the proposal is accepted", () => {

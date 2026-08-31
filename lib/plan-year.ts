@@ -3,6 +3,7 @@ import { generateCalendarPlan, generateEventsForTemplate } from "@/lib/schedulin
 import type {
   CalendarPlan,
   GenerationRule,
+  MeetingCategory,
   MeetingTemplate,
   ProposedEvent,
   ScenarioSettings,
@@ -385,6 +386,7 @@ export function addAdHocEvent(
   state: PlanYearState,
   date: string,
   title: string,
+  category: MeetingCategory = "organization",
 ): { state: PlanYearState; eventId: string; templateId: string } {
   const cleanTitle = title.trim();
   if (!cleanTitle) throw new Error("Event name is required.");
@@ -397,7 +399,7 @@ export function addAdHocEvent(
     id: templateId,
     abbreviation: cleanTitle.split(/\s+/).map((word) => word[0]).join("").slice(0, 7).toUpperCase(),
     name: cleanTitle,
-    category: "organization",
+    category,
     purpose: "Ad hoc calendar event added during 2027 planning.",
     owner: "To confirm",
     attendeeGroup: "To confirm",
@@ -499,18 +501,27 @@ function templateIdsForPhase(phase: PlanPhase, state?: PlanYearState): Set<strin
 
 export function isEventConfirmed(state: PlanYearState, event: ProposedEvent): boolean {
   if (event.templateId.startsWith("ad-hoc-")) return true;
-  return state.confirmedPhases.some((phase) =>
-    templateIdsForPhase(phase, state).has(event.templateId),
+  const eventPhase = phaseForTemplate(event.templateId, state);
+  if (!eventPhase || !state.confirmedPhases.includes(eventPhase)) return false;
+  const explicitApprovalsForPhase = (state.approvedTemplateIds ?? []).filter(
+    (templateId) => phaseForTemplate(templateId, state) === eventPhase,
   );
+  return explicitApprovalsForPhase.length === 0 || explicitApprovalsForPhase.includes(event.templateId);
 }
 
 export function visiblePlanEvents(state: PlanYearState): ProposedEvent[] {
   if (state.activePhase === "review") return state.plan.events;
   const activeTemplateIds = templateIdsForPhase(state.activePhase, state);
   return state.plan.events.filter(
-    (event) =>
-      !state.hiddenEventIds.includes(event.id) &&
-      (event.templateId.startsWith("ad-hoc-") || isEventConfirmed(state, event) || activeTemplateIds.has(event.templateId)),
+    (event) => {
+      const eventPhase = phaseForTemplate(event.templateId, state);
+      return !state.hiddenEventIds.includes(event.id) && (
+        event.templateId.startsWith("ad-hoc-") ||
+        isEventConfirmed(state, event) ||
+        (eventPhase !== null && state.confirmedPhases.includes(eventPhase)) ||
+        activeTemplateIds.has(event.templateId)
+      );
+    },
   );
 }
 
@@ -520,7 +531,7 @@ export function isEventLocked(
 ): boolean {
   if (event.templateId.startsWith("ad-hoc-")) return false;
   const eventPhase = phaseForTemplate(event.templateId, state);
-  return isEventConfirmed(state, event) && eventPhase !== state.activePhase;
+  return Boolean(eventPhase && state.confirmedPhases.includes(eventPhase) && eventPhase !== state.activePhase);
 }
 
 function eventById(state: PlanYearState, eventId: string): ProposedEvent {

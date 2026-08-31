@@ -6,6 +6,10 @@ import { PlanYearCalendar } from "@/app/components/PlanYearCalendar";
 import { OutlookSyncReview } from "@/app/components/OutlookSyncReview";
 import type { BlockedCalendarMove, PendingCalendarMove } from "@/app/components/PlanYearCalendar";
 import {
+  apply2027PlanningSession,
+  PLANNING_SESSION_LABEL,
+} from "@/data/planning-session-2027";
+import {
   PlanningCockpit,
   type PendingFormatConversion,
 } from "@/app/components/PlanningCockpit";
@@ -42,14 +46,14 @@ import { toOutlookPublishInput, type OutlookSyncPreview } from "@/lib/outlook-sy
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
-const STORAGE_KEY = "lss-plan-year-2027-v6";
+const STORAGE_KEY = "lss-plan-year-2027-v8";
 const DEFAULT_SETTINGS: ScenarioSettings = {
   boardScenario: "recent_direction",
   allStaffPattern: "detailed_calendar",
 };
 
 interface StoredPlanYear {
-  version: 6 | 7;
+  version: 8;
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
   pendingOutlookDeletionIds?: string[];
@@ -72,7 +76,7 @@ type OutlookStatus =
   | { kind: "error"; message: string };
 
 function initialState(settings: ScenarioSettings = DEFAULT_SETTINGS): PlanYearState {
-  return createPlanYearState(generateCalendarPlan(settings));
+  return apply2027PlanningSession(createPlanYearState(generateCalendarPlan(settings)));
 }
 
 function normalizeStoredState(state: PlanYearState): PlanYearState {
@@ -94,7 +98,7 @@ async function fetchSharePointState(): Promise<PlanYearState> {
   }
   const payload = await response.json() as { plan?: Parameters<typeof createPlanYearState>[0] };
   if (!payload.plan) throw new Error("SharePoint response did not include a calendar plan.");
-  return createPlanYearState(payload.plan);
+  return apply2027PlanningSession(createPlanYearState(payload.plan));
 }
 
 async function fetchLiveOutlookEvents(): Promise<ImportedCalendarEvent[]> {
@@ -192,7 +196,7 @@ export function CalendarPlanner({
     if (saved) {
       try {
         const stored = JSON.parse(saved) as StoredPlanYear;
-        if ([6, 7].includes(stored.version) && stored.state?.plan?.year === 2027) {
+        if (stored.version === 8 && stored.state?.plan?.year === 2027) {
           loadedSavedPlan = true;
           queueMicrotask(() => {
             setState(normalizeStoredState(stored.state));
@@ -225,14 +229,16 @@ export function CalendarPlanner({
         setState(next);
         setSourceStatus({
           kind: "sharepoint",
-          message: "Loaded from SharePoint lists",
+          message: `SharePoint rules + ${PLANNING_SESSION_LABEL}`,
         });
       })
       .catch((error) => {
         if (cancelled) return;
         setSourceStatus({
           kind: error instanceof Error && /not configured/i.test(error.message) ? "fallback" : "error",
-          message: error instanceof Error ? error.message : "Using built-in POC baseline",
+          message: error instanceof Error && /not configured/i.test(error.message)
+            ? `${PLANNING_SESSION_LABEL} + built-in rules`
+            : error instanceof Error ? error.message : `${PLANNING_SESSION_LABEL} + built-in rules`,
         });
       });
     return () => {
@@ -243,7 +249,7 @@ export function CalendarPlanner({
   useEffect(() => {
     if (!loaded) return;
     const stored: StoredPlanYear = {
-      version: 7,
+      version: 8,
       state,
       importedEvents,
       pendingOutlookDeletionIds,
@@ -444,8 +450,8 @@ export function CalendarPlanner({
       setPendingConversion(null);
       setDirtyRuleTemplateIds([]);
       setCancelledPlannerEventIds([]);
-      setCalendarMoveNotice({ valid: true, message: "SharePoint meeting rules and holidays loaded." });
-      setSourceStatus({ kind: "sharepoint", message: "Loaded from SharePoint lists" });
+      setCalendarMoveNotice({ valid: true, message: `SharePoint rules refreshed; ${PLANNING_SESSION_LABEL} preserved.` });
+      setSourceStatus({ kind: "sharepoint", message: `SharePoint rules + ${PLANNING_SESSION_LABEL}` });
     } catch (error) {
       setSourceStatus({
         kind: error instanceof Error && /not configured/i.test(error.message) ? "fallback" : "error",
@@ -544,7 +550,7 @@ export function CalendarPlanner({
     setDirtyRuleTemplateIds([]);
     window.localStorage.removeItem(STORAGE_KEY);
     setHasStoredPlan(false);
-    setSourceStatus({ kind: "fallback", message: "Using built-in POC baseline" });
+    setSourceStatus({ kind: "fallback", message: `${PLANNING_SESSION_LABEL} + built-in rules` });
     setOutlookStatus({ kind: "idle", message: "Outlook sync not run" });
   };
 
@@ -713,7 +719,12 @@ export function CalendarPlanner({
             }}
             onAddAdHoc={(date, title) => {
               try {
-                const added = addAdHocEvent(state, date, title);
+                const added = addAdHocEvent(
+                  state,
+                  date,
+                  title,
+                  state.activePhase === "review" ? "organization" : state.activePhase,
+                );
                 commitState(added.state);
                 setSelectedTemplateId(added.templateId);
                 setSelectedEventId(added.eventId);
