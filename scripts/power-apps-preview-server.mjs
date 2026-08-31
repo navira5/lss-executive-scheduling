@@ -20,7 +20,9 @@ const contentTypes = {
 
 function safePath(urlPath) {
   const pathname = decodeURIComponent(new URL(urlPath, "http://localhost").pathname);
-  const relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+  const previewRoutes = new Set(["/", "/plan", "/calendar", "/rulebook"]);
+  const relativePath = previewRoutes.has(normalizedPath) ? "index.html" : pathname.replace(/^\/+/, "");
   const candidate = resolve(root, relativePath);
   if (candidate !== root && !candidate.startsWith(`${root}${sep}`)) return null;
   return candidate;

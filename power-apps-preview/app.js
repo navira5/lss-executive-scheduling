@@ -404,7 +404,7 @@ function renderRulebook() {
     : `<strong>${rule.status === "Open question" ? "Open question" : "Needs confirmation"}</strong><span>${question}</span>`;
 }
 
-function switchView(view) {
+function switchView(view, updateUrl = false) {
   activeView = view;
   document.querySelectorAll(".view-tab").forEach(tab => {
     const selected = tab.dataset.view === view;
@@ -416,6 +416,7 @@ function switchView(view) {
     screen.classList.toggle("active", selected);
     screen.hidden = !selected;
   });
+  if (updateUrl) window.history.pushState({ view }, "", view === "plan" ? "/plan" : `/${view}`);
   if (view === "calendar") renderCalendar();
   if (view === "rulebook") renderRulebook();
 }
@@ -561,9 +562,15 @@ $("closeSourceButton").addEventListener("click", () => $("sourceDialog").close()
 $("doneSourceButton").addEventListener("click", () => $("sourceDialog").close());
 
 document.querySelectorAll(".view-tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    switchView(tab.dataset.view);
+  tab.addEventListener("click", (event) => {
+    event.preventDefault();
+    switchView(tab.dataset.view, true);
   });
+});
+
+window.addEventListener("popstate", () => {
+  const view = window.location.pathname.replace(/^\/+|\/+$/g, "");
+  switchView(["calendar", "rulebook"].includes(view) ? view : "plan");
 });
 
 $("calendarFilter").addEventListener("change", renderCalendar);
@@ -593,3 +600,5 @@ document.querySelectorAll(".layer").forEach(layer => {
 });
 
 render();
+const initialView = window.location.pathname.replace(/^\/+|\/+$/g, "");
+switchView(["calendar", "rulebook"].includes(initialView) ? initialView : "plan");

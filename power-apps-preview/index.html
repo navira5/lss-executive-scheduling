@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LSS Plan Year — Power Apps Preview</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <div class="app-shell">
@@ -65,9 +65,9 @@
 
         <main class="planner">
           <div class="view-tabs" role="tablist" aria-label="Planner views">
-            <button class="view-tab active" data-view="plan" role="tab" aria-selected="true">Plan meetings</button>
-            <button class="view-tab" data-view="calendar" role="tab" aria-selected="false">Calendar</button>
-            <button class="view-tab" data-view="rulebook" role="tab" aria-selected="false">Rulebook</button>
+            <a class="view-tab active" href="/plan" data-view="plan" role="tab" aria-selected="true">Plan meetings</a>
+            <a class="view-tab" href="/calendar" data-view="calendar" role="tab" aria-selected="false">Calendar</a>
+            <a class="view-tab" href="/rulebook" data-view="rulebook" role="tab" aria-selected="false">Rulebook</a>
           </div>
 
           <section id="planView" class="view-screen active" role="tabpanel">
@@ -350,6 +350,6 @@
       <div class="dialog-actions"><button class="button primary" id="doneSourceButton">Done</button></div>
     </dialog>
 
-    <script src="app.js"></script>
+    <script src="/app.js"></script>
   </body>
 </html>

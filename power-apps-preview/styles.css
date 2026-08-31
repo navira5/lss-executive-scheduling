@@ -150,7 +150,7 @@ button { cursor: pointer; }
 .view-screen { display: none; }
 .view-screen.active { display: block; }
 .view-tabs { height: 46px; display: flex; align-items: end; gap: 4px; border-bottom: 1px solid var(--line); }
-.view-tab { height: 42px; padding: 0 16px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); }
+.view-tab { height: 42px; display: flex; align-items: center; padding: 0 16px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); text-decoration: none; }
 .view-tab:hover { background: #ededed; color: var(--ink); }
 .view-tab.active { border-bottom-color: var(--power-purple); color: var(--ink); font-weight: 600; }
 
