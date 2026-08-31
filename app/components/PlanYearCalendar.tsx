@@ -70,6 +70,13 @@ export interface PendingCalendarMove {
   targetDate: string;
 }
 
+export interface BlockedCalendarMove {
+  eventId: string;
+  targetDate: string;
+  message: string;
+  recommendedDate: string | null;
+}
+
 function dateParts(date: string) {
   const [year, month, day] = date.split("-").map(Number);
   return { year, month, day };
@@ -90,6 +97,7 @@ interface MonthCardProps {
   state: PlanYearState;
   draggingEventId: string | null;
   selectedEventId: string | null;
+  syncedPlannerEventIds: ReadonlySet<string>;
   onSelectEvent: (eventId: string) => void;
   onSelectImported: (eventId: string) => void;
   onDeleteEvent: (eventId: string) => void;
@@ -100,8 +108,11 @@ interface MonthCardProps {
     detail: { title: string; date: string; x: number; y: number; status: string; note?: string } | null,
   ) => void;
   pendingMove: PendingCalendarMove | null;
+  blockedMove: BlockedCalendarMove | null;
   onResolveMove: (choice: "rule" | "override") => void;
   onCancelMove: () => void;
+  onUseRecommendedMove: () => void;
+  onDismissBlockedMove: () => void;
   onCloseDate: (date: string, label: string) => void;
   onRemoveClosure: (date: string) => void;
   onAddAdHoc: (date: string, title: string) => void;
@@ -114,6 +125,7 @@ function MonthCard({
   state,
   draggingEventId,
   selectedEventId,
+  syncedPlannerEventIds,
   onSelectEvent,
   onSelectImported,
   onDeleteEvent,
@@ -122,8 +134,11 @@ function MonthCard({
   onDragStateChange,
   onHoverEvent,
   pendingMove,
+  blockedMove,
   onResolveMove,
   onCancelMove,
+  onUseRecommendedMove,
+  onDismissBlockedMove,
   onCloseDate,
   onRemoveClosure,
   onAddAdHoc,
@@ -177,7 +192,7 @@ function MonthCard({
           const closure = (state.calendarClosures ?? []).find((item) => item.date === isoDate);
           return (
             <div
-              className={`day-cell${holiday ? " holiday" : ""}${closure ? " closure" : ""}${draggingEventId ? holiday || closure ? " drop-blocked" : " drop-ready" : ""}`}
+              className={`day-cell${holiday ? " holiday" : ""}${closure ? " closure" : ""}${blockedMove?.targetDate === isoDate ? " blocked-target" : ""}${draggingEventId ? holiday || closure ? " drop-blocked" : " drop-ready" : ""}`}
               key={isoDate}
               data-calendar-date={isoDate}
               onDragOver={(event) => {
@@ -212,7 +227,7 @@ function MonthCard({
                 {dayEvents.slice(0, 3).map((event) => (
                   <button
                     type="button"
-                    className={`meeting-chip ${event.category}${event.category === "committee" ? ` ${committeeToneClass(event.templateId)}` : ""} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.conflicts.some((conflict) => conflict.type === "automatic_move") ? " holiday-adjusted" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
+                    className={`meeting-chip ${event.category}${event.category === "committee" ? ` ${committeeToneClass(event.templateId)}` : ""} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.conflicts.some((conflict) => conflict.type === "automatic_move") ? " holiday-adjusted" : ""}${syncedPlannerEventIds.has(event.id) ? " synced" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
                     key={event.id}
                     draggable={!isEventLocked(state, event)}
                     onDragStart={(dragEvent) => {
@@ -233,11 +248,13 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
-                      status: state.eventOverrides[event.id]?.date
-                        ? "2027 override"
-                        : isEventConfirmed(state, event)
-                          ? "Confirmed"
-                          : "Working placement",
+                      status: syncedPlannerEventIds.has(event.id)
+                        ? "Synced to Outlook"
+                        : state.eventOverrides[event.id]?.date
+                          ? "2027 override"
+                          : isEventConfirmed(state, event)
+                            ? "Confirmed"
+                            : "Working placement",
                       note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
                         ? `Moved from ${event.originalDate} because of a federal holiday`
                         : undefined,
@@ -247,26 +264,29 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
-                      status: state.eventOverrides[event.id]?.date
-                        ? "2027 override"
-                        : isEventConfirmed(state, event)
-                          ? "Confirmed"
-                          : "Working placement",
+                      status: syncedPlannerEventIds.has(event.id)
+                        ? "Synced to Outlook"
+                        : state.eventOverrides[event.id]?.date
+                          ? "2027 override"
+                          : isEventConfirmed(state, event)
+                            ? "Confirmed"
+                            : "Working placement",
                       note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
                         ? `Moved from ${event.originalDate} because of a federal holiday`
                         : undefined,
                     })}
                     onMouseLeave={() => onHoverEvent(null)}
                     aria-label={`${event.title} on ${event.date}`}
-                    title={`${event.title} · ${event.date}${event.locked ? " · confirmed anchor" : " · drag or click for actions"}`}
+                    title={`${event.title} · ${event.date}${syncedPlannerEventIds.has(event.id) ? " · synced to Outlook" : ""}${event.locked ? " · confirmed anchor" : " · drag or click for actions"}`}
                   >
                     {CALENDAR_LABELS[event.templateId] ?? event.abbreviation}
+                    {syncedPlannerEventIds.has(event.id) && <span className="sync-badge" aria-label="Synced to Outlook">✓</span>}
                   </button>
                 ))}
                 {dayImported.slice(0, 2).map((event) => (
                   <button
                     type="button"
-                    className="meeting-chip outlook confirmed regular"
+                    className="meeting-chip outlook existing regular"
                     key={event.id}
                     onClick={(clickEvent) => {
                       clickEvent.stopPropagation();
@@ -292,7 +312,8 @@ function MonthCard({
                     title={`${event.title} — imported from ${event.sourceLabel}`}
                     aria-label={`${event.title} imported from Outlook`}
                   >
-                    OUTLOOK
+                    <span className="outlook-source-mark" aria-hidden="true">O</span>
+                    <span>{event.title}</span>
                   </button>
                 ))}
                 {dayEvents.length + dayImported.length > 5 && (
@@ -307,6 +328,18 @@ function MonthCard({
                     <button type="button" onClick={() => onResolveMove("rule")}>New rule</button>
                     <button type="button" onClick={() => onResolveMove("override")}>Just 2027</button>
                     <button type="button" onClick={onCancelMove}>Cancel</button>
+                  </div>
+                </div>
+              )}
+              {blockedMove?.targetDate === isoDate && !pendingMove && (
+                <div className="calendar-move-popover blocked-move-popover" onClick={(event) => event.stopPropagation()}>
+                  <strong>Meeting cannot be placed here</strong>
+                  <p>{blockedMove.message}</p>
+                  <div>
+                    {blockedMove.recommendedDate && (
+                      <button type="button" onClick={onUseRecommendedMove}>Use {blockedMove.recommendedDate}</button>
+                    )}
+                    <button type="button" onClick={onDismissBlockedMove}>Cancel</button>
                   </div>
                 </div>
               )}
@@ -382,6 +415,7 @@ interface PlanYearCalendarProps {
   selectedEventId: string | null;
   moveNotice: { valid: boolean; message: string } | null;
   previewMove: PendingCalendarMove | null;
+  blockedMove: BlockedCalendarMove | null;
   onSelectEvent: (eventId: string) => void;
   onSelectImported: (eventId: string) => void;
   onDeleteEvent: (eventId: string) => void;
@@ -389,6 +423,8 @@ interface PlanYearCalendarProps {
   onMoveEvent: (eventId: string, date: string) => void;
   onResolveMove: (choice: "rule" | "override") => void;
   onCancelMove: () => void;
+  onUseRecommendedMove: () => void;
+  onDismissBlockedMove: () => void;
   onCloseDate: (date: string, label: string) => void;
   onRemoveClosure: (date: string) => void;
   onAddAdHoc: (date: string, title: string) => void;
@@ -400,6 +436,7 @@ export function PlanYearCalendar({
   selectedEventId,
   moveNotice,
   previewMove,
+  blockedMove,
   onSelectEvent,
   onSelectImported,
   onDeleteEvent,
@@ -407,6 +444,8 @@ export function PlanYearCalendar({
   onMoveEvent,
   onResolveMove,
   onCancelMove,
+  onUseRecommendedMove,
+  onDismissBlockedMove,
   onCloseDate,
   onRemoveClosure,
   onAddAdHoc,
@@ -427,13 +466,22 @@ export function PlanYearCalendar({
     status: string;
     note?: string;
   } | null>(null);
-  const events = visiblePlanEvents(state).map((event) => {
+  const resolvedEvents = visiblePlanEvents(state).map((event) => {
     const resolved = resolvePlanEvent(state, event.id);
     return previewMove?.eventId === resolved.id
       ? { ...resolved, date: previewMove.targetDate }
       : resolved;
-  }).filter((event) => filters[event.category]);
-  const filteredImportedEvents = filters.outlook ? importedEvents : [];
+  });
+  const events = resolvedEvents.filter((event) => filters[event.category]);
+  const planEventIds = new Set(resolvedEvents.map((event) => event.id));
+  const syncedPlannerEventIds = new Set(
+    importedEvents
+      .map((event) => event.plannerEventId)
+      .filter((eventId): eventId is string => Boolean(eventId && planEventIds.has(eventId))),
+  );
+  const filteredImportedEvents = filters.outlook
+    ? importedEvents.filter((event) => !event.plannerEventId || !planEventIds.has(event.plannerEventId))
+    : [];
   return (
     <section className="calendar-section" aria-labelledby="calendar-heading">
       <div className="section-heading">
@@ -449,7 +497,7 @@ export function PlanYearCalendar({
               ["committee", "Committee"],
               ["executive", "Executive"],
               ["organization", "Organization"],
-              ["outlook", "Outlook"],
+              ["outlook", "Existing Outlook"],
             ] as const).map(([category, label]) => (
               <button
                 type="button"
@@ -484,6 +532,7 @@ export function PlanYearCalendar({
               state={state}
               draggingEventId={draggingEventId}
               selectedEventId={selectedEventId}
+              syncedPlannerEventIds={syncedPlannerEventIds}
               onSelectEvent={onSelectEvent}
               onSelectImported={onSelectImported}
               onDeleteEvent={onDeleteEvent}
@@ -492,8 +541,11 @@ export function PlanYearCalendar({
               onDragStateChange={setDraggingEventId}
               onHoverEvent={setHoveredEvent}
               pendingMove={previewMove}
+              blockedMove={blockedMove}
               onResolveMove={onResolveMove}
               onCancelMove={onCancelMove}
+              onUseRecommendedMove={onUseRecommendedMove}
+              onDismissBlockedMove={onDismissBlockedMove}
               onCloseDate={onCloseDate}
               onRemoveClosure={onRemoveClosure}
               onAddAdHoc={onAddAdHoc}

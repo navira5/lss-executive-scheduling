@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { PlanYearCalendar } from "@/app/components/PlanYearCalendar";
 import { OutlookSyncReview } from "@/app/components/OutlookSyncReview";
-import type { PendingCalendarMove } from "@/app/components/PlanYearCalendar";
+import type { BlockedCalendarMove, PendingCalendarMove } from "@/app/components/PlanYearCalendar";
 import {
   PlanningCockpit,
   type PendingFormatConversion,
@@ -28,6 +28,7 @@ import {
   resolvePlanEvent,
   removePlanEvent,
   removeCalendarClosure,
+  recommendManualEventDate,
   updateTemplateSchedule,
   updateWorkingRule,
   visiblePlanEvents,
@@ -164,6 +165,7 @@ export function CalendarPlanner({
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedImportedEventId, setSelectedImportedEventId] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<PendingCalendarMove | null>(null);
+  const [blockedMove, setBlockedMove] = useState<BlockedCalendarMove | null>(null);
   const [pendingConversion, setPendingConversion] = useState<PendingFormatConversion | null>(null);
   const [calendarMoveNotice, setCalendarMoveNotice] = useState<{ valid: boolean; message: string } | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
@@ -284,6 +286,7 @@ export function CalendarPlanner({
     setSelectedEventId(eventId);
     setSelectedTemplateId(dragged.templateId);
     setCalendarMoveNotice(null);
+    setBlockedMove(null);
     if (regularAtTarget) {
       setPendingConversion({
         retreatEventId: eventId,
@@ -295,10 +298,18 @@ export function CalendarPlanner({
     }
     const check = applyManualEventMove(state, eventId, targetDate);
     if (!check.proposal.valid) {
-      setCalendarMoveNotice({ valid: false, message: check.proposal.reason ?? check.proposal.summary });
+      const message = `${check.proposal.summary} ${check.proposal.reason ?? ""}`.trim();
+      setBlockedMove({
+        eventId,
+        targetDate,
+        message,
+        recommendedDate: recommendManualEventDate(state, targetDate),
+      });
+      setCalendarMoveNotice({ valid: false, message });
       return;
     }
     setPendingMove({ eventId, targetDate });
+    setBlockedMove(null);
     setPendingConversion(null);
   };
 
@@ -318,6 +329,7 @@ export function CalendarPlanner({
       }
     }
     setPendingMove(null);
+    setBlockedMove(null);
   };
 
   const applyConversion = () => {
@@ -428,6 +440,7 @@ export function CalendarPlanner({
       setSelectedTemplateId(null);
       setSelectedImportedEventId(null);
       setPendingMove(null);
+      setBlockedMove(null);
       setPendingConversion(null);
       setDirtyRuleTemplateIds([]);
       setCancelledPlannerEventIds([]);
@@ -479,6 +492,7 @@ export function CalendarPlanner({
     setSelectedEventId(null);
     setSelectedTemplateId(null);
     setPendingMove(null);
+    setBlockedMove(null);
     setPendingConversion(null);
   };
 
@@ -521,6 +535,7 @@ export function CalendarPlanner({
     setSelectedTemplateId(null);
     setSelectedImportedEventId(null);
     setPendingMove(null);
+    setBlockedMove(null);
     setPendingConversion(null);
     setCalendarMoveNotice(null);
     setOutlookReview(null);
@@ -556,7 +571,7 @@ export function CalendarPlanner({
             {sourceStatus.kind === "loading" ? "Loading Rules" : "Load SharePoint Rules"}
           </button>
           <button className="button ghost" type="button" disabled={outlookStatus.kind === "loading"} onClick={() => void loadLiveOutlook()}>
-            {outlookStatus.kind === "loading" ? "Loading Outlook" : "Load Outlook Events"}
+            {outlookStatus.kind === "loading" ? "Syncing Outlook" : "Sync Existing Outlook"}
           </button>
           <button
             className="button primary"
@@ -637,6 +652,7 @@ export function CalendarPlanner({
                     setSelectedEventId(null);
                     setSelectedTemplateId(null);
                     setPendingMove(null);
+                    setBlockedMove(null);
                     setPendingConversion(null);
                   }}
                 >
@@ -658,6 +674,7 @@ export function CalendarPlanner({
             selectedEventId={activeUsesGroupRoster && !selectedTemplateId ? null : effectiveSelectedEventId}
             moveNotice={calendarMoveNotice}
             previewMove={pendingMove}
+            blockedMove={blockedMove}
             onSelectEvent={(eventId) => {
               setSelectedEventId(eventId);
               setSelectedTemplateId(state.plan.events.find((event) => event.id === eventId)?.templateId ?? null);
@@ -673,7 +690,15 @@ export function CalendarPlanner({
             onDeleteImported={deleteImportedOutlookMeeting}
             onMoveEvent={handleCalendarMove}
             onResolveMove={resolveMove}
-            onCancelMove={() => setPendingMove(null)}
+            onCancelMove={() => {
+              setPendingMove(null);
+              setBlockedMove(null);
+            }}
+            onUseRecommendedMove={() => {
+              if (!blockedMove?.recommendedDate) return;
+              handleCalendarMove(blockedMove.eventId, blockedMove.recommendedDate);
+            }}
+            onDismissBlockedMove={() => setBlockedMove(null)}
             onCloseDate={(date, label) => {
               try {
                 commitState(addCalendarClosure(state, date, label));
@@ -762,6 +787,7 @@ export function CalendarPlanner({
             setState(previous);
             setHistory((current) => current.slice(0, -1));
             setPendingMove(null);
+            setBlockedMove(null);
             setPendingConversion(null);
             setCalendarMoveNotice({ valid: true, message: "Last change undone." });
           }}

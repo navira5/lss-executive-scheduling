@@ -1037,6 +1037,37 @@ export interface ManualEventMoveResult {
   proposal: PlanChangeProposal;
 }
 
+export function recommendManualEventDate(
+  state: PlanYearState,
+  date: string,
+): string | null {
+  const start = new Date(`${date}T12:00:00Z`);
+  if (Number.isNaN(start.valueOf())) return null;
+  const unavailable = new Set([
+    ...state.plan.holidays.map((holiday) => holiday.date),
+    ...(state.calendarClosures ?? []).map((closure) => closure.date),
+  ]);
+  const candidateAt = (offset: number): string => {
+    const candidate = new Date(start);
+    candidate.setUTCDate(candidate.getUTCDate() + offset);
+    return candidate.toISOString().slice(0, 10);
+  };
+  const valid = (candidate: string): boolean => {
+    const value = new Date(`${candidate}T12:00:00Z`);
+    const weekday = value.getUTCDay();
+    return candidate.startsWith("2027-") && weekday !== 0 && weekday !== 6 && !unavailable.has(candidate);
+  };
+  for (let distance = 1; distance <= 10; distance += 1) {
+    const after = candidateAt(distance);
+    if (valid(after)) return after;
+  }
+  for (let distance = 1; distance <= 10; distance += 1) {
+    const before = candidateAt(-distance);
+    if (valid(before)) return before;
+  }
+  return null;
+}
+
 export function applyManualEventMove(
   state: PlanYearState,
   eventId: string,

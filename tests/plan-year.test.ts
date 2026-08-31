@@ -21,6 +21,7 @@ import {
   createPlanYearState,
   navigateToPhase,
   proposeEventMove,
+  recommendManualEventDate,
   regenerateActivePhase,
   reopenPhase,
   removePlanEvent,
@@ -143,6 +144,25 @@ test("rejects a drag to a verified federal holiday", () => {
   assert.equal(proposal.valid, false);
   assert.match(proposal.reason ?? "", /federal holiday/i);
   assert.deepEqual(state.eventOverrides, {});
+});
+
+test("recommends the next valid business day after a blocked holiday drop", () => {
+  const state = createPlanYearState(generateCalendarPlan(baseline));
+
+  assert.equal(recommendManualEventDate(state, "2027-01-18"), "2027-01-19");
+});
+
+test("a blocked-date recommendation also skips an LSS closure", () => {
+  const initial = createPlanYearState(generateCalendarPlan(baseline));
+  const state = {
+    ...initial,
+    calendarClosures: [
+      ...(initial.calendarClosures ?? []),
+      { id: "closure-2027-01-19", date: "2027-01-19", label: "Office closed" },
+    ],
+  };
+
+  assert.equal(recommendManualEventDate(state, "2027-01-18"), "2027-01-20");
 });
 
 test("applies a valid move only after the proposal is accepted", () => {
