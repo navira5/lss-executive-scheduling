@@ -65,21 +65,22 @@
 
         <main class="planner">
           <div class="view-tabs" role="tablist" aria-label="Planner views">
-            <button class="view-tab active" role="tab" aria-selected="true">Plan meetings</button>
-            <button class="view-tab" role="tab" aria-selected="false">Calendar</button>
-            <button class="view-tab" role="tab" aria-selected="false">Rulebook</button>
+            <button class="view-tab active" data-view="plan" role="tab" aria-selected="true">Plan meetings</button>
+            <button class="view-tab" data-view="calendar" role="tab" aria-selected="false">Calendar</button>
+            <button class="view-tab" data-view="rulebook" role="tab" aria-selected="false">Rulebook</button>
           </div>
 
-          <section class="planner-intro">
-            <div>
-              <p class="eyebrow">BOARD &amp; GOVERNANCE</p>
-              <h2>Match each meeting group to its scheduling rule</h2>
-              <p>Select a group, review the rule beside its proposed meetings, then confirm or mark an exception.</p>
-            </div>
-            <span class="year-chip">Planning year 2027</span>
-          </section>
+          <section id="planView" class="view-screen active" role="tabpanel">
+            <section class="planner-intro">
+              <div>
+                <p class="eyebrow">BOARD &amp; GOVERNANCE</p>
+                <h2>Match each meeting group to its scheduling rule</h2>
+                <p>Select a group, review the rule beside its proposed meetings, then confirm or mark an exception.</p>
+              </div>
+              <span class="year-chip">Planning year 2027</span>
+            </section>
 
-          <div class="planner-workspace">
+            <div class="planner-workspace">
             <section class="group-panel" aria-labelledby="meetingGroupsTitle">
               <div class="panel-heading">
                 <div>
@@ -216,7 +217,121 @@
                 <button class="button primary" id="confirmButton">Confirm group</button>
               </div>
             </section>
-          </div>
+            </div>
+          </section>
+
+          <section id="calendarView" class="view-screen" role="tabpanel" hidden>
+            <section class="planner-intro calendar-intro">
+              <div>
+                <p class="eyebrow">YEAR AT A GLANCE</p>
+                <h2>2027 planning calendar</h2>
+                <p>See proposed meetings, confirmed placements, and federal closures across the year.</p>
+              </div>
+              <div class="calendar-actions">
+                <label class="compact-select">
+                  <span>Show</span>
+                  <select id="calendarFilter">
+                    <option value="all">All meetings</option>
+                    <option value="confirmed">Confirmed only</option>
+                    <option value="working">Needs validation</option>
+                  </select>
+                </label>
+                <span class="year-chip">Planning year 2027</span>
+              </div>
+            </section>
+
+            <div class="calendar-summary">
+              <div><span class="metric-label">Proposed</span><strong id="proposedMetric">12</strong></div>
+              <div><span class="metric-label">Confirmed</span><strong id="confirmedMetric">2</strong></div>
+              <div><span class="metric-label">Needs review</span><strong id="reviewMetric">10</strong></div>
+              <div class="calendar-legend" aria-label="Calendar legend">
+                <span><i class="legend-dot working"></i>Working</span>
+                <span><i class="legend-dot confirmed"></i>Confirmed</span>
+                <span><i class="legend-block"></i>Federal holiday</span>
+              </div>
+            </div>
+
+            <div id="yearCalendar" class="year-calendar" aria-label="2027 year calendar"></div>
+          </section>
+
+          <section id="rulebookView" class="view-screen" role="tabpanel" hidden>
+            <section class="planner-intro rulebook-intro">
+              <div>
+                <p class="eyebrow">MEETING RULES</p>
+                <h2>Rulebook</h2>
+                <p>Maintain the scheduling rules that generate proposed meetings. Changes remain drafts until confirmed.</p>
+              </div>
+              <button class="button primary" id="newRuleButton">＋ New meeting rule</button>
+            </section>
+
+            <div class="rulebook-toolbar">
+              <label class="search-field">
+                <span class="sr-only">Search rules</span>
+                <input id="ruleSearch" type="search" placeholder="Search meeting rules" />
+              </label>
+              <label class="compact-select">
+                <span>Layer</span>
+                <select id="ruleLayerFilter">
+                  <option value="all">All layers</option>
+                  <option value="board">Board &amp; Governance</option>
+                  <option value="committee">Committees</option>
+                  <option value="executive">Executive Leadership</option>
+                  <option value="organization">Organization</option>
+                </select>
+              </label>
+              <label class="compact-select">
+                <span>Status</span>
+                <select id="ruleStatusFilter">
+                  <option value="all">All statuses</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Needs validation">Needs validation</option>
+                  <option value="Open question">Open question</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="rulebook-layout">
+              <section class="rulebook-list-card" aria-labelledby="rulebookListTitle">
+                <div class="rulebook-list-head">
+                  <div>
+                    <p class="eyebrow">RULE REGISTRY</p>
+                    <h3 id="rulebookListTitle"><span id="ruleCount">3</span> meeting rules</h3>
+                  </div>
+                  <span class="sharepoint-chip">SharePoint list</span>
+                </div>
+                <div class="rule-table-head" aria-hidden="true">
+                  <span>Meeting group</span><span>Cadence</span><span>Count</span><span>Status</span>
+                </div>
+                <div id="ruleRows" class="rule-rows"></div>
+              </section>
+
+              <aside class="rulebook-detail" aria-live="polite">
+                <div class="rulebook-detail-head">
+                  <div>
+                    <p class="eyebrow">SELECTED RULE</p>
+                    <h3 id="ruleDetailTitle">Full Board Meetings</h3>
+                  </div>
+                  <span id="ruleDetailStatus" class="status-badge warning">Needs validation</span>
+                </div>
+                <dl class="rule-summary-list">
+                  <div><dt>Layer</dt><dd id="ruleDetailLayer">Board &amp; Governance</dd></div>
+                  <div><dt>Cadence</dt><dd id="ruleDetailCadence">Custom months</dd></div>
+                  <div><dt>Pattern</dt><dd id="ruleDetailPattern">Second Tuesday</dd></div>
+                  <div><dt>Time</dt><dd id="ruleDetailTime">5:00 PM · 2 hours</dd></div>
+                  <div><dt>Attendees</dt><dd id="ruleDetailAttendees">Full Board</dd></div>
+                  <div><dt>Source</dt><dd>2026 historical calendar and rulebook</dd></div>
+                </dl>
+                <div id="ruleQuestion" class="rule-question">
+                  <strong>Needs confirmation</strong>
+                  <span>Which months and preferred weekday should be used in 2027?</span>
+                </div>
+                <div class="rule-detail-actions">
+                  <button class="button secondary" id="editSelectedRule">Edit rule</button>
+                  <button class="button primary" id="useRuleInPlanner">Plan meetings</button>
+                </div>
+              </aside>
+            </div>
+          </section>
         </main>
       </div>
     </div>

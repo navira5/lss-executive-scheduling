@@ -89,7 +89,9 @@ Open `http://localhost:3000`.
 
 The repository also contains a separate, local-only preview of how the core
 rule-to-meeting workflow could feel in a native Microsoft Power Apps-style
-interface. It does not modify or replace the main planner.
+interface. Its Plan meetings, Calendar, and Rulebook tabs are complete visual
+screens for comparison; they use sample in-browser data and do not connect to
+Microsoft services. It does not modify or replace the main planner.
 
 Start both demonstrations with one command:
 

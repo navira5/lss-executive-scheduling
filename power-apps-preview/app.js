@@ -3,6 +3,20 @@ const holidays = new Set([
   "2027-07-05", "2027-09-06", "2027-10-11", "2027-11-11", "2027-11-25", "2027-12-24"
 ]);
 
+const holidayNames = {
+  "2027-01-01": "New Year's Day",
+  "2027-01-18": "Martin Luther King Jr. Day",
+  "2027-02-15": "Washington's Birthday",
+  "2027-05-31": "Memorial Day",
+  "2027-06-18": "Juneteenth observed",
+  "2027-07-05": "Independence Day observed",
+  "2027-09-06": "Labor Day",
+  "2027-10-11": "Columbus Day",
+  "2027-11-11": "Veterans Day",
+  "2027-11-25": "Thanksgiving Day",
+  "2027-12-24": "Christmas Day observed"
+};
+
 const groups = [
   {
     id: "full-board",
@@ -78,7 +92,106 @@ const groups = [
   }
 ];
 
+groups.forEach(group => { group.layer = "board"; });
+
+const otherRules = [
+  {
+    id: "executive-committee",
+    layer: "committee",
+    title: "Executive Committee",
+    purpose: "Board leadership coordination between Full Board meetings.",
+    count: 6,
+    cadence: "every-other-month",
+    week: 4,
+    day: 2,
+    time: "17:00",
+    duration: 90,
+    attendees: "Executive Committee",
+    status: "Needs validation",
+    source: { "Needs validation": "Reconfirm the cadence after the Full Board months are selected." }
+  },
+  {
+    id: "finance-committee",
+    layer: "committee",
+    title: "Administration & Finance Committee",
+    purpose: "Financial oversight and review before related Board decisions.",
+    count: 6,
+    cadence: "every-other-month",
+    week: 4,
+    day: 2,
+    time: "17:00",
+    duration: 90,
+    attendees: "Administration & Finance Committee",
+    status: "Needs validation",
+    source: { "Needs validation": "Confirm exact dates after financial-data availability and Board dates are known." }
+  },
+  {
+    id: "health-programs-committee",
+    layer: "committee",
+    title: "Health Center & Programs Committee",
+    purpose: "Program and health-center oversight.",
+    count: 4,
+    cadence: "quarterly",
+    week: 3,
+    day: 2,
+    time: "17:00",
+    duration: 90,
+    attendees: "Health Center & Programs Committee",
+    status: "Needs validation",
+    source: { "Needs validation": "Confirm the quarterly cadence for 2027." }
+  },
+  {
+    id: "talent-risk-committee",
+    layer: "committee",
+    title: "Talent & Risk Management Committee",
+    purpose: "Talent, organizational risk, and management oversight.",
+    count: 4,
+    cadence: "quarterly",
+    week: 1,
+    day: 2,
+    time: "17:00",
+    duration: 90,
+    attendees: "Talent & Risk Management Committee",
+    status: "Needs validation",
+    source: { "Needs validation": "Confirm the first-Tuesday pattern; May 2026 was an exception." }
+  },
+  {
+    id: "nominations-committee",
+    layer: "committee",
+    title: "Nominations Committee",
+    purpose: "Recruitment, nominations, succession planning, and Board deadlines.",
+    count: 0,
+    cadence: "custom",
+    week: 2,
+    day: 2,
+    time: "17:00",
+    duration: 60,
+    attendees: "Nominations Committee",
+    status: "Open question",
+    source: { "Needs validation": "No recurring cadence is documented." }
+  },
+  {
+    id: "program-committee",
+    layer: "committee",
+    title: "Program Committee",
+    purpose: "Program oversight; recurring scheduling pattern is not yet documented.",
+    count: 0,
+    cadence: "custom",
+    week: 2,
+    day: 2,
+    time: "17:00",
+    duration: 60,
+    attendees: "Program Committee",
+    status: "Open question",
+    source: { "Needs validation": "Confirm whether this group needs a recurring 2027 cadence." }
+  }
+];
+
+const rulebookEntries = [...groups, ...otherRules];
+
 let selectedId = "full-board";
+let selectedRuleId = "full-board";
+let activeView = "plan";
 let toastTimer;
 
 const $ = (id) => document.getElementById(id);
@@ -127,6 +240,184 @@ function statusClass(status) {
   if (status === "Confirmed") return "confirmed";
   if (status === "Open question") return "open";
   return "warning";
+}
+
+function cadenceLabel(cadence) {
+  return ({
+    custom: "Custom months",
+    monthly: "Monthly",
+    "every-other-month": "Every other month",
+    quarterly: "Quarterly",
+    semiannual: "Every six months"
+  })[cadence] || cadence;
+}
+
+function layerLabel(layer) {
+  return ({
+    board: "Board & Governance",
+    committee: "Committees",
+    executive: "Executive Leadership",
+    organization: "Organization"
+  })[layer] || layer;
+}
+
+function ordinal(value) {
+  return ({ 1: "First", 2: "Second", 3: "Third", 4: "Fourth" })[value] || `${value}th`;
+}
+
+function weekdayLabel(value) {
+  return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][Number(value)] || "Not set";
+}
+
+function timeLabel(value) {
+  const [hours, minutes] = String(value || "00:00").split(":").map(Number);
+  const suffix = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${String(minutes || 0).padStart(2, "0")} ${suffix}`;
+}
+
+function durationLabel(minutes) {
+  if (minutes === 60) return "1 hour";
+  if (minutes === 90) return "1.5 hours";
+  if (minutes === 120) return "2 hours";
+  if (minutes === 300) return "5 hours";
+  return `${minutes} minutes`;
+}
+
+function allCalendarMeetings() {
+  return groups.flatMap(group => buildMeetings(group).map(meeting => ({
+    ...meeting,
+    title: group.title,
+    confirmed: group.confirmed,
+    status: group.status
+  })));
+}
+
+function renderCalendar() {
+  const filter = $("calendarFilter").value;
+  const allMeetings = allCalendarMeetings();
+  const meetings = allMeetings.filter(meeting => {
+    if (filter === "confirmed") return meeting.confirmed;
+    if (filter === "working") return !meeting.confirmed;
+    return true;
+  });
+  const byDate = new Map();
+  meetings.forEach(meeting => {
+    const key = dateKey(meeting.date);
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key).push(meeting);
+  });
+
+  $("proposedMetric").textContent = allMeetings.length;
+  const confirmedCount = allMeetings.filter(meeting => meeting.confirmed).length;
+  $("confirmedMetric").textContent = confirmedCount;
+  $("reviewMetric").textContent = allMeetings.length - confirmedCount;
+
+  const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long" });
+  $("yearCalendar").innerHTML = Array.from({ length: 12 }, (_, month) => {
+    const first = new Date(2027, month, 1);
+    const daysInMonth = new Date(2027, month + 1, 0).getDate();
+    const leading = first.getDay();
+    const cells = [];
+    for (let index = 0; index < leading; index += 1) cells.push('<div class="calendar-day empty" aria-hidden="true"></div>');
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const date = new Date(2027, month, day);
+      const key = dateKey(date);
+      const dayMeetings = byDate.get(key) || [];
+      const holiday = holidayNames[key];
+      const eventMarkup = dayMeetings.map(meeting => `
+        <span class="calendar-event ${meeting.holiday ? "conflict" : meeting.confirmed ? "confirmed" : ""}" title="${meeting.title} — ${displayDate(meeting.date)}">
+          ${meeting.title.replace("Full Board ", "")}
+        </span>
+      `).join("");
+      cells.push(`
+        <div class="calendar-day ${holiday ? "holiday" : ""}">
+          <span class="day-number">${day}</span>
+          ${holiday ? `<span class="holiday-name" title="${holiday}">${holiday}</span>` : ""}
+          ${eventMarkup}
+        </div>
+      `);
+    }
+    while (cells.length % 7 !== 0) cells.push('<div class="calendar-day empty" aria-hidden="true"></div>');
+    const monthMeetingCount = meetings.filter(meeting => meeting.date.getMonth() === month).length;
+    return `
+      <section class="month-card">
+        <div class="month-heading"><strong>${monthFormatter.format(first)}</strong><span>${monthMeetingCount} meeting${monthMeetingCount === 1 ? "" : "s"}</span></div>
+        <div class="weekday-row"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+        <div class="month-grid">${cells.join("")}</div>
+      </section>
+    `;
+  }).join("");
+}
+
+function filteredRulebookEntries() {
+  const query = $("ruleSearch").value.trim().toLowerCase();
+  const layer = $("ruleLayerFilter").value;
+  const status = $("ruleStatusFilter").value;
+  return rulebookEntries.filter(rule => {
+    const matchesQuery = !query || `${rule.title} ${rule.purpose} ${rule.attendees}`.toLowerCase().includes(query);
+    const matchesLayer = layer === "all" || rule.layer === layer;
+    const matchesStatus = status === "all" || rule.status === status;
+    return matchesQuery && matchesLayer && matchesStatus;
+  });
+}
+
+function renderRulebook() {
+  const visibleRules = filteredRulebookEntries();
+  if (!visibleRules.some(rule => rule.id === selectedRuleId)) selectedRuleId = visibleRules[0]?.id || "";
+  $("ruleCount").textContent = visibleRules.length;
+  $("ruleRows").innerHTML = visibleRules.length ? visibleRules.map(rule => `
+    <button class="rule-row ${rule.id === selectedRuleId ? "active" : ""}" data-rule-id="${rule.id}">
+      <span class="rule-row-name"><strong>${rule.title}</strong><small>${layerLabel(rule.layer)}</small></span>
+      <span>${cadenceLabel(rule.cadence)}</span>
+      <span class="rule-row-count">${rule.count}</span>
+      <span class="mini-status ${statusClass(rule.status)}">${rule.status}</span>
+    </button>
+  `).join("") : '<div class="empty-rules">No rules match these filters.</div>';
+
+  document.querySelectorAll("[data-rule-id]").forEach(button => {
+    button.addEventListener("click", () => {
+      selectedRuleId = button.dataset.ruleId;
+      renderRulebook();
+    });
+  });
+
+  const rule = rulebookEntries.find(item => item.id === selectedRuleId);
+  if (!rule) {
+    $("ruleDetailTitle").textContent = "No rule selected";
+    $("ruleDetailStatus").hidden = true;
+    return;
+  }
+  $("ruleDetailStatus").hidden = false;
+  $("ruleDetailTitle").textContent = rule.title;
+  $("ruleDetailStatus").textContent = rule.status;
+  $("ruleDetailStatus").className = `status-badge ${statusClass(rule.status)}`;
+  $("ruleDetailLayer").textContent = layerLabel(rule.layer);
+  $("ruleDetailCadence").textContent = `${cadenceLabel(rule.cadence)} · ${rule.count} per year`;
+  $("ruleDetailPattern").textContent = `${ordinal(rule.week)} ${weekdayLabel(rule.day)}`;
+  $("ruleDetailTime").textContent = `${timeLabel(rule.time)} · ${durationLabel(rule.duration)}`;
+  $("ruleDetailAttendees").textContent = rule.attendees;
+  const question = rule.source?.["Needs validation"] || "No unresolved question is recorded.";
+  $("ruleQuestion").className = `rule-question ${rule.status === "Confirmed" ? "confirmed" : ""}`;
+  $("ruleQuestion").innerHTML = rule.status === "Confirmed"
+    ? `<strong>Rule confirmed</strong><span>This rule is ready to generate 2027 meetings.</span>`
+    : `<strong>${rule.status === "Open question" ? "Open question" : "Needs confirmation"}</strong><span>${question}</span>`;
+}
+
+function switchView(view) {
+  activeView = view;
+  document.querySelectorAll(".view-tab").forEach(tab => {
+    const selected = tab.dataset.view === view;
+    tab.classList.toggle("active", selected);
+    tab.setAttribute("aria-selected", selected ? "true" : "false");
+  });
+  document.querySelectorAll(".view-screen").forEach(screen => {
+    const selected = screen.id === `${view}View`;
+    screen.classList.toggle("active", selected);
+    screen.hidden = !selected;
+  });
+  if (view === "calendar") renderCalendar();
+  if (view === "rulebook") renderRulebook();
 }
 
 function showToast(message) {
@@ -225,6 +516,8 @@ function render() {
   renderGroupList();
   renderSelected();
   renderProgress();
+  if (activeView === "calendar") renderCalendar();
+  if (activeView === "rulebook") renderRulebook();
 }
 
 $("regenerateButton").addEventListener("click", () => {
@@ -269,12 +562,26 @@ $("doneSourceButton").addEventListener("click", () => $("sourceDialog").close())
 
 document.querySelectorAll(".view-tab").forEach(tab => {
   tab.addEventListener("click", () => {
-    document.querySelectorAll(".view-tab").forEach(item => {
-      item.classList.toggle("active", item === tab);
-      item.setAttribute("aria-selected", item === tab ? "true" : "false");
-    });
-    if (tab.textContent.trim() !== "Plan meetings") showToast(`${tab.textContent.trim()} is represented as a separate Power Apps screen in the full build.`);
+    switchView(tab.dataset.view);
   });
+});
+
+$("calendarFilter").addEventListener("change", renderCalendar);
+$("ruleSearch").addEventListener("input", renderRulebook);
+$("ruleLayerFilter").addEventListener("change", renderRulebook);
+$("ruleStatusFilter").addEventListener("change", renderRulebook);
+
+$("newRuleButton").addEventListener("click", () => showToast("A Power Apps form would open to create a new meeting rule in SharePoint."));
+$("editSelectedRule").addEventListener("click", () => {
+  const rule = rulebookEntries.find(item => item.id === selectedRuleId);
+  showToast(`${rule?.title || "Rule"} would open in an editable Power Apps form.`);
+});
+$("useRuleInPlanner").addEventListener("click", () => {
+  const rule = rulebookEntries.find(item => item.id === selectedRuleId);
+  if (groups.some(group => group.id === selectedRuleId)) selectedId = selectedRuleId;
+  switchView("plan");
+  render();
+  if (rule?.layer !== "board") showToast(`${rule.title} would open in the ${layerLabel(rule.layer)} planning layer.`);
 });
 
 document.querySelectorAll(".layer").forEach(layer => {
