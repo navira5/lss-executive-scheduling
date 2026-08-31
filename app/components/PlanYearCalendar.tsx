@@ -129,6 +129,11 @@ function MonthCard({
   onAddAdHoc,
 }: MonthCardProps) {
   const [dayAction, setDayAction] = useState<{ date: string; mode: "choose" | "closure" | "event"; value: string } | null>(null);
+  const [meetingAction, setMeetingAction] = useState<
+    | { date: string; kind: "plan"; event: ResolvedPlanEvent }
+    | { date: string; kind: "imported"; event: ImportedCalendarEvent }
+    | null
+  >(null);
   const start = firstWeekday(monthIndex);
   const count = daysInMonth(monthIndex);
   const cells = Array.from({ length: 42 }, (_, index) => {
@@ -189,6 +194,7 @@ function MonthCard({
                 onDragStateChange(null);
               }}
               onClick={() => {
+                setMeetingAction(null);
                 setDayAction((current) => current?.date === isoDate ? null : { date: isoDate, mode: "choose", value: "" });
               }}
             >
@@ -204,114 +210,90 @@ function MonthCard({
               {closure && <span className="closure-marker" title={`${closure.label} — no meetings`}>{closure.label}</span>}
               <div className="day-events">
                 {dayEvents.slice(0, 3).map((event) => (
-                  <span className="meeting-chip-shell" key={event.id}>
-                    <button
-                      type="button"
-                      className={`meeting-chip ${event.category}${event.category === "committee" ? ` ${committeeToneClass(event.templateId)}` : ""} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.conflicts.some((conflict) => conflict.type === "automatic_move") ? " holiday-adjusted" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
-                      draggable={!isEventLocked(state, event)}
-                      onDragStart={(dragEvent) => {
-                        dragEvent.dataTransfer.setData("text/lss-event-id", event.id);
-                        dragEvent.dataTransfer.setData("text/plain", event.id);
-                        dragEvent.dataTransfer.effectAllowed = "move";
-                        onDragStateChange(event.id);
-                      }}
-                      onDragEnd={() => onDragStateChange(null)}
-                      onClick={(clickEvent) => {
-                        clickEvent.stopPropagation();
-                        onSelectEvent(event.id);
-                      }}
-                      onMouseEnter={(mouseEvent) => onHoverEvent({
-                        title: event.title,
-                        date: event.date,
-                        x: mouseEvent.clientX,
-                        y: mouseEvent.clientY,
-                        status: state.eventOverrides[event.id]?.date
-                          ? "2027 override"
-                          : isEventConfirmed(state, event)
-                            ? "Confirmed"
-                            : "Working placement",
-                        note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
-                          ? `Moved from ${event.originalDate} because of a federal holiday`
-                          : undefined,
-                      })}
-                      onMouseMove={(mouseEvent) => onHoverEvent({
-                        title: event.title,
-                        date: event.date,
-                        x: mouseEvent.clientX,
-                        y: mouseEvent.clientY,
-                        status: state.eventOverrides[event.id]?.date
-                          ? "2027 override"
-                          : isEventConfirmed(state, event)
-                            ? "Confirmed"
-                            : "Working placement",
-                        note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
-                          ? `Moved from ${event.originalDate} because of a federal holiday`
-                          : undefined,
-                      })}
-                      onMouseLeave={() => onHoverEvent(null)}
-                      aria-label={`${event.title} on ${event.date}`}
-                      title={`${event.title} · ${event.date}${event.locked ? " · confirmed anchor" : " · drag or click to adjust"}`}
-                    >
-                      {CALENDAR_LABELS[event.templateId] ?? event.abbreviation}
-                    </button>
-                    <button
-                      type="button"
-                      className="meeting-remove"
-                      aria-label={`Remove ${event.title} on ${event.date}`}
-                      title="Remove meeting"
-                      onClick={(clickEvent) => {
-                        clickEvent.stopPropagation();
-                        onHoverEvent(null);
-                        onDeleteEvent(event.id);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
+                  <button
+                    type="button"
+                    className={`meeting-chip ${event.category}${event.category === "committee" ? ` ${committeeToneClass(event.templateId)}` : ""} ${event.templateId.endsWith("retreat") ? "retreat" : "regular"}${isEventConfirmed(state, event) ? " confirmed" : " unconfirmed"}${state.eventOverrides[event.id]?.date ? " override" : ""}${event.conflicts.some((conflict) => conflict.type === "automatic_move") ? " holiday-adjusted" : ""}${event.locked ? " locked" : ""}${selectedEventId === event.id ? " selected" : ""}`}
+                    key={event.id}
+                    draggable={!isEventLocked(state, event)}
+                    onDragStart={(dragEvent) => {
+                      dragEvent.dataTransfer.setData("text/lss-event-id", event.id);
+                      dragEvent.dataTransfer.setData("text/plain", event.id);
+                      dragEvent.dataTransfer.effectAllowed = "move";
+                      onDragStateChange(event.id);
+                    }}
+                    onDragEnd={() => onDragStateChange(null)}
+                    onClick={(clickEvent) => {
+                      clickEvent.stopPropagation();
+                      onHoverEvent(null);
+                      setDayAction(null);
+                      setMeetingAction({ date: isoDate, kind: "plan", event });
+                    }}
+                    onMouseEnter={(mouseEvent) => onHoverEvent({
+                      title: event.title,
+                      date: event.date,
+                      x: mouseEvent.clientX,
+                      y: mouseEvent.clientY,
+                      status: state.eventOverrides[event.id]?.date
+                        ? "2027 override"
+                        : isEventConfirmed(state, event)
+                          ? "Confirmed"
+                          : "Working placement",
+                      note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
+                        ? `Moved from ${event.originalDate} because of a federal holiday`
+                        : undefined,
+                    })}
+                    onMouseMove={(mouseEvent) => onHoverEvent({
+                      title: event.title,
+                      date: event.date,
+                      x: mouseEvent.clientX,
+                      y: mouseEvent.clientY,
+                      status: state.eventOverrides[event.id]?.date
+                        ? "2027 override"
+                        : isEventConfirmed(state, event)
+                          ? "Confirmed"
+                          : "Working placement",
+                      note: event.conflicts.some((conflict) => conflict.type === "automatic_move")
+                        ? `Moved from ${event.originalDate} because of a federal holiday`
+                        : undefined,
+                    })}
+                    onMouseLeave={() => onHoverEvent(null)}
+                    aria-label={`${event.title} on ${event.date}`}
+                    title={`${event.title} · ${event.date}${event.locked ? " · confirmed anchor" : " · drag or click for actions"}`}
+                  >
+                    {CALENDAR_LABELS[event.templateId] ?? event.abbreviation}
+                  </button>
                 ))}
                 {dayImported.slice(0, 2).map((event) => (
-                  <span className="meeting-chip-shell" key={event.id}>
-                    <button
-                      type="button"
-                      className="meeting-chip outlook confirmed regular"
-                      onClick={(clickEvent) => {
-                        clickEvent.stopPropagation();
-                        onSelectImported(event.id);
-                      }}
-                      onMouseEnter={(mouseEvent) => onHoverEvent({
-                        title: event.title,
-                        date: event.date,
-                        x: mouseEvent.clientX,
-                        y: mouseEvent.clientY,
-                        status: "Imported Outlook event",
-                      })}
-                      onMouseMove={(mouseEvent) => onHoverEvent({
-                        title: event.title,
-                        date: event.date,
-                        x: mouseEvent.clientX,
-                        y: mouseEvent.clientY,
-                        status: "Imported Outlook event",
-                      })}
-                      onMouseLeave={() => onHoverEvent(null)}
-                      title={`${event.title} — imported from ${event.sourceLabel}`}
-                      aria-label={`${event.title} imported from Outlook`}
-                    >
-                      OUTLOOK
-                    </button>
-                    <button
-                      type="button"
-                      className="meeting-remove"
-                      aria-label={`Remove ${event.title} on ${event.date}`}
-                      title={event.outlookEventId ? "Queue Outlook deletion" : "Remove meeting"}
-                      onClick={(clickEvent) => {
-                        clickEvent.stopPropagation();
-                        onHoverEvent(null);
-                        onDeleteImported(event);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
+                  <button
+                    type="button"
+                    className="meeting-chip outlook confirmed regular"
+                    key={event.id}
+                    onClick={(clickEvent) => {
+                      clickEvent.stopPropagation();
+                      onHoverEvent(null);
+                      setDayAction(null);
+                      setMeetingAction({ date: isoDate, kind: "imported", event });
+                    }}
+                    onMouseEnter={(mouseEvent) => onHoverEvent({
+                      title: event.title,
+                      date: event.date,
+                      x: mouseEvent.clientX,
+                      y: mouseEvent.clientY,
+                      status: "Imported Outlook event",
+                    })}
+                    onMouseMove={(mouseEvent) => onHoverEvent({
+                      title: event.title,
+                      date: event.date,
+                      x: mouseEvent.clientX,
+                      y: mouseEvent.clientY,
+                      status: "Imported Outlook event",
+                    })}
+                    onMouseLeave={() => onHoverEvent(null)}
+                    title={`${event.title} — imported from ${event.sourceLabel}`}
+                    aria-label={`${event.title} imported from Outlook`}
+                  >
+                    OUTLOOK
+                  </button>
                 ))}
                 {dayEvents.length + dayImported.length > 5 && (
                   <span className="more-events">+{dayEvents.length + dayImported.length - 5}</span>
@@ -326,6 +308,36 @@ function MonthCard({
                     <button type="button" onClick={() => onResolveMove("override")}>Just 2027</button>
                     <button type="button" onClick={onCancelMove}>Cancel</button>
                   </div>
+                </div>
+              )}
+              {meetingAction?.date === isoDate && !pendingMove && (
+                <div className="day-action-popover meeting-action-popover" onClick={(event) => event.stopPropagation()}>
+                  <strong>{meetingAction.event.title}</strong>
+                  <span>{isoDate}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (meetingAction.kind === "plan") onSelectEvent(meetingAction.event.id);
+                      else onSelectImported(meetingAction.event.id);
+                      setMeetingAction(null);
+                    }}
+                  >
+                    Edit details
+                  </button>
+                  <button
+                    type="button"
+                    className="danger-action"
+                    onClick={() => {
+                      if (meetingAction.kind === "plan") onDeleteEvent(meetingAction.event.id);
+                      else onDeleteImported(meetingAction.event);
+                      setMeetingAction(null);
+                    }}
+                  >
+                    {meetingAction.kind === "imported" && meetingAction.event.outlookEventId
+                      ? "Queue Outlook deletion"
+                      : "Remove meeting"}
+                  </button>
+                  <button className="quiet" type="button" onClick={() => setMeetingAction(null)}>Cancel</button>
                 </div>
               )}
               {dayAction?.date === isoDate && !pendingMove && (

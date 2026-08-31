@@ -372,7 +372,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .holiday-marker.projected_lss { color: var(--amber); }
 .closure-marker { display: -webkit-box; margin-top: 3px; overflow: hidden; color: #a53e30; font-size: .43rem; font-weight: 900; line-height: 1.08; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .day-events { display: grid; gap: 3px; margin-top: 4px; }
-.meeting-chip-shell { position: relative; display: block; min-width: 0; }
 .meeting-chip {
   position: relative;
   display: block;
@@ -395,37 +394,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   cursor: grab;
   -webkit-user-drag: element;
 }
-.meeting-chip-shell .meeting-chip { padding-right: 14px; }
-.meeting-remove {
-  position: absolute;
-  top: 50%;
-  right: 1px;
-  z-index: 2;
-  display: grid;
-  width: 13px;
-  height: 13px;
-  padding: 0;
-  place-items: center;
-  border: 0;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--red);
-  box-shadow: 0 0 0 1px rgba(139, 48, 38, .24);
-  font-size: .62rem;
-  font-weight: 900;
-  line-height: 1;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-50%);
-  transition: opacity .12s ease, background .12s ease, color .12s ease;
-}
-.meeting-chip-shell:hover .meeting-remove,
-.meeting-chip-shell:focus-within .meeting-remove {
-  opacity: 1;
-  pointer-events: auto;
-}
-.meeting-remove:hover,
-.meeting-remove:focus-visible { outline: 2px solid white; background: var(--red); color: white; box-shadow: 0 0 0 3px var(--red); }
 .meeting-chip.board { color: var(--board); }
 .meeting-chip.committee { color: var(--committee); }
 .meeting-chip.committee-executive-committee { color: #A6532D; }
@@ -460,9 +428,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .meeting-chip.retreat { min-height: 18px; border-width: 2px; }
 .meeting-chip.override { box-shadow: 0 0 0 2px white, 0 0 0 3px currentColor; }
 .meeting-chip.locked { cursor: default; opacity: .66; }
-@media (hover: none) {
-  .meeting-remove { opacity: .92; pointer-events: auto; }
-}
 .meeting-chip.selected { box-shadow: 0 0 0 2px white, 0 0 0 4px #d39a27; z-index: 2; }
 .meeting-chip.override.selected { box-shadow: 0 0 0 2px white, 0 0 0 4px #d39a27; }
 .meeting-chip.holiday-adjusted { box-shadow: inset 0 0 0 2px #d98219; }
@@ -493,7 +458,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .day-action-popover { position: absolute; left: 50%; top: calc(100% - 2px); z-index: 35; display: grid; gap: 6px; width: 190px; padding: 10px; border: 1px solid var(--line-dark); border-radius: 6px; background: white; box-shadow: 0 8px 20px rgba(32,37,43,.14); transform: translateX(-18%); }
 .day-action-popover::before { content: ""; position: absolute; left: 18%; top: -7px; width: 12px; height: 12px; border-left: 1px solid #bbc8c4; border-top: 1px solid #bbc8c4; background: white; transform: rotate(45deg); }
 .day-action-popover strong { font-size: .66rem; }
+.meeting-action-popover > span { margin-top: -3px; color: var(--muted); font-size: .58rem; }
 .day-action-popover > button, .day-action-popover form button { padding: 6px 7px; border: 1px solid var(--line-dark); border-radius: 6px; background: #f8faf8; color: var(--ink); font-size: .59rem; font-weight: 850; text-align: left; cursor: pointer; }
+.day-action-popover > button.danger-action { border-color: #dfb1ab; background: var(--red-soft); color: var(--red); }
+.day-action-popover > button.danger-action:hover { border-color: var(--red); background: var(--red); color: white; }
 .day-action-popover button:disabled { opacity: .45; cursor: not-allowed; }
 .day-action-popover button.quiet { border-color: transparent; background: transparent; color: var(--muted); }
 .day-action-popover form { display: grid; gap: 7px; }
