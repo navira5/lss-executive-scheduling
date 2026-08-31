@@ -9,6 +9,10 @@ import {
   importedEventFromOutlook,
   type OutlookPublishEventInput,
 } from "@/lib/outlook-sync";
+import {
+  microsoftGraphFailureResponse,
+  microsoftGraphRequestError,
+} from "@/lib/microsoft-graph-error";
 
 const publishEvent: OutlookPublishEventInput = {
   id: "full-board-2027-01-13-1",
@@ -155,4 +159,29 @@ test("legacy direct Outlook publishing is retired in favor of reviewed synchroni
   } finally {
     restoreEnv(previous);
   }
+});
+
+test("turns a Microsoft calendar outage into a safe, traceable retry message", async () => {
+  const graphResponse = Response.json({
+    error: {
+      code: "ErrorInternalServerError",
+      message: "An internal server error occurred. The operation failed.",
+    },
+  }, {
+    status: 500,
+    headers: { "request-id": "graph-request-123" },
+  });
+
+  const error = await microsoftGraphRequestError(graphResponse, "read");
+  const failure = microsoftGraphFailureResponse(error, "Outlook calendar import failed.");
+
+  assert.equal(failure.status, 503);
+  assert.equal(failure.body.provider, "Microsoft Graph");
+  assert.equal(failure.body.providerStatus, 500);
+  assert.equal(failure.body.providerCode, "ErrorInternalServerError");
+  assert.equal(failure.body.requestId, "graph-request-123");
+  assert.equal(failure.body.retryable, true);
+  assert.match(String(failure.body.error), /temporarily unavailable/i);
+  assert.match(String(failure.body.error), /no Outlook changes were made/i);
+  assert.doesNotMatch(String(failure.body.error), /internal server error/i);
 });

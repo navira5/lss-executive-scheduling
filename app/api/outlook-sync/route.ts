@@ -6,6 +6,11 @@ import {
   type OutlookEventFields,
   type OutlookSyncRequest,
 } from "@/lib/outlook-sync";
+import {
+  microsoftGraphFailureLog,
+  microsoftGraphFailureResponse,
+  microsoftGraphRequestError,
+} from "@/lib/microsoft-graph-error";
 
 interface GraphCollection<T> {
   value?: T[];
@@ -83,7 +88,7 @@ async function graphCollection<T>(path: string, token: string, timeZone: string)
         prefer: `outlook.timezone="${timeZone}", outlook.body-content-type="text"`,
       },
     });
-    if (!response.ok) throw new Error(`Microsoft Graph calendar request failed with ${response.status}.`);
+    if (!response.ok) throw await microsoftGraphRequestError(response, "read");
     const page = await response.json() as GraphCollection<T>;
     rows.push(...(page.value ?? []));
     next = page["@odata.nextLink"];
@@ -106,8 +111,7 @@ async function graphMutation(
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(`Microsoft Graph ${method.toLowerCase()} failed with ${response.status}${detail ? `: ${detail.slice(0, 220)}` : ""}`);
+    throw await microsoftGraphRequestError(response, "write");
   }
   if (response.status === 204) return {};
   return response.json() as Promise<{ id?: string; webLink?: string }>;
@@ -183,6 +187,9 @@ export async function POST(request: Request): Promise<Response> {
       count: applied.length,
     }, { status: failed.length ? 207 : 200 });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Outlook synchronization failed." }, { status: 502 });
+    const providerFailure = microsoftGraphFailureLog(error);
+    if (providerFailure) console.error("Outlook change review failed", providerFailure);
+    const failure = microsoftGraphFailureResponse(error, "Outlook synchronization failed.");
+    return Response.json(failure.body, { status: failure.status });
   }
 }

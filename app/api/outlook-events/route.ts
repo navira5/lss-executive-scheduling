@@ -1,5 +1,10 @@
 import { importedEventFromOutlook, type OutlookEventFields } from "@/lib/outlook-sync";
 import { requireDemoApiSession } from "@/app/demo-auth";
+import {
+  microsoftGraphFailureLog,
+  microsoftGraphFailureResponse,
+  microsoftGraphRequestError,
+} from "@/lib/microsoft-graph-error";
 
 interface GraphCollection<T> {
   value?: T[];
@@ -66,7 +71,7 @@ async function graphCollection<T>(pathOrUrl: string, token: string, timeZone: st
         prefer: `outlook.timezone="${timeZone}"`,
       },
     });
-    if (!response.ok) throw new Error(`Microsoft Graph calendar request failed with ${response.status}.`);
+    if (!response.ok) throw await microsoftGraphRequestError(response, "read");
     const page = await response.json() as GraphCollection<T>;
     items.push(...(page.value ?? []));
     next = page["@odata.nextLink"];
@@ -119,8 +124,9 @@ export async function GET(): Promise<Response> {
       count: events.length,
     });
   } catch (error) {
-    return Response.json({
-      error: error instanceof Error ? error.message : "Outlook calendar import failed.",
-    }, { status: 502 });
+    const providerFailure = microsoftGraphFailureLog(error);
+    if (providerFailure) console.error("Outlook calendar read failed", providerFailure);
+    const failure = microsoftGraphFailureResponse(error, "Outlook calendar import failed.");
+    return Response.json(failure.body, { status: failure.status });
   }
 }
