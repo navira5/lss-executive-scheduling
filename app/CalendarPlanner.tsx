@@ -669,6 +669,8 @@ export function CalendarPlanner({
               setDetailsCollapsed(false);
               setCalendarMoveNotice({ valid: true, message: "Existing Outlook meeting selected. Details are open at right." });
             }}
+            onDeleteEvent={deletePlanMeeting}
+            onDeleteImported={deleteImportedOutlookMeeting}
             onMoveEvent={handleCalendarMove}
             onResolveMove={resolveMove}
             onCancelMove={() => setPendingMove(null)}
