@@ -159,6 +159,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .capability-table td { font-weight: 500; }
 .capability-table td > strong { display: block; width: max-content; margin-bottom: 5px; padding: 3px 6px; border: 1px solid currentColor; border-radius: 3px; font-size: .62rem; letter-spacing: .03em; text-transform: uppercase; }
 .capability-table td > span { display: block; color: var(--muted); font-size: .68rem; line-height: 1.42; }
+.future-capability-note { margin: 0; padding: 16px 24px; border-top: 1px solid var(--line); background: #f7f8f9; color: var(--muted); font-size: .74rem; line-height: 1.5; }
+.future-capability-note strong { color: var(--ink); }
 .fit-retained { color: #21643d; background: #edf7f0; }
 .fit-adapted { color: #735500; background: #fff8dc; }
 .fit-manual { color: #8a471b; background: #fff2e8; }

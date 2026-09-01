@@ -88,8 +88,10 @@ test("server-renders a concise comparison of all four delivery options", async (
   assert.match(html, /aria-pressed="true"/);
   assert.match(html, /Power Apps Component Framework—the Microsoft extension/);
   assert.match(html, /What is retained—and what changes/);
-  assert.match(html, /Add, edit, cancel, delete events/);
-  assert.match(html, /Meeting-fit advisor/);
+  assert.match(html, /Manage meetings and closed dates/);
+  assert.match(html, /See and rearrange the year/);
+  assert.match(html, /Future scheduling helper/);
+  assert.doesNotMatch(html, /Meeting-fit advisor/);
   assert.match(html, /What LSS is signing up to own/);
   assert.match(html, /Ongoing LSS effort/);
   assert.match(html, /Who gets called/);
