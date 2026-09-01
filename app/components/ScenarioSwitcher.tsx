@@ -1,19 +1,20 @@
 const OPTIONS = [
   { id: "standalone", label: "A · Standalone", href: "/standalone" },
   { id: "integrated", label: "B · Microsoft-connected", href: "/integrated" },
-  { id: "power-apps", label: "C · Power Apps + PCF", href: "/power-apps" },
+  { id: "native-power-apps", label: "C · Native Power Apps", href: "/native-power-apps" },
+  { id: "power-apps", label: "D · Power Apps + PCF", href: "/power-apps" },
 ] as const;
 
 export function ScenarioSwitcher({
   current,
 }: {
-  current: "standalone" | "integrated" | "power-apps" | "overview";
+  current: "standalone" | "integrated" | "native-power-apps" | "power-apps" | "overview";
 }) {
   return (
     <nav className="scenario-switcher" aria-label="Planner delivery options">
       <a className="scenario-switcher-home" href="/scenarios">
         <span className="scenario-mini-mark" aria-hidden="true">LSS</span>
-        <span><strong>Delivery options</strong><small>Compare three ways to run the planner</small></span>
+        <span><strong>Delivery options</strong><small>Compare four ways to run the planner</small></span>
       </a>
       <div className="scenario-switcher-links">
         {OPTIONS.map((option) => (

@@ -4,7 +4,7 @@ Date: 2026-09-01
 
 ## Latest Continuity Update — 2026-09-01
 
-The project now presents three distinct ownership/deployment options without
+The project now presents four distinct ownership/deployment options without
 mixing their data paths:
 
 1. **Integrated custom planner** — the existing rich planner with optional
@@ -16,12 +16,16 @@ mixing their data paths:
    state, imports calendar context from `.ics`, exports confirmed meetings to
    `.ics`, exports the plan to PDF, and downloads the current working rules as
    a SharePoint-ready CSV.
-3. **Power Apps-style comparison** — a local visual prototype at
+3. **Native Power Apps comparison** — a hosted visual prototype at
+   `/native-power-apps` using standard Canvas App forms, galleries, SharePoint
+   and Outlook connector concepts. It deliberately uses a month calendar and
+   form-based date changes, with no PCF component or drag-and-drop.
+4. **Power Apps + PCF comparison** — a local visual prototype at
    `http://localhost:4176` when `npm run demo:compare` is running. The same
    comparison is now included in the hosted app at `/power-apps`. It remains a
    comparison surface, not a live Power Platform deployment.
 
-All three options are now connected through a common delivery-option switcher.
+All four options are now connected through a common delivery-option switcher.
 The hosted `/scenarios` route gives Rachel, the COO, and Chad a concise choice
 screen explaining what each option includes, its tradeoff, and who owns
 production support. The `/integrated` and `/standalone` routes both
@@ -38,7 +42,7 @@ Current verified source and deployment:
 - GitHub `main` contains that commit.
 - Sites production version: 32
 - Full `npm test` suite passed, including production build and rendered checks
-  for the landing page and all three option routes.
+  for the landing page and all four option routes.
 
 One unrelated untracked directory remains in the worktree:
 

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LSS Plan Year — Native Power Apps Preview</title>
+    <link rel="stylesheet" href="../power-apps-preview/styles.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell native-app">
+      <header class="suite-bar">
+        <button class="waffle" aria-label="Microsoft 365 apps">••<br />••</button>
+        <div class="suite-product">Power Apps</div>
+        <div class="suite-title">LSS 2027 Calendar Planner</div>
+        <div class="suite-spacer"></div>
+        <span class="environment">LSS Planning</span>
+        <button class="avatar" aria-label="Account menu">RA</button>
+      </header>
+
+      <nav class="command-bar" aria-label="Application commands">
+        <div>
+          <p class="eyebrow">NATIVE CANVAS APP</p>
+          <h1>Build the 2027 calendar</h1>
+        </div>
+        <div class="connector-status"><span class="connector sharepoint">S</span> SharePoint rules <i></i> <span class="connector outlook">O</span> Outlook calendar</div>
+        <div class="command-actions">
+          <button class="button secondary" data-toast="Draft saved in SharePoint. Outlook was not changed.">Save draft</button>
+          <button class="button primary" data-toast="Review opened. No Outlook events were uploaded.">Review Outlook upload</button>
+        </div>
+      </nav>
+
+      <div class="page-grid">
+        <aside class="layer-nav" aria-label="Planning layers">
+          <div class="preview-note native-note">
+            <strong>Standard controls only</strong>
+            <span>This version uses Power Apps forms, galleries, and connectors. Dates change through a form—not by dragging.</span>
+          </div>
+          <p class="nav-label">Planning layers</p>
+          <button class="layer active"><span class="layer-index">1</span><span><strong>Board &amp; Governance</strong><small>1 of 3 groups confirmed</small></span></button>
+          <button class="layer"><span class="layer-index">2</span><span><strong>Committees</strong><small>Not started</small></span></button>
+          <button class="layer"><span class="layer-index">3</span><span><strong>Executive Leadership</strong><small>Not started</small></span></button>
+          <button class="layer"><span class="layer-index">4</span><span><strong>Organization</strong><small>Not started</small></span></button>
+          <button class="layer"><span class="layer-index">5</span><span><strong>Final Review</strong><small>Waiting on 2 items</small></span></button>
+          <div class="layer-progress"><div class="progress-copy"><span>Plan progress</span><strong>33%</strong></div><div class="progress-track"><div class="progress-bar"></div></div></div>
+        </aside>
+
+        <main class="planner">
+          <div class="view-tabs" role="tablist" aria-label="Planner views">
+            <button class="view-tab active" data-view="plan" role="tab" aria-selected="true">Plan meetings</button>
+            <button class="view-tab" data-view="calendar" role="tab" aria-selected="false">Calendar</button>
+            <button class="view-tab" data-view="rulebook" role="tab" aria-selected="false">Rulebook</button>
+          </div>
+
+          <section id="planView" class="view-screen active" role="tabpanel">
+            <section class="planner-intro">
+              <div><p class="eyebrow">BOARD &amp; GOVERNANCE</p><h2>Apply a rule, then review the generated meetings</h2><p>Standard Power Apps controls keep the workflow maintainable, but each exception opens an edit form.</p></div>
+              <span class="year-chip">Planning year 2027</span>
+            </section>
+
+            <div class="native-workspace">
+              <section class="native-rule-list">
+                <div class="panel-heading"><div><p class="eyebrow">MEETING GROUPS</p><h3>Board calendar</h3></div><button class="icon-button" data-toast="A standard New Item form would open.">＋</button></div>
+                <button class="native-group active"><span class="group-dot"></span><span><strong>Full Board Meetings</strong><small>4 planned · Needs validation</small></span><em>4</em></button>
+                <button class="native-group"><span class="group-dot"></span><span><strong>Full Board Retreats</strong><small>2 planned · Confirmed</small></span><em>2</em></button>
+                <button class="native-group"><span class="group-dot"></span><span><strong>Critical Issue Check-Ins</strong><small>6 planned · Open question</small></span><em>6</em></button>
+              </section>
+
+              <section class="native-form-card">
+                <div class="detail-heading compact"><div><p class="eyebrow">EDIT RULE</p><h3>Full Board Meetings</h3><p class="group-purpose">Changes remain drafts until this meeting group is confirmed.</p></div><span class="status-badge warning">Needs validation</span></div>
+                <form class="native-rule-form">
+                  <label><span>Annual count</span><input id="annualCount" type="number" min="1" max="12" value="4" /></label>
+                  <label><span>Cadence</span><select><option>Custom months</option><option>Monthly</option><option>Every other month</option><option>Quarterly</option><option>Every six months</option></select></label>
+                  <div class="field-row"><label><span>Week of month</span><select><option>Second</option><option>Third</option><option>Fourth</option></select></label><label><span>Preferred day</span><select><option>Tuesday</option><option>Wednesday</option><option>Thursday</option></select></label></div>
+                  <div class="field-row"><label><span>Start time</span><input type="time" value="17:00" /></label><label><span>Duration</span><select><option>2 hours</option><option>90 minutes</option><option>1 hour</option></select></label></div>
+                  <label><span>Attendee group</span><input value="Full Board" /></label>
+                  <button type="button" class="button primary full" id="applyRule">Apply rule &amp; refresh meetings</button>
+                </form>
+              </section>
+
+              <section class="native-meeting-card">
+                <div class="section-title"><div><p class="eyebrow">GENERATED MEETINGS</p><h4><span id="generatedCount">4</span> proposed for 2027</h4></div><span class="sharepoint-chip">Draft records</span></div>
+                <div class="native-callout"><strong>Native interaction</strong><span>Select Change date, edit the form, save, and refresh. Drag-and-drop is not available.</span></div>
+                <div class="native-meeting-head"><span>Date</span><span>Meeting</span><span>Status</span><span></span></div>
+                <div id="nativeMeetingRows">
+                  <div class="native-meeting-row"><strong>Mar 9</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-03-09">Change date</button></div>
+                  <div class="native-meeting-row"><strong>Jul 13</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-07-13">Change date</button></div>
+                  <div class="native-meeting-row"><strong>Sep 14</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-09-14">Change date</button></div>
+                  <div class="native-meeting-row"><strong>Nov 9</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-11-09">Change date</button></div>
+                </div>
+                <div class="native-confirm"><span><strong>Ready to confirm?</strong><small>Confirmed dates become constraints for later layers.</small></span><button class="button primary" data-toast="Full Board Meetings confirmed. Outlook remains unchanged until final review.">Confirm group</button></div>
+              </section>
+            </div>
+          </section>
+
+          <section id="calendarView" class="view-screen" role="tabpanel" hidden>
+            <section class="planner-intro calendar-intro"><div><p class="eyebrow">MONTH CALENDAR</p><h2>Outlook context and proposed meetings</h2><p>Select a date to see its events. Use the form to change a proposed meeting.</p></div><span class="year-chip">Outlook + proposed plan</span></section>
+            <div class="native-calendar-toolbar">
+              <button id="previousMonth" class="button secondary" aria-label="Previous month">‹</button><strong id="monthTitle">March 2027</strong><button id="nextMonth" class="button secondary" aria-label="Next month">›</button>
+              <label><span>Show</span><select><option>Outlook + planner</option><option>Planner only</option><option>Confirmed only</option></select></label>
+            </div>
+            <div class="native-calendar-layout">
+              <section class="native-month-card">
+                <div class="native-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+                <div id="nativeMonthGrid" class="native-month-grid" aria-label="Monthly calendar"></div>
+              </section>
+              <aside class="native-agenda">
+                <p class="eyebrow">SELECTED DATE</p><h3 id="agendaDate">March 9, 2027</h3>
+                <article><span class="agenda-source planner-source">Proposed</span><strong>Full Board Meeting</strong><small>5:00–7:00 PM · Needs validation</small><button class="button secondary full" data-change-date="2027-03-09">Change date</button></article>
+                <article><span class="agenda-source outlook-source">Outlook</span><strong>Rachel — donor call</strong><small>2:00–2:30 PM · Existing calendar</small></article>
+                <div class="native-limit"><strong>What changes here</strong><span>The monthly calendar can refresh after rules are applied. Meetings do not move directly on the grid.</span></div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="rulebookView" class="view-screen" role="tabpanel" hidden>
+            <section class="planner-intro rulebook-intro"><div><p class="eyebrow">SHAREPOINT RULES</p><h2>Rulebook</h2><p>Standard Power Apps forms let Felise maintain rules without touching application code.</p></div><button class="button primary" data-toast="A standard SharePoint New Item form would open.">＋ New meeting rule</button></section>
+            <div class="native-rulebook">
+              <section class="native-rule-table">
+                <div class="native-rule-table-head"><span>Meeting group</span><span>Cadence</span><span>Count</span><span>Status</span></div>
+                <button class="native-rule-row active"><span><strong>Full Board Meetings</strong><small>Board &amp; Governance</small></span><span>Custom months</span><span>4</span><span class="mini-status warning">Needs validation</span></button>
+                <button class="native-rule-row"><span><strong>Full Board Retreats</strong><small>Board &amp; Governance</small></span><span>Every six months</span><span>2</span><span class="mini-status confirmed">Confirmed</span></button>
+                <button class="native-rule-row"><span><strong>Administration &amp; Finance</strong><small>Committees</small></span><span>Every other month</span><span>6</span><span class="mini-status warning">Needs validation</span></button>
+                <button class="native-rule-row"><span><strong>Health Center &amp; Programs</strong><small>Committees</small></span><span>Quarterly</span><span>4</span><span class="mini-status warning">Needs validation</span></button>
+              </section>
+              <aside class="native-rule-detail">
+                <div><p class="eyebrow">SELECTED RULE</p><h3>Full Board Meetings</h3></div>
+                <label><span>Cadence</span><select><option>Custom months</option><option>Every other month</option></select></label>
+                <label><span>Annual count</span><input type="number" value="4" min="1" max="12" /></label>
+                <label><span>Preferred pattern</span><select><option>Second Tuesday</option><option>Fourth Tuesday</option></select></label>
+                <label><span>Status</span><select><option>Needs validation</option><option>Confirmed</option></select></label>
+                <div class="native-callout"><strong>SharePoint is the source</strong><span>Saving updates the rule record. Applying the rule regenerates proposed meetings; confirmation remains separate.</span></div>
+                <button class="button primary full" data-toast="Rule draft saved to SharePoint. Proposed meetings were not changed yet.">Save rule draft</button>
+              </aside>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog id="dateDialog">
+      <div class="dialog-heading"><div><p class="eyebrow">EDIT PROPOSED MEETING</p><h3>Change meeting date</h3></div><button class="icon-button" id="closeDialog" aria-label="Close">×</button></div>
+      <form class="native-date-form" method="dialog"><label><span>Meeting</span><input value="Full Board Meeting" readonly /></label><label><span>New date</span><input id="newDate" type="date" value="2027-03-09" /></label><label><span>Reason</span><select><option>One-time exception</option><option>Update the recurring rule</option></select></label><div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button primary" id="saveDate" value="default">Save change</button></div></form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

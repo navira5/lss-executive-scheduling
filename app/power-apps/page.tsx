@@ -16,7 +16,7 @@ export default async function PowerAppsPreviewPage() {
     <main className="power-preview-shell">
       <ScenarioSwitcher current="power-apps" />
       <div className="power-preview-note">
-        <strong>Option C comparison preview</strong>
+        <strong>Option D comparison preview</strong>
         <span>This demonstrates the Power Apps shell and custom-calendar direction. It is not connected to a live Power Platform environment.</span>
       </div>
       <iframe

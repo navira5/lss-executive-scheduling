@@ -91,15 +91,15 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Compare the three planning approaches
+## Compare the four delivery options
 
-The repository also contains a separate, local-only preview of how the core
-rule-to-meeting workflow could feel in a native Microsoft Power Apps-style
-interface. Its Plan meetings, Calendar, and Rulebook tabs are complete visual
-screens for comparison; they use sample in-browser data and do not connect to
-Microsoft services. It does not modify or replace the main planner.
+The hosted comparison includes both a native Canvas App option using standard
+Power Apps controls and a Power Apps + PCF option with a custom year-calendar
+component. Their Plan meetings, Calendar, and Rulebook tabs use sample
+in-browser data and do not connect to Microsoft services. Neither preview
+modifies or replaces the main planner.
 
-Start all three demonstrations with one command:
+Start the four-option comparison and separate PCF preview with one command:
 
 ```bash
 npm run demo:compare
@@ -111,6 +111,7 @@ Then open:
 - Main URL (redirects to options): `http://localhost:3000`
 - Integrated calendar planner: `http://localhost:3000/integrated`
 - Standalone calendar planner: `http://localhost:3000/standalone`
+- Native Power Apps comparison: `http://localhost:3000/native-power-apps`
 - Hosted Power Apps + PCF comparison: `http://localhost:3000/power-apps`
 - Separate local Power Apps preview: `http://localhost:4176`
 

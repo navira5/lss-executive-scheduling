@@ -41,6 +41,20 @@ const options = [
   },
   {
     letter: "C",
+    title: "Native Power Apps planner",
+    tag: "Lowest custom-code burden",
+    description: "A Canvas App using standard Power Apps controls, SharePoint or Dataverse, and Outlook connectors—with no custom calendar component.",
+    includes: ["Microsoft identity", "SharePoint or Dataverse rules", "Outlook calendar view", "Form-based date changes"],
+    tradeoff: "Rachel can apply rules and see meetings refresh, but she works month by month and changes dates through forms. There is no drag-and-drop or polished 3×4 year view.",
+    effort: "Low–medium",
+    timeline: "Weeks, after LSS setup and review",
+    support: "LSS Power Platform admin",
+    agentRole: "Can help draft Power Fx formulas, screens, flows, tests, and documentation. An LSS maker or admin still reviews and publishes changes.",
+    href: "/native-power-apps",
+    action: "Open native Power Apps preview",
+  },
+  {
+    letter: "D",
     title: "Power Apps + custom calendar",
     tag: "Microsoft-native direction",
     description: "A Power Apps shell for rules and workflow, with a custom Power Apps Component Framework (PCF) calendar preserving the year view and richer planning interactions.",
@@ -62,8 +76,8 @@ export default async function ScenarioOptionsPage() {
       <ScenarioSwitcher current="overview" />
       <section className="scenario-intro">
         <p className="eyebrow">LSS 2027 CALENDAR PLANNER</p>
-        <h1>One planning workflow. Three ways LSS could own it.</h1>
-        <p>These are delivery options—not three different products. Each preserves the rules-first calendar workflow while changing integration, ownership, and ongoing support.</p>
+        <h1>One planning workflow. Four ways LSS could own it.</h1>
+        <p>These are delivery options—not four different products. Each preserves the rules-first calendar workflow while changing integration, ownership, user experience, and ongoing support.</p>
       </section>
       <section className="scenario-card-grid" aria-label="Planner delivery options">
         {options.map((option) => (

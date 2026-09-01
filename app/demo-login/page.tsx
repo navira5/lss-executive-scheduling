@@ -21,7 +21,7 @@ export default async function DemoLoginPage({
         <div className="brand-mark" aria-hidden="true">LSS</div>
         <p className="eyebrow">Private prototype</p>
         <h1 id="demo-login-title">2027 Calendar Planning</h1>
-        <p>Use the temporary testing credentials supplied by Navira. This private workspace includes standalone, Microsoft-connected, and Power Apps comparison views.</p>
+        <p>Use the temporary testing credentials supplied by Navira. This private workspace includes standalone, Microsoft-connected, native Power Apps, and custom-calendar comparison views.</p>
         {params.error ? <div className="demo-login-error" role="alert">The username or access code was not recognized.</div> : null}
         <form action="/api/demo-login" method="post">
           <input type="hidden" name="return_to" value={returnTo} />

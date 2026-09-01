@@ -1,0 +1,85 @@
+.native-app { --native-accent: #7f6000; }
+.native-app .layer.active { border-left-color: var(--native-accent); background: #fff8dc; }
+.native-app .layer.active .layer-index { border-color: var(--native-accent); background: var(--native-accent); }
+.native-app .view-tab.active { border-bottom-color: var(--native-accent); }
+.native-note { border-left-color: var(--native-accent); background: #fff8dc; }
+.connector-status { display: flex; align-items: center; gap: 7px; margin-left: auto; color: var(--muted); font-size: 11px; }
+.connector-status i { width: 1px; height: 20px; margin: 0 4px; background: var(--line); }
+.connector { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 3px; color: white; font-size: 11px; font-weight: 800; }
+.connector.sharepoint { background: #038387; }
+.connector.outlook { background: #0078d4; }
+.native-app .command-actions { margin-left: 12px; }
+.native-app .view-tab { cursor: pointer; }
+
+.native-workspace { display: grid; grid-template-columns: 240px 300px minmax(480px, 1fr); min-height: 650px; border: 1px solid var(--line); background: white; }
+.native-rule-list, .native-form-card { border-right: 1px solid var(--line); }
+.native-group { width: 100%; min-height: 70px; display: grid; grid-template-columns: 10px 1fr 25px; gap: 10px; align-items: start; padding: 13px 14px; border: 0; border-left: 3px solid transparent; border-bottom: 1px solid var(--line-soft); background: white; text-align: left; }
+.native-group:hover { background: #f7f7f7; }
+.native-group.active { border-left-color: var(--lss-navy); background: var(--blue-soft); }
+.native-group strong, .native-group small { display: block; }
+.native-group strong { font-size: 12px; }
+.native-group small { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+.native-group em { width: 22px; height: 22px; display: grid; place-items: center; background: #ededed; font-size: 10px; font-style: normal; font-weight: 700; }
+.detail-heading.compact { min-height: 94px; padding: 16px; }
+.native-rule-form { padding: 16px; }
+.native-meeting-card { min-width: 0; padding: 18px; }
+.native-callout { display: grid; gap: 3px; margin: 0 0 15px; padding: 11px 12px; border-left: 3px solid var(--native-accent); background: #fff8dc; font-size: 11px; line-height: 1.45; }
+.native-callout span { color: #5c4b00; }
+.native-meeting-head, .native-meeting-row { display: grid; grid-template-columns: 72px minmax(150px, 1fr) 110px 90px; gap: 10px; align-items: center; }
+.native-meeting-head { padding: 0 8px 8px; color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.native-meeting-row { min-height: 56px; padding: 8px; border-top: 1px solid var(--line-soft); font-size: 11px; }
+.native-meeting-row > button { padding: 6px 7px; border: 1px solid #8a8886; background: white; font-size: 10px; font-weight: 600; }
+.native-meeting-row > button:hover { background: #f3f2f1; }
+.native-confirm { display: flex; align-items: center; gap: 16px; margin: 18px -18px -18px; padding: 14px 18px; border-top: 1px solid var(--line); background: #fafafa; }
+.native-confirm > span { display: grid; gap: 3px; }
+.native-confirm small { color: var(--muted); }
+.native-confirm button { margin-left: auto; }
+
+.native-calendar-toolbar { min-height: 58px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); background: white; }
+.native-calendar-toolbar > strong { min-width: 160px; font-size: 16px; text-align: center; }
+.native-calendar-toolbar > label { width: 210px; margin: 0 0 0 auto; }
+.native-calendar-toolbar .button { min-width: 36px; padding: 4px 10px; font-size: 18px; }
+.native-calendar-layout { display: grid; grid-template-columns: minmax(700px, 1fr) 300px; min-height: 670px; margin-top: 14px; border: 1px solid var(--line); background: white; }
+.native-month-card { padding: 18px; border-right: 1px solid var(--line); }
+.native-weekdays, .native-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.native-weekdays span { padding: 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 700; text-align: center; }
+.native-day { min-height: 98px; padding: 7px; overflow: hidden; border: 0; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); background: white; text-align: left; }
+.native-day:hover { background: #f8f8f8; }
+.native-day.selected { outline: 2px solid var(--power-purple); outline-offset: -2px; background: var(--purple-soft); }
+.native-day.empty { background: #fafafa; }
+.native-day > span:first-child { display: block; color: var(--muted); font-size: 11px; }
+.native-event { display: block; margin-top: 5px; padding: 4px 5px; overflow: hidden; border-left: 3px solid; font-size: 9px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.planner-event { border-color: var(--lss-navy); background: var(--blue-soft); color: var(--lss-navy); }
+.outlook-event { border-color: #767676; background: #f1f1f1; color: #4a4a4a; }
+.native-agenda { padding: 18px; }
+.native-agenda h3 { margin: 4px 0 18px; font-size: 18px; }
+.native-agenda article { display: grid; gap: 6px; margin-bottom: 12px; padding: 13px; border: 1px solid var(--line); }
+.native-agenda article strong { font-size: 12px; }
+.native-agenda article small { color: var(--muted); font-size: 10px; }
+.agenda-source { width: max-content; padding: 3px 5px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.planner-source { background: var(--blue-soft); color: var(--lss-navy); }
+.outlook-source { background: #ededed; color: #555; }
+.native-limit { display: grid; gap: 4px; margin-top: 18px; padding: 12px; border-left: 3px solid var(--native-accent); background: #fff8dc; font-size: 11px; line-height: 1.45; }
+.native-limit span { color: #5c4b00; }
+
+.native-rulebook { display: grid; grid-template-columns: minmax(650px, 1.4fr) 330px; min-height: 650px; border: 1px solid var(--line); background: white; }
+.native-rule-table { border-right: 1px solid var(--line); }
+.native-rule-table-head, .native-rule-row { display: grid; grid-template-columns: minmax(220px, 1fr) 150px 60px 120px; gap: 12px; align-items: center; }
+.native-rule-table-head { padding: 11px 16px; border-bottom: 1px solid var(--line); background: #fafafa; color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.native-rule-row { width: 100%; min-height: 66px; padding: 10px 16px; border: 0; border-left: 3px solid transparent; border-bottom: 1px solid var(--line-soft); background: white; text-align: left; }
+.native-rule-row:hover { background: #f7f7f7; }
+.native-rule-row.active { border-left-color: var(--power-purple); background: var(--purple-soft); }
+.native-rule-row > span { color: var(--muted); font-size: 11px; }
+.native-rule-row strong, .native-rule-row small { display: block; }
+.native-rule-row strong { color: var(--ink); font-size: 12px; }
+.native-rule-row small { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.native-rule-detail { padding: 18px; }
+.native-rule-detail h3 { margin: 4px 0 18px; font-size: 18px; }
+.native-date-form { padding: 18px 20px 0; }
+.native-date-form .dialog-actions { margin: 14px -20px 0; }
+
+@media (max-width: 1250px) {
+  .native-workspace { grid-template-columns: 210px 275px minmax(430px, 1fr); }
+  .native-calendar-layout { grid-template-columns: minmax(620px, 1fr) 280px; }
+  .native-rulebook { grid-template-columns: minmax(590px, 1.35fr) 310px; }
+}

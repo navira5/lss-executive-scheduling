@@ -23,7 +23,7 @@ async function render(pathname = "/") {
   );
 }
 
-test("the main URL leads to the three-option landing page", async () => {
+test("the main URL leads to the four-option landing page", async () => {
   const response = await render();
   assert.equal(response.status, 307);
   assert.equal(response.headers.get("location"), "http://localhost/scenarios");
@@ -71,14 +71,16 @@ test("server-renders a Microsoft-free standalone planner behind the same access 
   assert.doesNotMatch(html, /Review Outlook Changes/);
 });
 
-test("server-renders a concise comparison of all three delivery options", async () => {
+test("server-renders a concise comparison of all four delivery options", async () => {
   const response = await render("/scenarios");
   assert.equal(response.status, 200);
 
   const html = await response.text();
-  assert.match(html, /One planning workflow\. Three ways LSS could own it\./);
+  assert.match(html, /One planning workflow\. Four ways LSS could own it\./);
   assert.match(html, /Standalone planner/);
   assert.match(html, /Microsoft-connected planner/);
+  assert.match(html, /Native Power Apps planner/);
+  assert.match(html, /no drag-and-drop or polished 3×4 year view/i);
   assert.match(html, /Power Apps \+ custom calendar/);
   assert.match(html, /Power Apps Component Framework \(PCF\)/);
   assert.match(html, /What LSS is signing up to own/);
@@ -89,12 +91,33 @@ test("server-renders a concise comparison of all three delivery options", async 
   assert.match(html, /Navira provides the prototype/);
 });
 
+test("server-renders the native Power Apps comparison without a custom calendar", async () => {
+  const response = await render("/native-power-apps");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Option C comparison preview/);
+  assert.match(html, /No custom PCF calendar and no drag-and-drop/);
+  assert.match(html, /native-power-apps-preview\/index\.html/);
+
+  const preview = await readFile(
+    new URL("../dist/client/native-power-apps-preview/index.html", import.meta.url),
+    "utf8",
+  );
+  assert.match(preview, /NATIVE CANVAS APP/);
+  assert.match(preview, /Standard controls only/);
+  assert.match(preview, /Apply rule &amp; refresh meetings/);
+  assert.match(preview, /Monthly calendar/);
+  assert.match(preview, /href="styles\.css"/);
+  assert.match(preview, /src="app\.js"/);
+});
+
 test("server-renders the hosted Power Apps and PCF comparison shell", async () => {
   const response = await render("/power-apps");
   assert.equal(response.status, 200);
 
   const html = await response.text();
-  assert.match(html, /Option C comparison preview/);
+  assert.match(html, /Option D comparison preview/);
   assert.match(html, /Power Apps \+ PCF/);
   assert.match(html, /power-apps-preview\/index\.html/);
 
