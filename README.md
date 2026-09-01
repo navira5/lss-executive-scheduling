@@ -107,9 +107,11 @@ npm run demo:compare
 
 Then open:
 
+- Delivery-options overview: `http://localhost:3000/scenarios`
 - Integrated calendar planner: `http://localhost:3000`
 - Standalone calendar planner: `http://localhost:3000/standalone`
-- Power Apps-style preview: `http://localhost:4176`
+- Hosted Power Apps + PCF comparison: `http://localhost:3000/power-apps`
+- Separate local Power Apps preview: `http://localhost:4176`
 
 Use `Control-C` in the terminal to stop all demonstrations.
 

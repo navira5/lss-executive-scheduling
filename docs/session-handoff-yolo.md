@@ -18,8 +18,15 @@ mixing their data paths:
    `.ics`, exports the plan to PDF, and downloads the current working rules as
    a SharePoint-ready CSV.
 3. **Power Apps-style comparison** — a local visual prototype at
-   `http://localhost:4176` when `npm run demo:compare` is running. It remains a
+   `http://localhost:4176` when `npm run demo:compare` is running. The same
+   comparison is now included in the hosted app at `/power-apps`. It remains a
    comparison surface, not a live Power Platform deployment.
+
+All three options are now connected through a common delivery-option switcher.
+The hosted `/scenarios` route gives Rachel, the COO, and Chad a concise choice
+screen explaining what each option includes, its tradeoff, and who owns
+production support. The root integrated planner and `/standalone` route both
+link back to this choice screen and directly to the other options.
 
 The standalone route deliberately does not render or call SharePoint or Outlook
 controls. Its browser storage key is separate from the integrated planner, so

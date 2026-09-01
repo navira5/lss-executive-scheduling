@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { CalendarPlanner } from "@/app/CalendarPlanner";
+import { ScenarioSwitcher } from "@/app/components/ScenarioSwitcher";
 import { requireDemoSession } from "@/app/demo-auth";
 
 export const dynamic = "force-dynamic";
@@ -12,5 +13,10 @@ export const metadata: Metadata = {
 
 export default async function StandalonePlannerPage() {
   const session = await requireDemoSession("/standalone");
-  return <CalendarPlanner viewerName={session.username} mode="standalone" />;
+  return (
+    <>
+      <ScenarioSwitcher current="standalone" />
+      <CalendarPlanner viewerName={session.username} mode="standalone" />
+    </>
+  );
 }

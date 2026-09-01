@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render(pathname = "/") {
@@ -62,4 +63,34 @@ test("server-renders a Microsoft-free standalone planner behind the same access 
   assert.doesNotMatch(html, /Load SharePoint Rules/);
   assert.doesNotMatch(html, /Sync Existing Outlook/);
   assert.doesNotMatch(html, /Review Outlook Changes/);
+});
+
+test("server-renders a concise comparison of all three delivery options", async () => {
+  const response = await render("/scenarios");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /One planning workflow\. Three ways LSS could own it\./);
+  assert.match(html, /Standalone planner/);
+  assert.match(html, /Microsoft-connected planner/);
+  assert.match(html, /Power Apps \+ custom calendar/);
+  assert.match(html, /Navira provides the prototype/);
+});
+
+test("server-renders the hosted Power Apps and PCF comparison shell", async () => {
+  const response = await render("/power-apps");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Option C comparison preview/);
+  assert.match(html, /Power Apps \+ PCF/);
+  assert.match(html, /power-apps-preview\/index\.html/);
+
+  const preview = await readFile(
+    new URL("../dist/client/power-apps-preview/index.html", import.meta.url),
+    "utf8",
+  );
+  assert.match(preview, /Power Apps \+ PCF preview/);
+  assert.match(preview, /href="styles\.css"/);
+  assert.match(preview, /src="app\.js"/);
 });

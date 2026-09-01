@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CalendarPlanner } from "./CalendarPlanner";
+import { ScenarioSwitcher } from "./components/ScenarioSwitcher";
 import { requireDemoSession } from "./demo-auth";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +14,13 @@ export const metadata: Metadata = {
 export default async function Home() {
   const session = await requireDemoSession("/");
   return (
-    <CalendarPlanner
-      viewerName={session.username}
-      outlookPublishEnabled={process.env.OUTLOOK_PUBLISH_ENABLED?.trim().toLowerCase() === "true"}
-      powerAppUrl={process.env.POWER_APP_URL?.trim() ?? ""}
-    />
+    <>
+      <ScenarioSwitcher current="integrated" />
+      <CalendarPlanner
+        viewerName={session.username}
+        outlookPublishEnabled={process.env.OUTLOOK_PUBLISH_ENABLED?.trim().toLowerCase() === "true"}
+        powerAppUrl={process.env.POWER_APP_URL?.trim() ?? ""}
+      />
+    </>
   );
 }
