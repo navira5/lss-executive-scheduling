@@ -1,6 +1,76 @@
 # YOLO Restart Handoff: LSS Executive Scheduling
 
-Date: 2026-08-30
+Date: 2026-09-01
+
+## Latest Continuity Update — 2026-09-01
+
+The project now presents three distinct ownership/deployment options without
+mixing their data paths:
+
+1. **Integrated custom planner** — the existing rich planner with optional
+   SharePoint and Outlook integration at
+   `https://lss-2027-calendar-planner.navira-ali.chatgpt.site/`.
+2. **Standalone custom planner** — the same planning workflow with no Microsoft
+   API calls at
+   `https://lss-2027-calendar-planner.navira-ali.chatgpt.site/standalone`.
+   It uses the same temporary signed-session login, has isolated browser-local
+   state, imports calendar context from `.ics`, exports confirmed meetings to
+   `.ics`, exports the plan to PDF, and downloads the current working rules as
+   a SharePoint-ready CSV.
+3. **Power Apps-style comparison** — a local visual prototype at
+   `http://localhost:4176` when `npm run demo:compare` is running. It remains a
+   comparison surface, not a live Power Platform deployment.
+
+The standalone route deliberately does not render or call SharePoint or Outlook
+controls. Its browser storage key is separate from the integrated planner, so
+testing one option cannot overwrite the other option's local working plan.
+
+Current verified source and deployment:
+
+- Git commit: `08f65f9` (`feat: add standalone calendar planning option`)
+- GitHub `main` contains that commit.
+- Sites production version: 32
+- Full `npm test` suite passed, including production build and rendered checks
+  for both `/` and `/standalone`.
+
+One unrelated untracked directory remains in the worktree:
+
+- `power-platform/`
+
+It contains separate Power Platform/PCF exploration. Do not delete, overwrite,
+or include it in an unrelated commit without reviewing it first.
+
+The recommended scope language for Navira is:
+
+- Standalone means no Microsoft integration effort, not literally zero future
+  maintenance. It still needs a hosting owner, access-code management, file
+  handoffs/backups, and occasional application support.
+- The integrated custom planner requires LSS/Chad's team to own Entra, Graph,
+  SharePoint schema, deployment, monitoring, and production support.
+- A Power Apps + custom PCF direction is still custom development. Navira may
+  provide a proof of concept, packaged source, and documentation; LSS should own
+  production implementation, deployment, security approval, and maintenance.
+
+## Exact Codex Continuity Command
+
+The durable session ID transferred from the original machine is:
+
+```text
+01a02a7f-da35-7bd2-81fd-56c080c984ea
+```
+
+Using the explicit ID is safer than `resume --last`, because `--last` can select
+a newer unrelated Codex session. Run:
+
+```bash
+codex -C /Users/naviraabbasi/lss-executive-scheduling \
+  -m gpt-5.6-sol \
+  --dangerously-bypass-approvals-and-sandbox \
+  resume 01a02a7f-da35-7bd2-81fd-56c080c984ea
+```
+
+`resume --last` is acceptable only when this is definitely the most recently
+used Codex session in that repository.
 
 ## Repository
 
