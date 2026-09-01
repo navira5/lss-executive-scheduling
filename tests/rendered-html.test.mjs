@@ -84,6 +84,8 @@ test("server-renders a concise comparison of all four delivery options", async (
   assert.match(html, /Build it in Microsoft, but keep the custom calendar/);
   assert.match(html, /For Rachel &amp; the planning team/);
   assert.match(html, /For Chad &amp; LSS IT/);
+  assert.match(html, /Choose information for planning or IT/);
+  assert.match(html, /aria-pressed="true"/);
   assert.match(html, /Power Apps Component Framework—the Microsoft extension/);
   assert.match(html, /What is retained—and what changes/);
   assert.match(html, /Add, edit, cancel, delete events/);

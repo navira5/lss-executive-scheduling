@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ScenarioSwitcher } from "@/app/components/ScenarioSwitcher";
 import { requireDemoSession } from "@/app/demo-auth";
+import { ScenarioAudienceToggle } from "@/app/scenarios/ScenarioAudienceToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -173,7 +174,7 @@ export default async function ScenarioOptionsPage() {
         <p className="eyebrow">LSS 2027 CALENDAR PLANNER</p>
         <h1>One planning workflow. Four ways LSS could own it.</h1>
         <p>Start with what each choice would feel like for the planning team. Technical ownership details for Chad and LSS IT are available below.</p>
-        <nav className="scenario-audience-links" aria-label="Page sections"><a href="#planning-options">For Rachel &amp; the planning team</a><a href="#technical-details">For Chad &amp; LSS IT</a></nav>
+        <ScenarioAudienceToggle />
       </section>
       <section className="scenario-card-grid" id="planning-options" aria-label="Planner delivery options">
         {options.map((option) => (
