@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-async function render() {
+async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
+    new Request(`http://localhost${pathname}`, {
       headers: { accept: "text/html" },
     }),
     {
@@ -46,4 +46,20 @@ test("server-renders the LSS annual planning workbench", async () => {
   assert.match(html, /Private feedback workspace/);
   assert.match(html, /changes save only in this browser/i);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
+});
+
+test("server-renders a Microsoft-free standalone planner behind the same access gate", async () => {
+  const response = await render("/standalone");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Standalone planner/);
+  assert.match(html, /Import Calendar File/);
+  assert.match(html, /Download Rules CSV/);
+  assert.match(html, /Download Calendar \(\.ics\)/);
+  assert.match(html, /no Microsoft connection/i);
+  assert.match(html, /Imported calendar/);
+  assert.doesNotMatch(html, /Load SharePoint Rules/);
+  assert.doesNotMatch(html, /Sync Existing Outlook/);
+  assert.doesNotMatch(html, /Review Outlook Changes/);
 });

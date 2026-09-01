@@ -154,6 +154,7 @@ interface PlanningCockpitProps {
   onImport: (result: CalendarImportResult) => void;
   onDeletePlanEvent: (eventId: string) => void;
   onDeleteImportedEvent: (event: ImportedCalendarEvent) => void;
+  standalone?: boolean;
 }
 
 export function PlanningCockpit({
@@ -180,6 +181,7 @@ export function PlanningCockpit({
   onImport,
   onDeletePlanEvent,
   onDeleteImportedEvent,
+  standalone = false,
 }: PlanningCockpitProps) {
   const [confirming, setConfirming] = useState(false);
   const [addingGroup, setAddingGroup] = useState(false);
@@ -402,7 +404,7 @@ export function PlanningCockpit({
         )}
         {selectedImported && (
           <section className="imported-snapshot-card">
-            <p className="eyebrow">Existing Outlook meeting</p>
+            <p className="eyebrow">{standalone ? "Imported calendar event" : "Existing Outlook meeting"}</p>
             <h2>{selectedImported.title}</h2>
             <dl>
               <div><dt>Date</dt><dd>{selectedImported.date}</dd></div>
@@ -410,13 +412,13 @@ export function PlanningCockpit({
               <div><dt>Duration</dt><dd>{selectedImported.durationMinutes} min</dd></div>
               <div><dt>Location</dt><dd>{selectedImported.location || "Not provided"}</dd></div>
             </dl>
-            <p>Live Outlook event · used as scheduling context</p>
+            <p>{standalone ? "Imported .ics event · used as scheduling context" : "Live Outlook event · used as scheduling context"}</p>
             <button
               className="button danger full"
               type="button"
               onClick={() => onDeleteImportedEvent(selectedImported)}
             >
-              {selectedImported.outlookEventId ? "Queue deletion from Outlook" : "Remove from this snapshot"}
+              {standalone ? "Remove imported event" : selectedImported.outlookEventId ? "Queue deletion from Outlook" : "Remove from this snapshot"}
             </button>
           </section>
         )}
@@ -582,8 +584,8 @@ export function PlanningCockpit({
         )}
 
         <details className="snapshot-import">
-          <summary>Existing Outlook snapshot <i>{importedEvents.length || ""}</i></summary>
-          <label><input type="file" accept=".ics,text/calendar" multiple onChange={(event) => void importFiles(event.target.files)} /><span>Import .ics snapshot locally</span></label>
+          <summary>{standalone ? "Existing calendar file" : "Existing Outlook snapshot"} <i>{importedEvents.length || ""}</i></summary>
+          <label><input type="file" accept=".ics,text/calendar" multiple onChange={(event) => void importFiles(event.target.files)} /><span>{standalone ? "Import .ics file locally" : "Import .ics snapshot locally"}</span></label>
         </details>
           </>
         )}

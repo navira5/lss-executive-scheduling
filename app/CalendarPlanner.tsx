@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PlanYearCalendar } from "@/app/components/PlanYearCalendar";
 import { OutlookSyncReview } from "@/app/components/OutlookSyncReview";
@@ -13,8 +13,8 @@ import {
   PlanningCockpit,
   type PendingFormatConversion,
 } from "@/app/components/PlanningCockpit";
-import type { CalendarImportResult, ImportedCalendarEvent } from "@/lib/calendar-import";
-import { calendarIcs, confirmedCalendarEvents, downloadPlanPdf } from "@/lib/plan-export";
+import { parseCalendarSnapshot, type CalendarImportResult, type ImportedCalendarEvent } from "@/lib/calendar-import";
+import { calendarIcs, confirmedCalendarEvents, downloadPlanPdf, sharePointRulesCsv } from "@/lib/plan-export";
 import {
   applyManualEventMove,
   applyPlanProposal,
@@ -47,6 +47,7 @@ import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
 const STORAGE_KEY = "lss-plan-year-2027-v8";
+const STANDALONE_STORAGE_KEY = "lss-plan-year-2027-standalone-v1";
 const DEFAULT_SETTINGS: ScenarioSettings = {
   boardScenario: "recent_direction",
   allStaffPattern: "detailed_calendar",
@@ -138,7 +139,8 @@ async function syncApprovedWithOutlook(
 }
 
 function download(filename: string, contents: string) {
-  const blob = new Blob([contents], { type: "text/csv;charset=utf-8" });
+  const contentType = filename.endsWith(".ics") ? "text/calendar;charset=utf-8" : "text/csv;charset=utf-8";
+  const blob = new Blob([contents], { type: contentType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -157,11 +159,16 @@ export function CalendarPlanner({
   viewerName = "Local demo",
   outlookPublishEnabled = false,
   powerAppUrl = "",
+  mode = "integrated",
 }: {
   viewerName?: string;
   outlookPublishEnabled?: boolean;
   powerAppUrl?: string;
+  mode?: "integrated" | "standalone";
 }) {
+  const standalone = mode === "standalone";
+  const storageKey = standalone ? STANDALONE_STORAGE_KEY : STORAGE_KEY;
+  const standaloneImportRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<PlanYearState>(() => initialState());
   const [history, setHistory] = useState<PlanYearState[]>([]);
   const [importedEvents, setImportedEvents] = useState<ImportedCalendarEvent[]>([]);
@@ -185,13 +192,12 @@ export function CalendarPlanner({
   const [dirtyRuleTemplateIds, setDirtyRuleTemplateIds] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [hasStoredPlan, setHasStoredPlan] = useState(false);
-  const [sourceStatus, setSourceStatus] = useState<SourceStatus>({
-    kind: "loading",
-    message: "Checking SharePoint rules",
-  });
+  const [sourceStatus, setSourceStatus] = useState<SourceStatus>(() => standalone
+    ? { kind: "local", message: `${PLANNING_SESSION_LABEL} + built-in rulebook` }
+    : { kind: "loading", message: "Checking SharePoint rules" });
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
+    const saved = window.localStorage.getItem(storageKey);
     let loadedSavedPlan = false;
     if (saved) {
       try {
@@ -206,22 +212,24 @@ export function CalendarPlanner({
             setDirtyRuleTemplateIds(stored.dirtyRuleTemplateIds ?? []);
             setSourceStatus({
               kind: "local",
-              message: "Using browser-local planning state",
+              message: standalone
+                ? "Using this browser's standalone planning state"
+                : "Using browser-local planning state",
             });
           });
         }
       } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(storageKey);
       }
     }
     queueMicrotask(() => {
       setHasStoredPlan(loadedSavedPlan);
       setLoaded(true);
     });
-  }, []);
+  }, [standalone, storageKey]);
 
   useEffect(() => {
-    if (!loaded || hasStoredPlan) return;
+    if (!loaded || hasStoredPlan || standalone) return;
     let cancelled = false;
     void fetchSharePointState()
       .then((next) => {
@@ -244,7 +252,7 @@ export function CalendarPlanner({
     return () => {
       cancelled = true;
     };
-  }, [loaded, hasStoredPlan]);
+  }, [loaded, hasStoredPlan, standalone]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -256,8 +264,8 @@ export function CalendarPlanner({
       cancelledPlannerEventIds,
       dirtyRuleTemplateIds,
     };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-  }, [state, importedEvents, pendingOutlookDeletionIds, cancelledPlannerEventIds, dirtyRuleTemplateIds, loaded]);
+    window.localStorage.setItem(storageKey, JSON.stringify(stored));
+  }, [state, importedEvents, pendingOutlookDeletionIds, cancelledPlannerEventIds, dirtyRuleTemplateIds, loaded, storageKey]);
 
   const commitState = (next: PlanYearState) => {
     setHistory((current) => [...current.slice(-29), state]);
@@ -370,6 +378,22 @@ export function CalendarPlanner({
       const byId = new Map(current.map((event) => [event.id, event]));
       for (const event of result.events) byId.set(event.id, event);
       return [...byId.values()];
+    });
+  };
+
+  const importStandaloneCalendar = async (files: FileList | null) => {
+    if (!files?.length) return;
+    let accepted = 0;
+    let skipped = 0;
+    for (const file of Array.from(files)) {
+      const result = parseCalendarSnapshot(await file.text(), file.name);
+      importSnapshot(result);
+      accepted += result.events.length;
+      skipped += result.skipped.length;
+    }
+    setCalendarMoveNotice({
+      valid: true,
+      message: `Imported ${accepted} existing 2027 event${accepted === 1 ? "" : "s"} from the calendar file. ${skipped} item${skipped === 1 ? " was" : "s were"} skipped.`,
     });
   };
 
@@ -493,8 +517,11 @@ export function CalendarPlanner({
   };
 
   const confirmPhaseAndSyncRules = async () => {
-    if (!await saveConfirmedRulesToSharePoint()) return;
+    if (!standalone && !await saveConfirmedRulesToSharePoint()) return;
     commitState(confirmActivePhase(state));
+    if (standalone) {
+      setSourceStatus({ kind: "local", message: "Layer confirmed in this browser · rules CSV available for download" });
+    }
     setSelectedEventId(null);
     setSelectedTemplateId(null);
     setPendingMove(null);
@@ -504,21 +531,29 @@ export function CalendarPlanner({
 
   const deletePlanMeeting = (eventId: string) => {
     const event = resolvePlanEvent(state, eventId);
-    if (!window.confirm(`Remove ${event.title} on ${event.date} from the 2027 plan? If it already exists in the demo Outlook calendar, the deletion will appear in Outlook Change Review.`)) return;
+    const prompt = standalone
+      ? `Remove ${event.title} on ${event.date} from this 2027 working plan? This does not change any external calendar.`
+      : `Remove ${event.title} on ${event.date} from the 2027 plan? If it already exists in the demo Outlook calendar, the deletion will appear in Outlook Change Review.`;
+    if (!window.confirm(prompt)) return;
     commitState(removePlanEvent(state, eventId));
-    setCancelledPlannerEventIds((current) => [...new Set([...current, eventId])]);
+    if (!standalone) setCancelledPlannerEventIds((current) => [...new Set([...current, eventId])]);
     setSelectedEventId(null);
     setSelectedTemplateId(null);
-    setCalendarMoveNotice({ valid: true, message: `${event.title} removed from the plan. Review Outlook changes before deleting any published copy.` });
+    setCalendarMoveNotice({
+      valid: true,
+      message: standalone
+        ? `${event.title} removed from this browser's working plan.`
+        : `${event.title} removed from the plan. Review Outlook changes before deleting any published copy.`,
+    });
   };
 
   const deleteImportedOutlookMeeting = (event: ImportedCalendarEvent) => {
-    const liveOutlook = Boolean(event.outlookEventId);
+    const liveOutlook = !standalone && Boolean(event.outlookEventId);
     const message = liveOutlook
       ? `Queue “${event.title}” on ${event.date} for deletion from the dedicated demo Outlook calendar? Nothing is deleted until Outlook Change Review is uploaded.`
-      : `Remove “${event.title}” on ${event.date} from this browser-local Outlook snapshot? This cannot change the source Outlook calendar.`;
+      : `Remove “${event.title}” on ${event.date} from this browser-local calendar snapshot? This cannot change the source calendar file.`;
     if (!window.confirm(message)) return;
-    if (event.outlookEventId) {
+    if (!standalone && event.outlookEventId) {
       setPendingOutlookDeletionIds((current) => [...new Set([...current, event.outlookEventId as string])]);
     } else {
       setImportedEvents((current) => current.filter((candidate) => candidate.id !== event.id));
@@ -528,7 +563,7 @@ export function CalendarPlanner({
       valid: true,
       message: liveOutlook
         ? `${event.title} is queued for Outlook deletion. Review and upload changes to apply it.`
-        : `${event.title} was removed from this browser-local snapshot. The source Outlook calendar was not changed.`,
+        : `${event.title} was removed from this browser-local snapshot. The source calendar file was not changed.`,
     });
   };
 
@@ -548,9 +583,11 @@ export function CalendarPlanner({
     setPendingOutlookDeletionIds([]);
     setCancelledPlannerEventIds([]);
     setDirtyRuleTemplateIds([]);
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(storageKey);
     setHasStoredPlan(false);
-    setSourceStatus({ kind: "fallback", message: `${PLANNING_SESSION_LABEL} + built-in rules` });
+    setSourceStatus(standalone
+      ? { kind: "local", message: `${PLANNING_SESSION_LABEL} + built-in rulebook` }
+      : { kind: "fallback", message: `${PLANNING_SESSION_LABEL} + built-in rules` });
     setOutlookStatus({ kind: "idle", message: "Outlook sync not run" });
   };
 
@@ -573,21 +610,49 @@ export function CalendarPlanner({
           <strong>{confirmedCount} layers confirmed</strong>
         </div>
         <div className="header-actions">
-          <button className="button ghost" type="button" disabled={sourceStatus.kind === "loading"} onClick={() => void loadSharePointRules()}>
-            {sourceStatus.kind === "loading" ? "Loading Rules" : "Load SharePoint Rules"}
-          </button>
-          <button className="button ghost" type="button" disabled={outlookStatus.kind === "loading"} onClick={() => void loadLiveOutlook()}>
-            {outlookStatus.kind === "loading" ? "Syncing Outlook" : "Sync Existing Outlook"}
-          </button>
-          <button
-            className="button primary"
-            type="button"
-            disabled={outlookStatus.kind === "loading" || !outlookPublishEnabled}
-            title={outlookPublishEnabled ? "Review creates, updates, and deletions before changing the demo calendar" : "Outlook uploading is locked"}
-            onClick={() => void reviewOutlookChanges()}
-          >
-            {outlookPublishEnabled ? "Review Outlook Changes" : "Outlook Upload Locked"}
-          </button>
+          {standalone ? (
+            <>
+              <input
+                ref={standaloneImportRef}
+                className="visually-hidden"
+                type="file"
+                accept=".ics,text/calendar"
+                multiple
+                onChange={(event) => {
+                  void importStandaloneCalendar(event.target.files);
+                  event.target.value = "";
+                }}
+              />
+              <button className="button ghost" type="button" onClick={() => standaloneImportRef.current?.click()}>
+                Import Calendar File
+              </button>
+              <button className="button ghost" type="button" onClick={() => {
+                const exported = sharePointRulesCsv(state);
+                download("LSS-2027-Working-Rules-SharePoint.csv", exported.contents);
+                setCalendarMoveNotice({ valid: true, message: `Downloaded ${exported.count} working meeting rules for SharePoint review.` });
+              }}>
+                Download Rules CSV
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="button ghost" type="button" disabled={sourceStatus.kind === "loading"} onClick={() => void loadSharePointRules()}>
+                {sourceStatus.kind === "loading" ? "Loading Rules" : "Load SharePoint Rules"}
+              </button>
+              <button className="button ghost" type="button" disabled={outlookStatus.kind === "loading"} onClick={() => void loadLiveOutlook()}>
+                {outlookStatus.kind === "loading" ? "Syncing Outlook" : "Sync Existing Outlook"}
+              </button>
+              <button
+                className="button primary"
+                type="button"
+                disabled={outlookStatus.kind === "loading" || !outlookPublishEnabled}
+                title={outlookPublishEnabled ? "Review creates, updates, and deletions before changing the demo calendar" : "Outlook uploading is locked"}
+                onClick={() => void reviewOutlookChanges()}
+              >
+                {outlookPublishEnabled ? "Review Outlook Changes" : "Outlook Upload Locked"}
+              </button>
+            </>
+          )}
           <button className="button ghost" type="button" disabled={pdfBusy} onClick={async () => {
             setPdfBusy(true);
             try {
@@ -604,7 +669,7 @@ export function CalendarPlanner({
             }
             download("LSS-2027-Confirmed-Meetings.ics", exported.contents);
             setCalendarMoveNotice({ valid: true, message: `Downloaded ${exported.count} confirmed meetings. Working and unresolved placements were excluded.` });
-          }}>Download Calendar File</button>
+          }}>{standalone ? "Download Calendar (.ics)" : "Download Calendar File"}</button>
         </div>
       </header>
 
@@ -613,7 +678,7 @@ export function CalendarPlanner({
           <strong>Private feedback workspace</strong>
           <span>Signed in as {viewerName} · changes save only in this browser</span>
         </div>
-        <span>SharePoint rules + dedicated demo Outlook calendar</span>
+        <span>{standalone ? "Standalone planner · no Microsoft connection" : "SharePoint rules + dedicated demo Outlook calendar"}</span>
       </section>
 
       <section className={`scope-banner data-source-banner ${sourceStatus.kind}`}>
@@ -621,20 +686,24 @@ export function CalendarPlanner({
           <strong>Data source</strong>
           <span>{sourceStatus.message}</span>
         </div>
-        {powerAppUrl ? (
+        {standalone ? (
+          <span>Saved only in this browser · download files for handoff</span>
+        ) : powerAppUrl ? (
           <a href={powerAppUrl} target="_blank" rel="noreferrer">Open Power Apps rule editor</a>
         ) : (
           <span>Rules managed through SharePoint / Power Apps</span>
         )}
       </section>
 
-      <section className={`scope-banner outlook-sync-banner ${outlookStatus.kind}`}>
-        <div>
-          <strong>Outlook sync</strong>
-          <span>{outlookStatus.message}</span>
-        </div>
-        <span>Read before planning · publish after human approval</span>
-      </section>
+      {!standalone && (
+        <section className={`scope-banner outlook-sync-banner ${outlookStatus.kind}`}>
+          <div>
+            <strong>Outlook sync</strong>
+            <span>{outlookStatus.message}</span>
+          </div>
+          <span>Read before planning · publish after human approval</span>
+        </section>
+      )}
 
       <nav className="phase-progress" aria-label="Plan Year stages">
         <div className="phase-progress-inner">
@@ -675,6 +744,7 @@ export function CalendarPlanner({
 
         <div className="planning-canvas calendar-canvas">
           <PlanYearCalendar
+            standalone={standalone}
             state={state}
             importedEvents={visibleImportedEvents}
             selectedEventId={activeUsesGroupRoster && !selectedTemplateId ? null : effectiveSelectedEventId}
@@ -690,7 +760,9 @@ export function CalendarPlanner({
             onSelectImported={(eventId) => {
               setSelectedImportedEventId(eventId);
               setDetailsCollapsed(false);
-              setCalendarMoveNotice({ valid: true, message: "Existing Outlook meeting selected. Details are open at right." });
+              setCalendarMoveNotice({ valid: true, message: standalone
+                ? "Imported calendar event selected. Details are open at right."
+                : "Existing Outlook meeting selected. Details are open at right." });
             }}
             onDeleteEvent={deletePlanMeeting}
             onDeleteImported={deleteImportedOutlookMeeting}
@@ -806,10 +878,11 @@ export function CalendarPlanner({
           onImport={importSnapshot}
           onDeletePlanEvent={deletePlanMeeting}
           onDeleteImportedEvent={deleteImportedOutlookMeeting}
+          standalone={standalone}
         />
       </div>
 
-      {outlookReview && (
+      {!standalone && outlookReview && (
         <OutlookSyncReview
           preview={outlookReview}
           busy={outlookSyncBusy}
@@ -820,7 +893,9 @@ export function CalendarPlanner({
 
       <footer className="app-footer">
         <span>Historical evidence remains separate from 2027 working rules and one-year overrides.</span>
-        <strong>{outlookPublishEnabled ? "Outlook changes require review and confirmation" : "Demo Outlook uploading is locked"}</strong>
+        <strong>{standalone
+          ? "No Microsoft connection · calendar and rules move by file"
+          : outlookPublishEnabled ? "Outlook changes require review and confirmation" : "Demo Outlook uploading is locked"}</strong>
         <a href="/api/demo-logout">Sign out</a>
         <button type="button" onClick={reset}>Start over</button>
       </footer>

@@ -7,7 +7,8 @@ const children = [
 ];
 
 console.log("\nStarting both LSS planning demonstrations:");
-console.log("  Main planner:       http://localhost:3000");
+console.log("  Integrated planner: http://localhost:3000");
+console.log("  Standalone planner: http://localhost:3000/standalone");
 console.log("  Power Apps preview: http://localhost:4176\n");
 
 let closing = false;

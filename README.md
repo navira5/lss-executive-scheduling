@@ -25,6 +25,12 @@ Each active layer combines a 3 x 4 year view with:
 - a collapsible meeting-details panel for full-calendar review; and
 - CSV export and browser-local working state.
 
+The same planning experience is also available at `/standalone` as a
+Microsoft-free feedback option. It uses isolated browser-local state, accepts
+calendar context through `.ics` files, exports confirmed meetings as `.ics`,
+and downloads the current working rulebook as a SharePoint-ready CSV. It makes
+no SharePoint or Outlook API calls.
+
 ## Microsoft 365 integration checkpoint
 
 The repository includes optional server-side Microsoft Graph adapters that can:
@@ -85,7 +91,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Compare the two planning interfaces
+## Compare the three planning approaches
 
 The repository also contains a separate, local-only preview of how the core
 rule-to-meeting workflow could feel in a native Microsoft Power Apps-style
@@ -93,7 +99,7 @@ interface. Its Plan meetings, Calendar, and Rulebook tabs are complete visual
 screens for comparison; they use sample in-browser data and do not connect to
 Microsoft services. It does not modify or replace the main planner.
 
-Start both demonstrations with one command:
+Start all three demonstrations with one command:
 
 ```bash
 npm run demo:compare
@@ -101,10 +107,11 @@ npm run demo:compare
 
 Then open:
 
-- Main calendar planner: `http://localhost:3000`
+- Integrated calendar planner: `http://localhost:3000`
+- Standalone calendar planner: `http://localhost:3000/standalone`
 - Power Apps-style preview: `http://localhost:4176`
 
-Use `Control-C` in the terminal to stop both demonstrations.
+Use `Control-C` in the terminal to stop all demonstrations.
 
 ## Verify
 

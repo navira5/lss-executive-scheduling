@@ -91,6 +91,7 @@ function firstWeekday(monthIndex: number): number {
 }
 
 interface MonthCardProps {
+  standalone: boolean;
   monthIndex: number;
   events: ResolvedPlanEvent[];
   importedEvents: ImportedCalendarEvent[];
@@ -119,6 +120,7 @@ interface MonthCardProps {
 }
 
 function MonthCard({
+  standalone,
   monthIndex,
   events,
   importedEvents,
@@ -248,7 +250,7 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
-                      status: syncedPlannerEventIds.has(event.id)
+                      status: !standalone && syncedPlannerEventIds.has(event.id)
                         ? "Synced to Outlook"
                         : state.eventOverrides[event.id]?.date
                           ? "2027 override"
@@ -264,7 +266,7 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
-                      status: syncedPlannerEventIds.has(event.id)
+                      status: !standalone && syncedPlannerEventIds.has(event.id)
                         ? "Synced to Outlook"
                         : state.eventOverrides[event.id]?.date
                           ? "2027 override"
@@ -277,10 +279,10 @@ function MonthCard({
                     })}
                     onMouseLeave={() => onHoverEvent(null)}
                     aria-label={`${event.title} on ${event.date}`}
-                    title={`${event.title} · ${event.date}${syncedPlannerEventIds.has(event.id) ? " · synced to Outlook" : ""}${event.locked ? " · confirmed anchor" : " · drag or click for actions"}`}
+                    title={`${event.title} · ${event.date}${!standalone && syncedPlannerEventIds.has(event.id) ? " · synced to Outlook" : ""}${event.locked ? " · confirmed anchor" : " · drag or click for actions"}`}
                   >
                     {CALENDAR_LABELS[event.templateId] ?? event.abbreviation}
-                    {syncedPlannerEventIds.has(event.id) && <span className="sync-badge" aria-label="Synced to Outlook">✓</span>}
+                    {!standalone && syncedPlannerEventIds.has(event.id) && <span className="sync-badge" aria-label="Synced to Outlook">✓</span>}
                   </button>
                 ))}
                 {dayImported.slice(0, 2).map((event) => (
@@ -299,20 +301,20 @@ function MonthCard({
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
-                      status: "Imported Outlook event",
+                      status: standalone ? "Imported calendar event" : "Imported Outlook event",
                     })}
                     onMouseMove={(mouseEvent) => onHoverEvent({
                       title: event.title,
                       date: event.date,
                       x: mouseEvent.clientX,
                       y: mouseEvent.clientY,
-                      status: "Imported Outlook event",
+                      status: standalone ? "Imported calendar event" : "Imported Outlook event",
                     })}
                     onMouseLeave={() => onHoverEvent(null)}
                     title={`${event.title} — imported from ${event.sourceLabel}`}
-                    aria-label={`${event.title} imported from Outlook`}
+                    aria-label={`${event.title} imported from ${standalone ? "calendar file" : "Outlook"}`}
                   >
-                    <span className="outlook-source-mark" aria-hidden="true">O</span>
+                    <span className="outlook-source-mark" aria-hidden="true">{standalone ? "I" : "O"}</span>
                     <span>{event.title}</span>
                   </button>
                 ))}
@@ -366,9 +368,11 @@ function MonthCard({
                       setMeetingAction(null);
                     }}
                   >
-                    {meetingAction.kind === "imported" && meetingAction.event.outlookEventId
+                    {!standalone && meetingAction.kind === "imported" && meetingAction.event.outlookEventId
                       ? "Queue Outlook deletion"
-                      : "Remove meeting"}
+                      : standalone && meetingAction.kind === "imported"
+                        ? "Remove imported event"
+                        : "Remove meeting"}
                   </button>
                   <button className="quiet" type="button" onClick={() => setMeetingAction(null)}>Cancel</button>
                 </div>
@@ -410,6 +414,7 @@ function MonthCard({
 }
 
 interface PlanYearCalendarProps {
+  standalone?: boolean;
   state: PlanYearState;
   importedEvents: ImportedCalendarEvent[];
   selectedEventId: string | null;
@@ -431,6 +436,7 @@ interface PlanYearCalendarProps {
 }
 
 export function PlanYearCalendar({
+  standalone = false,
   state,
   importedEvents,
   selectedEventId,
@@ -497,7 +503,7 @@ export function PlanYearCalendar({
               ["committee", "Committee"],
               ["executive", "Executive"],
               ["organization", "Organization"],
-              ["outlook", "Existing Outlook"],
+              ["outlook", standalone ? "Imported calendar" : "Existing Outlook"],
             ] as const).map(([category, label]) => (
               <button
                 type="button"
@@ -522,6 +528,7 @@ export function PlanYearCalendar({
           {MONTHS.map((_, monthIndex) => (
             <MonthCard
               key={monthIndex}
+              standalone={standalone}
               monthIndex={monthIndex}
               events={events.filter(
                 (event) => dateParts(event.date).month === monthIndex + 1,

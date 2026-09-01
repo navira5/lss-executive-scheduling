@@ -83,6 +83,96 @@ export function calendarIcs(state: PlanYearState): { contents: string; count: nu
   return { contents: `${lines.join("\r\n")}\r\n`, count: events.length };
 }
 
+const RULE_EXPORT_WEEKDAYS = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+const RULE_EXPORT_CADENCES: Record<string, string> = {
+  weekly: "Weekly",
+  biweekly: "Every two weeks",
+  monthly: "Monthly",
+  every_other_month: "Every other month",
+  quarterly: "Quarterly",
+  semiannual: "Every six months",
+  custom: "Custom annual count",
+};
+
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function ordinalLabel(value: number | undefined): string {
+  if (value === undefined) return "";
+  if (value === -1) return "Last";
+  return ["", "First", "Second", "Third", "Fourth", "Fifth"][value] ?? String(value);
+}
+
+export function sharePointRulesCsv(state: PlanYearState): { contents: string; count: number } {
+  const headings = [
+    "Title",
+    "Category",
+    "Purpose",
+    "Leader",
+    "Attendees",
+    "Cadence",
+    "AnnualCount",
+    "PlannedDates2027",
+    "DayOfWeek",
+    "WeekOfMonth",
+    "PreferredTime",
+    "DurationMinutes",
+    "Modality",
+    "Location",
+    "AttendanceRule",
+    "Flexibility",
+    "RuleStatus",
+    "Notes",
+  ];
+  const rows = meetingTemplatesForState(state).map((template) => {
+    const rule = state.workingRules[template.id] ?? {};
+    const plannedEvents = state.plan.events
+      .filter((event) => event.templateId === template.id && !event.isPlaceholder && !state.hiddenEventIds.includes(event.id))
+      .map((event) => resolvePlanEvent(state, event.id))
+      .sort((left, right) => left.date.localeCompare(right.date));
+    const weekday = rule.weekday ?? ("weekday" in template.generation ? template.generation.weekday : undefined);
+    const ordinal = rule.ordinal ?? ("ordinal" in template.generation ? template.generation.ordinal : undefined);
+    return {
+      Title: rule.titleTemplate ?? template.name,
+      Category: template.category[0].toUpperCase() + template.category.slice(1),
+      Purpose: rule.messageTemplate ?? template.purpose,
+      Leader: rule.owner ?? template.owner,
+      Attendees: (rule.attendees ?? [template.attendeeGroup]).join("; "),
+      Cadence: rule.cadencePreset
+        ? RULE_EXPORT_CADENCES[rule.cadencePreset] ?? rule.cadencePreset
+        : rule.cadence ?? template.cadence,
+      AnnualCount: plannedEvents.length,
+      PlannedDates2027: plannedEvents.map((event) => event.date).join("; "),
+      DayOfWeek: weekday === undefined ? "" : RULE_EXPORT_WEEKDAYS[weekday],
+      WeekOfMonth: ordinalLabel(ordinal),
+      PreferredTime: rule.startTime ?? template.startTime ?? "",
+      DurationMinutes: rule.durationMinutes ?? template.durationMinutes,
+      Modality: rule.modality ?? template.modality,
+      Location: rule.location ?? template.location,
+      AttendanceRule: template.attendanceRequirement,
+      Flexibility: template.flexibility,
+      RuleStatus: template.ruleStatus,
+      Notes: [
+        rule.note,
+        "Exported from the standalone LSS planner. Review organizational authority before uploading to SharePoint.",
+      ].filter(Boolean).join(" "),
+    };
+  });
+  return {
+    count: rows.length,
+    contents: `${[
+      headings.join(","),
+      ...rows.map((row) => headings.map((heading) => csvCell(row[heading as keyof typeof row])).join(",")),
+    ].join("\r\n")}\r\n`,
+  };
+}
+
 function displayDate(date: string): string {
   return new Intl.DateTimeFormat("en-US", {
     weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC",

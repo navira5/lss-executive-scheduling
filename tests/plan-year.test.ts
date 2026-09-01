@@ -32,7 +32,7 @@ import {
   updateWorkingRule,
   visiblePlanEvents,
 } from "@/lib/plan-year";
-import { calendarIcs, confirmedCalendarEvents } from "@/lib/plan-export";
+import { calendarIcs, confirmedCalendarEvents, sharePointRulesCsv } from "@/lib/plan-export";
 import { generateCalendarPlan } from "@/lib/scheduling";
 import type { ScenarioSettings } from "@/lib/types";
 
@@ -635,4 +635,23 @@ test("any planner meeting can be removed from the working calendar and Outlook e
   assert.ok(!visiblePlanEvents(removed).some((item) => item.id === event.id));
   const confirmed = confirmActivePhase(removed);
   assert.ok(!confirmedCalendarEvents(confirmed).some((item) => item.id === event.id));
+});
+
+test("standalone rules export is a SharePoint-ready CSV of current working rules", () => {
+  let state = createPlanYearState(generateCalendarPlan(baseline));
+  state = updateWorkingRule(state, "finance-committee", {
+    weekday: 3,
+    attendees: ["Administration & Finance Committee", "CEO"],
+    startTime: "16:30",
+  });
+
+  const exported = sharePointRulesCsv(state);
+
+  assert.ok(exported.count > 0);
+  assert.match(exported.contents, /^Title,Category,Purpose,Leader,Attendees,/);
+  assert.match(exported.contents, /Administration & Finance Committee/);
+  assert.match(exported.contents, /Administration & Finance Committee; CEO/);
+  assert.match(exported.contents, /Wednesday/);
+  assert.match(exported.contents, /PlannedDates2027/);
+  assert.match(exported.contents, /Review organizational authority before uploading to SharePoint/);
 });
