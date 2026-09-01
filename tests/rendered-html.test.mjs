@@ -77,12 +77,17 @@ test("server-renders a concise comparison of all four delivery options", async (
 
   const html = await response.text();
   assert.match(html, /One planning workflow\. Four ways LSS could own it\./);
-  assert.match(html, /Standalone planner/);
-  assert.match(html, /Microsoft-connected planner/);
-  assert.match(html, /Native Power Apps planner/);
-  assert.match(html, /no drag-and-drop or polished 3×4 year view/i);
-  assert.match(html, /Power Apps \+ custom calendar/);
-  assert.match(html, /Power Apps Component Framework \(PCF\)/);
+  assert.match(html, /Use the planner as it is today/);
+  assert.match(html, /Keep the planner and connect it to LSS/);
+  assert.match(html, /Build it using standard Microsoft tools/);
+  assert.match(html, /form instead of drag-and-drop/i);
+  assert.match(html, /Build it in Microsoft, but keep the custom calendar/);
+  assert.match(html, /For Rachel &amp; the planning team/);
+  assert.match(html, /For Chad &amp; LSS IT/);
+  assert.match(html, /Power Apps Component Framework—the Microsoft extension/);
+  assert.match(html, /What is retained—and what changes/);
+  assert.match(html, /Add, edit, cancel, delete events/);
+  assert.match(html, /Meeting-fit advisor/);
   assert.match(html, /What LSS is signing up to own/);
   assert.match(html, /Ongoing LSS effort/);
   assert.match(html, /Who gets called/);
@@ -107,7 +112,11 @@ test("server-renders the native Power Apps comparison without a custom calendar"
   assert.match(preview, /NATIVE CANVAS APP/);
   assert.match(preview, /Standard controls only/);
   assert.match(preview, /Apply rule &amp; refresh meetings/);
-  assert.match(preview, /Monthly calendar/);
+  assert.match(preview, /All 2027/);
+  assert.match(preview, /Close selected day/);
+  assert.match(preview, /Add event/);
+  assert.match(preview, /Delete event/);
+  assert.match(preview, /Review Outlook upload/);
   assert.match(preview, /href="styles\.css"/);
   assert.match(preview, /src="app\.js"/);
 });

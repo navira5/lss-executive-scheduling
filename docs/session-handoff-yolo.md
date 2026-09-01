@@ -19,7 +19,10 @@ mixing their data paths:
 3. **Native Power Apps comparison** — a hosted visual prototype at
    `/native-power-apps` using standard Canvas App forms, galleries, SharePoint
    and Outlook connector concepts. It deliberately uses a month calendar and
-   form-based date changes, with no PCF component or drag-and-drop.
+   form-based date changes, with no PCF component or drag-and-drop. The preview
+   now demonstrates adding, editing, deleting, and closing dates; regenerating
+   individual occurrences from a rule; viewing an annual list; and reviewing
+   proposed Outlook creates, updates, and deletions before approval.
 4. **Power Apps + PCF comparison** — a local visual prototype at
    `http://localhost:4176` when `npm run demo:compare` is running. The same
    comparison is now included in the hosted app at `/power-apps`. It remains a
@@ -28,7 +31,10 @@ mixing their data paths:
 All four options are now connected through a common delivery-option switcher.
 The hosted `/scenarios` route gives Rachel, the COO, and Chad a concise choice
 screen explaining what each option includes, its tradeoff, and who owns
-production support. The `/integrated` and `/standalone` routes both
+production support. The primary card language is written for Rachel and the
+planning team; Chad and LSS IT have a separate expandable ownership section.
+An exact capability table shows what is retained, adapted, manual, or custom
+in every option. The `/integrated` and `/standalone` routes both
 link back to this choice screen and directly to the other options. The main
 hosted URL redirects to `/scenarios`, making this the first screen after login.
 
@@ -38,11 +44,10 @@ testing one option cannot overwrite the other option's local working plan.
 
 Current verified source and deployment:
 
-- Git commit: `08f65f9` (`feat: add standalone calendar planning option`)
-- GitHub `main` contains that commit.
-- Sites production version: 32
-- Full `npm test` suite passed, including production build and rendered checks
-  for the landing page and all four option routes.
+- Use `git log -1 --oneline` for the exact deployed source commit.
+- GitHub `main` and the Sites production deployment are updated together.
+- Full `npm test` must pass, including production build and rendered checks for
+  the landing page and all four option routes, before deployment.
 
 One unrelated untracked directory remains in the worktree:
 

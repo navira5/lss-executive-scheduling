@@ -78,6 +78,51 @@
 .native-date-form { padding: 18px 20px 0; }
 .native-date-form .dialog-actions { margin: 14px -20px 0; }
 
+[hidden] { display: none !important; }
+.native-calendar-toolbar { flex-wrap: wrap; }
+.native-view-toggle { display: flex; border: 1px solid #8a8886; border-radius: 3px; overflow: hidden; }
+.native-view-toggle button { min-height: 34px; padding: 0 13px; border: 0; border-right: 1px solid #c8c6c4; background: white; color: #4a4a4a; font-size: 11px; font-weight: 700; }
+.native-view-toggle button:last-child { border-right: 0; }
+.native-view-toggle button.active { background: #fff4ce; color: #5c4b00; box-shadow: inset 0 -3px 0 var(--native-accent); }
+.month-navigation { display: flex; align-items: center; gap: 8px; }
+.month-navigation strong { min-width: 125px; font-size: 14px; text-align: center; }
+.month-navigation .button { min-width: 34px; padding: 7px 10px; }
+.native-calendar-toolbar > label { width: 180px; }
+.native-calendar-toolbar > label span { display: block; margin-bottom: 3px; color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.native-calendar-toolbar > label select { min-height: 34px; }
+.native-day.has-closure { background: #fff1f0; }
+.closure-event { border-color: #c4314b; background: #fde7e9; color: #a4262c; }
+.confirmed-event { border-color: #107c10; background: #e7f4e4; color: #0b5a0b; }
+.canceled-event { border-color: #8a8886; background: #f3f2f1; color: #605e5c; text-decoration: line-through; }
+.event-overflow { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; font-weight: 700; }
+.closure-source { background: #fde7e9; color: #a4262c; }
+.empty-agenda { margin: 0 0 16px; padding: 16px; border: 1px dashed var(--line-dark); color: var(--muted); font-size: 11px; text-align: center; }
+.native-agenda article .button { justify-self: start; margin-top: 4px; padding: 6px 8px; font-size: 10px; }
+
+.native-annual-list { min-height: 570px; border: 1px solid var(--line); background: white; }
+.native-annual-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 18px; border-bottom: 1px solid var(--line); }
+.native-annual-head h3 { margin: 4px 0 0; font-size: 18px; }
+.native-annual-head > span { max-width: 380px; color: var(--muted); font-size: 11px; line-height: 1.45; text-align: right; }
+.native-annual-table-head, .native-annual-row { display: grid; grid-template-columns: 90px minmax(180px, 1.4fr) 110px 120px 120px 90px; gap: 12px; align-items: center; }
+.native-annual-table-head { padding: 10px 16px; border-bottom: 1px solid var(--line); background: #fafafa; color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.native-annual-row { min-height: 58px; padding: 9px 16px; border-bottom: 1px solid var(--line-soft); font-size: 11px; }
+.native-annual-row > span { color: var(--muted); }
+.native-annual-row .button { padding: 6px 7px; font-size: 9px; }
+.read-only { font-size: 9px; font-weight: 700; text-transform: uppercase; }
+
+.event-form-actions { display: grid; grid-template-columns: max-content 1fr max-content max-content; gap: 9px; align-items: center; margin: 18px -20px 0; padding: 14px 20px; border-top: 1px solid var(--line); background: #fafafa; }
+.button.danger { border-color: #c4314b; background: white; color: #a4262c; }
+.button.danger:hover { background: #fde7e9; }
+.review-summary { display: grid; gap: 7px; min-width: 520px; padding: 18px 20px; }
+.review-summary > span { color: var(--muted); font-size: 11px; }
+#reviewChangesList { display: grid; gap: 0; margin-top: 10px; border: 1px solid var(--line); }
+#reviewChangesList > div { display: grid; grid-template-columns: 64px 1fr 80px; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); font-size: 11px; }
+#reviewChangesList > div:last-child { border-bottom: 0; }
+#reviewChangesList strong { color: var(--lss-navy); font-size: 9px; text-transform: uppercase; }
+#reviewChangesList small { color: var(--muted); text-align: right; }
+#reviewChangesList > p { margin: 0; padding: 18px; color: var(--muted); font-size: 11px; text-align: center; }
+#reviewDialog .dialog-actions { margin: 0; }
+
 @media (max-width: 1250px) {
   .native-workspace { grid-template-columns: 210px 275px minmax(430px, 1fr); }
   .native-calendar-layout { grid-template-columns: minmax(620px, 1fr) 280px; }

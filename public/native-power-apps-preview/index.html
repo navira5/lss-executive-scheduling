@@ -25,8 +25,9 @@
         </div>
         <div class="connector-status"><span class="connector sharepoint">S</span> SharePoint rules <i></i> <span class="connector outlook">O</span> Outlook calendar</div>
         <div class="command-actions">
+          <button class="button secondary" data-toast="Power Automate would generate the plan PDF and calendar handoff files.">Export plan</button>
           <button class="button secondary" data-toast="Draft saved in SharePoint. Outlook was not changed.">Save draft</button>
-          <button class="button primary" data-toast="Review opened. No Outlook events were uploaded.">Review Outlook upload</button>
+          <button class="button primary" id="reviewOutlook">Review Outlook upload</button>
         </div>
       </nav>
 
@@ -83,10 +84,10 @@
                 <div class="native-callout"><strong>Native interaction</strong><span>Select Change date, edit the form, save, and refresh. Drag-and-drop is not available.</span></div>
                 <div class="native-meeting-head"><span>Date</span><span>Meeting</span><span>Status</span><span></span></div>
                 <div id="nativeMeetingRows">
-                  <div class="native-meeting-row"><strong>Mar 9</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-03-09">Change date</button></div>
-                  <div class="native-meeting-row"><strong>Jul 13</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-07-13">Change date</button></div>
-                  <div class="native-meeting-row"><strong>Sep 14</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-09-14">Change date</button></div>
-                  <div class="native-meeting-row"><strong>Nov 9</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-change-date="2027-11-09">Change date</button></div>
+                  <div class="native-meeting-row"><strong>Mar 9</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-edit-event-id="board-mar">Edit / delete</button></div>
+                  <div class="native-meeting-row"><strong>Jul 13</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-edit-event-id="board-jul">Edit / delete</button></div>
+                  <div class="native-meeting-row"><strong>Sep 14</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-edit-event-id="board-sep">Edit / delete</button></div>
+                  <div class="native-meeting-row"><strong>Nov 9</strong><span>Full Board Meeting</span><span class="mini-status warning">Needs validation</span><button data-edit-event-id="board-nov">Edit / delete</button></div>
                 </div>
                 <div class="native-confirm"><span><strong>Ready to confirm?</strong><small>Confirmed dates become constraints for later layers.</small></span><button class="button primary" data-toast="Full Board Meetings confirmed. Outlook remains unchanged until final review.">Confirm group</button></div>
               </section>
@@ -96,21 +97,29 @@
           <section id="calendarView" class="view-screen" role="tabpanel" hidden>
             <section class="planner-intro calendar-intro"><div><p class="eyebrow">MONTH CALENDAR</p><h2>Outlook context and proposed meetings</h2><p>Select a date to see its events. Use the form to change a proposed meeting.</p></div><span class="year-chip">Outlook + proposed plan</span></section>
             <div class="native-calendar-toolbar">
-              <button id="previousMonth" class="button secondary" aria-label="Previous month">‹</button><strong id="monthTitle">March 2027</strong><button id="nextMonth" class="button secondary" aria-label="Next month">›</button>
+              <div class="native-view-toggle" aria-label="Calendar display"><button id="calendarModeMonth" class="active">Month</button><button id="calendarModeYear">All 2027</button></div>
+              <div id="monthNavigation" class="month-navigation"><button id="previousMonth" class="button secondary" aria-label="Previous month">‹</button><strong id="monthTitle">March 2027</strong><button id="nextMonth" class="button secondary" aria-label="Next month">›</button></div>
               <label><span>Show</span><select><option>Outlook + planner</option><option>Planner only</option><option>Confirmed only</option></select></label>
+              <button id="addClosure" class="button secondary">Close selected day</button>
+              <button id="addCalendarEvent" class="button primary">＋ Add event</button>
             </div>
-            <div class="native-calendar-layout">
+            <div id="nativeCalendarLayout" class="native-calendar-layout">
               <section class="native-month-card">
                 <div class="native-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
                 <div id="nativeMonthGrid" class="native-month-grid" aria-label="Monthly calendar"></div>
               </section>
               <aside class="native-agenda">
                 <p class="eyebrow">SELECTED DATE</p><h3 id="agendaDate">March 9, 2027</h3>
-                <article><span class="agenda-source planner-source">Proposed</span><strong>Full Board Meeting</strong><small>5:00–7:00 PM · Needs validation</small><button class="button secondary full" data-change-date="2027-03-09">Change date</button></article>
-                <article><span class="agenda-source outlook-source">Outlook</span><strong>Rachel — donor call</strong><small>2:00–2:30 PM · Existing calendar</small></article>
+                <div id="agendaEvents"></div>
+                <button id="agendaAddEvent" class="button primary full">＋ Add event on this date</button>
                 <div class="native-limit"><strong>What changes here</strong><span>The monthly calendar can refresh after rules are applied. Meetings do not move directly on the grid.</span></div>
               </aside>
             </div>
+            <section id="annualList" class="native-annual-list" hidden>
+              <div class="native-annual-head"><div><p class="eyebrow">ALL 2027 MEETINGS</p><h3>A sortable annual planning list</h3></div><span>This replaces the spatial 3×4 calendar in a standard-controls build.</span></div>
+              <div class="native-annual-table-head"><span>Date</span><span>Event</span><span>Type</span><span>Status</span><span>Source</span><span></span></div>
+              <div id="annualListBody"></div>
+            </section>
           </section>
 
           <section id="rulebookView" class="view-screen" role="tabpanel" hidden>
@@ -138,9 +147,22 @@
       </div>
     </div>
 
-    <dialog id="dateDialog">
-      <div class="dialog-heading"><div><p class="eyebrow">EDIT PROPOSED MEETING</p><h3>Change meeting date</h3></div><button class="icon-button" id="closeDialog" aria-label="Close">×</button></div>
-      <form class="native-date-form" method="dialog"><label><span>Meeting</span><input value="Full Board Meeting" readonly /></label><label><span>New date</span><input id="newDate" type="date" value="2027-03-09" /></label><label><span>Reason</span><select><option>One-time exception</option><option>Update the recurring rule</option></select></label><div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button primary" id="saveDate" value="default">Save change</button></div></form>
+    <dialog id="eventDialog">
+      <div class="dialog-heading"><div><p class="eyebrow">STANDARD POWER APPS FORM</p><h3 id="eventDialogTitle">Add event</h3></div><button class="icon-button" id="closeEventDialog" aria-label="Close">×</button></div>
+      <form class="native-date-form" id="eventForm">
+        <input id="eventId" type="hidden" />
+        <label><span>Title</span><input id="eventTitle" required /></label>
+        <div class="field-row"><label><span>Type</span><select id="eventType"><option value="Meeting">Meeting</option><option value="One-time event">One-time event</option><option value="Closure">Closure</option></select></label><label><span>Date</span><input id="eventDate" type="date" required /></label></div>
+        <div class="field-row"><label><span>Start time</span><input id="eventTime" type="time" value="09:00" /></label><label><span>Duration</span><select id="eventDuration"><option value="30">30 minutes</option><option value="60">1 hour</option><option value="90">90 minutes</option><option value="120">2 hours</option><option value="all-day">All day</option></select></label></div>
+        <label><span>Status</span><select id="eventStatus"><option>Needs validation</option><option>Confirmed</option><option>Canceled</option><option>Existing Outlook</option></select></label>
+        <label><span>Change applies to</span><select id="eventScope"><option>Just this occurrence</option><option>Update the meeting rule</option></select></label>
+        <div class="event-form-actions"><button class="button danger" id="deleteEvent" type="button">Delete event</button><span></span><button class="button secondary" id="cancelEvent" type="button">Cancel</button><button class="button primary" type="submit">Save event</button></div>
+      </form>
+    </dialog>
+    <dialog id="reviewDialog">
+      <div class="dialog-heading"><div><p class="eyebrow">HUMAN APPROVAL GATE</p><h3>Review Outlook changes</h3></div><button class="icon-button" id="closeReviewDialog" aria-label="Close">×</button></div>
+      <div class="review-summary"><strong id="reviewCount">0 changes queued</strong><span>Nothing reaches Outlook until an authorized user approves this list.</span><div id="reviewChangesList"></div></div>
+      <div class="dialog-actions"><button class="button secondary" id="cancelReview">Cancel</button><button class="button primary" id="uploadChanges">Approve &amp; upload</button></div>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="app.js"></script>

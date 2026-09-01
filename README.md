@@ -96,8 +96,11 @@ Open `http://localhost:3000`.
 The hosted comparison includes both a native Canvas App option using standard
 Power Apps controls and a Power Apps + PCF option with a custom year-calendar
 component. Their Plan meetings, Calendar, and Rulebook tabs use sample
-in-browser data and do not connect to Microsoft services. Neither preview
-modifies or replaces the main planner.
+in-browser data and do not connect to Microsoft services. The native preview
+demonstrates the feasible standard-control workflow end to end: apply a rule,
+view a month or annual list, add/edit/delete meetings and closures, and review
+queued Outlook changes before approval. Neither preview modifies or replaces
+the main planner.
 
 Start the four-option comparison and separate PCF preview with one command:
 
