@@ -8,8 +8,7 @@ The project now presents three distinct ownership/deployment options without
 mixing their data paths:
 
 1. **Integrated custom planner** — the existing rich planner with optional
-   SharePoint and Outlook integration at
-   `https://lss-2027-calendar-planner.navira-ali.chatgpt.site/`.
+   SharePoint and Outlook integration at `/integrated`.
 2. **Standalone custom planner** — the same planning workflow with no Microsoft
    API calls at
    `https://lss-2027-calendar-planner.navira-ali.chatgpt.site/standalone`.
@@ -25,8 +24,9 @@ mixing their data paths:
 All three options are now connected through a common delivery-option switcher.
 The hosted `/scenarios` route gives Rachel, the COO, and Chad a concise choice
 screen explaining what each option includes, its tradeoff, and who owns
-production support. The root integrated planner and `/standalone` route both
-link back to this choice screen and directly to the other options.
+production support. The `/integrated` and `/standalone` routes both
+link back to this choice screen and directly to the other options. The main
+hosted URL redirects to `/scenarios`, making this the first screen after login.
 
 The standalone route deliberately does not render or call SharePoint or Outlook
 controls. Its browser storage key is separate from the integrated planner, so
@@ -38,7 +38,7 @@ Current verified source and deployment:
 - GitHub `main` contains that commit.
 - Sites production version: 32
 - Full `npm test` suite passed, including production build and rendered checks
-  for both `/` and `/standalone`.
+  for the landing page and all three option routes.
 
 One unrelated untracked directory remains in the worktree:
 

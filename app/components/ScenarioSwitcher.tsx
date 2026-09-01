@@ -1,6 +1,6 @@
 const OPTIONS = [
   { id: "standalone", label: "A · Standalone", href: "/standalone" },
-  { id: "integrated", label: "B · Microsoft-connected", href: "/" },
+  { id: "integrated", label: "B · Microsoft-connected", href: "/integrated" },
   { id: "power-apps", label: "C · Power Apps + PCF", href: "/power-apps" },
 ] as const;
 

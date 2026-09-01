@@ -108,7 +108,8 @@ npm run demo:compare
 Then open:
 
 - Delivery-options overview: `http://localhost:3000/scenarios`
-- Integrated calendar planner: `http://localhost:3000`
+- Main URL (redirects to options): `http://localhost:3000`
+- Integrated calendar planner: `http://localhost:3000/integrated`
 - Standalone calendar planner: `http://localhost:3000/standalone`
 - Hosted Power Apps + PCF comparison: `http://localhost:3000/power-apps`
 - Separate local Power Apps preview: `http://localhost:4176`

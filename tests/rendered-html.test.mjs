@@ -23,13 +23,19 @@ async function render(pathname = "/") {
   );
 }
 
-test("server-renders the LSS annual planning workbench", async () => {
+test("the main URL leads to the three-option landing page", async () => {
   const response = await render();
+  assert.equal(response.status, 307);
+  assert.equal(response.headers.get("location"), "http://localhost/scenarios");
+});
+
+test("server-renders the LSS Microsoft-connected annual planning workbench", async () => {
+  const response = await render("/integrated");
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>LSS 2027 Calendar Planning Workbench<\/title>/i);
+  assert.match(html, /<title>LSS 2027 Microsoft-Connected Calendar Planner<\/title>/i);
   assert.match(html, /Plan Year 2027/);
   assert.match(html, />Board</);
   assert.match(html, /Board Committees/);

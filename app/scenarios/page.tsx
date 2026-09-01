@@ -28,7 +28,7 @@ const options = [
     description: "The same rich planner connected to SharePoint rules and an Outlook calendar through Microsoft Graph, with human review before publishing.",
     includes: ["SharePoint rules", "Outlook planning context", "Reviewed Outlook publishing", "Full drag-and-drop planner"],
     tradeoff: "LSS IT owns deployment, permissions, monitoring, and support.",
-    href: "/",
+    href: "/integrated",
     action: "Open connected planner",
   },
   {
