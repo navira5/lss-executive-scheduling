@@ -80,6 +80,12 @@ test("server-renders a concise comparison of all three delivery options", async 
   assert.match(html, /Standalone planner/);
   assert.match(html, /Microsoft-connected planner/);
   assert.match(html, /Power Apps \+ custom calendar/);
+  assert.match(html, /Power Apps Component Framework \(PCF\)/);
+  assert.match(html, /What LSS is signing up to own/);
+  assert.match(html, /Ongoing LSS effort/);
+  assert.match(html, /Who gets called/);
+  assert.match(html, /Where coding agents help/);
+  assert.match(html, /LSS IT \+ developer/);
   assert.match(html, /Navira provides the prototype/);
 });
 
