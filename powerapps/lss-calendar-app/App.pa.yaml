@@ -18,19 +18,20 @@ App:
       );
       ClearCollect(
         colCalProofEvents,
-        {EventId:"FB-2027-01",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,1,12),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
-        {EventId:"BCI-2027-02",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,2,9),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
-        {EventId:"BCI-2027-03",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,3,9),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
-        {EventId:"FB-2027-04",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,4,13),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
-        {EventId:"RET-2027-05",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,5,27),StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date"},
-        {EventId:"BCI-2027-06",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,6,8),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
-        {EventId:"FB-2027-07",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,7,13),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
-        {EventId:"BCI-2027-08",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,8,10),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
-        {EventId:"BCI-2027-09",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,9,14),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
-        {EventId:"FB-2027-10",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,10,12),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
-        {EventId:"RET-2027-11",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,11,18),StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date"},
-        {EventId:"BCI-2027-12",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,12,14),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"}
+        {EventId:"FB-2027-01",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,1,12),GeneratedDate:Date(2027,1,12),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday",SourceRuleId:"BOARD-FULL",IsManualOverride:false},
+        {EventId:"BCI-2027-02",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,2,9),GeneratedDate:Date(2027,2,9),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false},
+        {EventId:"BCI-2027-03",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,3,9),GeneratedDate:Date(2027,3,9),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false},
+        {EventId:"FB-2027-04",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,4,13),GeneratedDate:Date(2027,4,13),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday",SourceRuleId:"BOARD-FULL",IsManualOverride:false},
+        {EventId:"RET-2027-05",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,5,27),GeneratedDate:Date(2027,5,27),StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date",SourceRuleId:"BOARD-RETREAT",IsManualOverride:false},
+        {EventId:"BCI-2027-06",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,6,8),GeneratedDate:Date(2027,6,8),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false},
+        {EventId:"FB-2027-07",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,7,13),GeneratedDate:Date(2027,7,13),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday",SourceRuleId:"BOARD-FULL",IsManualOverride:false},
+        {EventId:"BCI-2027-08",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,8,10),GeneratedDate:Date(2027,8,10),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false},
+        {EventId:"BCI-2027-09",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,9,14),GeneratedDate:Date(2027,9,14),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false},
+        {EventId:"FB-2027-10",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,10,12),GeneratedDate:Date(2027,10,12),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday",SourceRuleId:"BOARD-FULL",IsManualOverride:false},
+        {EventId:"RET-2027-11",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,11,18),GeneratedDate:Date(2027,11,18),StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date",SourceRuleId:"BOARD-RETREAT",IsManualOverride:false},
+        {EventId:"BCI-2027-12",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,12,14),GeneratedDate:Date(2027,12,14),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false}
       );
+      ClearCollect(colCalProofGeneratedEvents,FirstN(colCalProofEvents,0));
       ClearCollect(
         colCalProofClosures,
         {ClosureId:"CLOSE-2027-0101",ClosureName:"New Year's Day",ClosureLabel:"New Year",ClosureDate:Date(2027,1,1)},
@@ -51,6 +52,11 @@ App:
         {SortOrder:2,RuleId:"BOARD-CHECKIN",MeetingName:"Board Critical Issue Check-in",Cadence:"Specific months",MonthsText:"February, March, June, August, September, December",StartMonth:"February",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:9,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:30,Format:"Virtual",Flexibility:"Fixed",RuleStatus:"Confirmed"},
         {SortOrder:3,RuleId:"BOARD-RETREAT",MeetingName:"Board Retreat",Cadence:"Specific months",MonthsText:"May, November",StartMonth:"May",WeekOfMonth:"Last",PreferredDay:"Thursday",AnchorMonth:"May",AnchorDay:27,SecondPreferredDay:"Friday",SecondWeekOfMonth:"Fourth",StartTimeText:"8:00 AM",DurationMinutes:300,Format:"In person",Flexibility:"Fixed",RuleStatus:"Needs validation"}
       );
+      ClearCollect(
+        colCalProofGenerationReceipt,
+        {BatchId:"",GeneratedCount:0,RuleCount:0,GeneratedAt:Now(),FirstDate:Date(2027,1,1),LastDate:Date(2027,1,1),RuleIds:""}
+      );
+      Clear(colCalProofGenerationReceipt);
       ClearCollect(
         colBrvCadenceOptions,
         {SortOrder:1,Value:"One time",HelpText:"Choose one date in the 2027 planning year.",UsesAnchorDate:true,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:false,UsesDay:false,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},

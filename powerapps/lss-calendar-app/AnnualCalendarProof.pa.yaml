@@ -13,6 +13,8 @@ Screens:
             LayoutAlignItems: =LayoutAlignItems.Stretch
             LayoutDirection: =LayoutDirection.Vertical
             LayoutGap: =16
+            LayoutMinHeight: =0
+            LayoutMinWidth: =0
             LayoutOverflowY: =LayoutOverflow.Scroll
             PaddingBottom: =If(App.Width<760,16,24)
             PaddingLeft: =If(App.Width<760,16,24)
@@ -24,6 +26,7 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
                   BorderColor: =RGBA(203,213,225,1)
                   BorderThickness: =1
                   DropShadow: =DropShadow.Semilight
@@ -120,22 +123,23 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
                   BorderColor: =RGBA(203,213,225,1)
                   BorderThickness: =1
                   DropShadow: =DropShadow.None
                   Fill: =RGBA(255,255,255,1)
                   FillPortions: =0
-                  Height: =If(App.Width<760,132,76)
+                  Height: =If(App.Width<760,248,If(App.Width<1100,180,124))
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
                   LayoutGap: =12
                   LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
                   LayoutMinHeight: =0
                   LayoutMinWidth: =0
-                  PaddingBottom: =If(App.Width<760,8,16)
+                  PaddingBottom: =If(App.Width<760,12,16)
                   PaddingLeft: =16
                   PaddingRight: =16
-                  PaddingTop: =If(App.Width<760,8,16)
+                  PaddingTop: =If(App.Width<760,12,16)
                   RadiusBottomLeft: =10
                   RadiusBottomRight: =10
                   RadiusTopLeft: =10
@@ -147,7 +151,7 @@ Screens:
                       Properties:
                         DropShadow: =DropShadow.None
                         FillPortions: =If(App.Width<760,0,1)
-                        Height: =If(App.Width<760,60,44)
+                        Height: =If(App.Width<760,112,If(App.Width<1100,140,84))
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Vertical
                         LayoutGap: =2
@@ -157,9 +161,10 @@ Screens:
                         - txtCalProofRulesNavTitle:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Board rules are ready to review"
+                              AccessibleLabel: ="Board rules and draft"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(15,43,91,1)
+                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =24
@@ -169,52 +174,184 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =18
-                              Text: ="Board rules are ready to review"
+                              Text: ="Board rules and draft"
                               Wrap: =false
                         - txtCalProofRulesNavHelp:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Review and edit the three Board patterns. Dates stay unchanged in this slice."
+                              AccessibleLabel: =Self.Text
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
+                              FillPortions: =0
                               Font: =Font.'Segoe UI'
-                              Height: =If(App.Width<760,34,18)
+                              Height: =If(App.Width<760,84,If(App.Width<1100,114,54))
                               LayoutMinWidth: =0
                               PaddingBottom: =0
                               PaddingLeft: =0
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =13
-                              Text: ="Review and edit the three Board patterns. Dates stay unchanged in this slice."
+                              Text: |-
+                                =If(
+                                  CountRows(colBoardRuleProof)=0,
+                                  "No Board rules are available.",
+                                  CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")>0,
+                                  Text(CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")) & " Board rule" & If(CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")=1,"","s") & " still need confirmation. Open Board rules, complete them, and return here.",
+                                  CountRows(colCalProofGenerationReceipt)=0,
+                                  "All " & Text(CountRows(colBoardRuleProof)) & " Board rules are confirmed. Generate the 2027 Board draft when ready.",
+                                  First(colCalProofGenerationReceipt).GeneratedCount>0,
+                                  "Draft " & First(colCalProofGenerationReceipt).BatchId & " · " & Text(First(colCalProofGenerationReceipt).GeneratedCount) & " dates from " & Text(First(colCalProofGenerationReceipt).RuleCount) & " confirmed rules (" & First(colCalProofGenerationReceipt).RuleIds & ") · " & Text(First(colCalProofGenerationReceipt).FirstDate,"mmm d") & "–" & Text(First(colCalProofGenerationReceipt).LastDate,"mmm d") & ".",
+                                  "Draft " & First(colCalProofGenerationReceipt).BatchId & " · 0 dates from " & Text(First(colCalProofGenerationReceipt).RuleCount) & " confirmed rules (" & First(colCalProofGenerationReceipt).RuleIds & ") · no dates generated for as-needed rules."
+                                )
                               VerticalAlign: =VerticalAlign.Top
-                  - btnCalProofRulesNavOpen:
-                      Control: ModernButton
+                  - conCalProofDraftActions:
+                      Control: GroupContainer
+                      Variant: AutoLayout
                       Properties:
-                        AccessibleLabel: ="Open Board rules review"
-                        Align: =Align.Center
                         AlignInContainer: =AlignInContainer.Stretch
-                        BasePaletteColor: =RGBA(37,99,235,1)
-                        Color: =RGBA(255,255,255,1)
-                        Font: =Font.'Segoe UI'
-                        FontWeight: =FontWeight.Semibold
-                        Height: =44
-                        Layout: =ButtonLayout.TextOnly
-                        LayoutMinWidth: =160
-                        OnSelect: |-
-                          =Set(varBrvReceiptVisible,false);
-                          Set(varBrvSaveAttempted,false);
-                          Navigate(BoardRulesReview,ScreenTransition.None)
-                        PaddingBottom: =0
-                        PaddingLeft: =12
-                        PaddingRight: =12
-                        PaddingTop: =0
-                        RadiusBottomLeft: =8
-                        RadiusBottomRight: =8
-                        RadiusTopLeft: =8
-                        RadiusTopRight: =8
-                        Size: =14
-                        Text: ="Board rules"
-                        Width: =If(App.Width<760,Parent.Width,160)
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =If(App.Width<760,96,44)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Width: =If(App.Width<760,Parent.Width,348)
+                      Children:
+                        - btnCalProofRulesNavOpen:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Open Board rules review"
+                              Align: =Align.Center
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(37,99,235,1)
+                              Color: =RGBA(15,43,91,1)
+                              FillPortions: =If(App.Width<760,0,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varBrvReceiptVisible,false);
+                                Set(varBrvSaveAttempted,false);
+                                Navigate(BoardRulesReview,ScreenTransition.None)
+                              PaddingBottom: =0
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =0
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Size: =14
+                              Text: ="Board rules"
+                              Width: =If(App.Width<760,Parent.Width,132)
+                        - btnCalProofDraftGenerate:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: =Self.Text
+                              Align: =Align.Center
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BasePaletteColor: =RGBA(37,99,235,1)
+                              Color: =RGBA(255,255,255,1)
+                              DisplayMode: =If(CountRows(colBoardRuleProof)>0 && CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")=0,DisplayMode.Edit,DisplayMode.Disabled)
+                              FillPortions: =If(App.Width<760,0,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =If(
+                                    CountRows(colBoardRuleProof)>0 && CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")=0,
+                                    Clear(colCalProofGeneratedEvents);
+                                    ForAll(
+                                        SortByColumns(Filter(colBoardRuleProof,RuleStatus="Confirmed"),"SortOrder",SortOrder.Ascending) As boardRule,
+                                        With(
+                                            {
+                                                startMonthNumber:Switch(boardRule.StartMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
+                                                anchorMonthNumber:Switch(boardRule.AnchorMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
+                                                preferredDayNumber:Switch(boardRule.PreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1),
+                                                secondDayNumber:Switch(boardRule.SecondPreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1)
+                                            },
+                                            With(
+                                                {anchorDate:Date(2027,anchorMonthNumber,boardRule.AnchorDay)},
+                                                ForAll(
+                                                    Filter(
+                                                        AddColumns(Sequence(365),CandidateDate,DateAdd(Date(2027,1,1),Value-1,TimeUnit.Days)),
+                                                        Switch(
+                                                            boardRule.Cadence,
+                                                            "One time",CandidateDate=anchorDate,
+                                                            "Twice a week",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber || Weekday(CandidateDate,StartOfWeek.Monday)=secondDayNumber,
+                                                            "Weekly",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber,
+                                                            "Every two weeks",CandidateDate>=anchorDate && Mod(DateDiff(anchorDate,CandidateDate,TimeUnit.Days),14)=0,
+                                                            "Twice a month",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber &&
+                                                                (Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false) ||
+                                                                 Switch(boardRule.SecondWeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false)),
+                                                            "Monthly",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                            "Every two months",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,2)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                            "Quarterly",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,3)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                            "Specific months",Text(CandidateDate,"mmmm") in boardRule.MonthsText && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                            "Annually",Month(CandidateDate)=startMonthNumber && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                            "As needed — no dates generated automatically",false,
+                                                            false
+                                                        )
+                                                    ) As generatedDay,
+                                                    Collect(
+                                                        colCalProofGeneratedEvents,
+                                                        {
+                                                            EventId:boardRule.RuleId&"-"&Text(generatedDay.CandidateDate,"yyyymmdd"),
+                                                            EventName:boardRule.MeetingName,
+                                                            EventType:Switch(boardRule.RuleId,"BOARD-FULL","Full Board","BOARD-CHECKIN","Critical Issue Check-in","BOARD-RETREAT","Board Retreat",boardRule.MeetingName),
+                                                            EventDate:generatedDay.CandidateDate,
+                                                            GeneratedDate:generatedDay.CandidateDate,
+                                                            StartTime:TimeValue(boardRule.StartTimeText),
+                                                            EndTime:DateAdd(TimeValue(boardRule.StartTimeText),boardRule.DurationMinutes,TimeUnit.Minutes),
+                                                            ChipText:Switch(boardRule.RuleId,"BOARD-FULL","BOARD","BOARD-CHECKIN","CHECK","BOARD-RETREAT","RETREAT","BOARD"),
+                                                            SchedulingSource:"Generated from rule "&boardRule.RuleId&" · "&boardRule.Cadence&" · "&Switch(boardRule.Cadence,"One time",boardRule.AnchorMonth&" "&Text(boardRule.AnchorDay)&", 2027","Twice a week",boardRule.PreferredDay&" and "&boardRule.SecondPreferredDay,"Weekly",boardRule.PreferredDay,"Every two weeks","every 14 days from "&boardRule.AnchorMonth&" "&Text(boardRule.AnchorDay),"Twice a month",boardRule.WeekOfMonth&" and "&boardRule.SecondWeekOfMonth&" "&boardRule.PreferredDay,"Monthly",boardRule.WeekOfMonth&" "&boardRule.PreferredDay,"Every two months","starting "&boardRule.StartMonth&" · "&boardRule.WeekOfMonth&" "&boardRule.PreferredDay,"Quarterly","starting "&boardRule.StartMonth&" · "&boardRule.WeekOfMonth&" "&boardRule.PreferredDay,"Specific months",boardRule.MonthsText&" · "&boardRule.WeekOfMonth&" "&boardRule.PreferredDay,"Annually",boardRule.StartMonth&" · "&boardRule.WeekOfMonth&" "&boardRule.PreferredDay,"As needed — no dates generated automatically","no automatic dates",""),
+                                                            SourceRuleId:boardRule.RuleId,
+                                                            IsManualOverride:false
+                                                        }
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    );
+                                    ClearCollect(colCalProofEvents,SortByColumns(colCalProofGeneratedEvents,"EventDate",SortOrder.Ascending,"EventId",SortOrder.Ascending));
+                                    Set(varCalProofSelectedEventId,"");
+                                    Set(varCalProofSelectedEvent,First(colCalProofEvents));
+                                    Set(varCalProofSelectedEvent,Blank());
+                                    With(
+                                        {generatedCount:CountRows(colCalProofEvents),batchTime:Now()},
+                                        ClearCollect(
+                                            colCalProofGenerationReceipt,
+                                            {
+                                                BatchId:"BOARD-DRAFT-"&Text(batchTime,"yyyymmddhhmmss"),
+                                                GeneratedCount:generatedCount,
+                                                RuleCount:CountRows(Filter(colBoardRuleProof,RuleStatus="Confirmed")),
+                                                GeneratedAt:batchTime,
+                                                FirstDate:If(generatedCount>0,First(colCalProofEvents).EventDate,Date(2027,1,1)),
+                                                LastDate:If(generatedCount>0,Last(colCalProofEvents).EventDate,Date(2027,1,1)),
+                                                RuleIds:Concat(SortByColumns(Filter(colBoardRuleProof,RuleStatus="Confirmed"),"SortOrder",SortOrder.Ascending),RuleId,", ")
+                                            }
+                                        )
+                                    )
+                                )
+                              PaddingBottom: =0
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =0
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Size: =14
+                              Text: =If(CountRows(colCalProofGenerationReceipt)=0,"Generate Board draft","Regenerate Board draft")
+                              Tooltip: =If(Self.DisplayMode=DisplayMode.Disabled,"Confirm every Board rule before generating.",Self.Text)
+                              Width: =If(App.Width<760,Parent.Width,208)
             - conCalProofYearIntro:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -374,9 +511,10 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
                   DropShadow: =DropShadow.None
                   FillPortions: =0
-                  Height: =With({calendarHeight:With({rows:If(App.Width>=1320,4,If(App.Width>=760,6,12))},rows*348+4)},If(App.Width>=1320,calendarHeight,calendarHeight+16+360))
+                  Height: =With({calendarHeight:With({rows:If(App.Width>=1320,4,If(App.Width>=760,6,12))},rows*348+4)},If(App.Width>=1320,calendarHeight,calendarHeight+16+460))
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =If(App.Width>=1320,LayoutDirection.Horizontal,LayoutDirection.Vertical)
                   LayoutGap: =16
@@ -750,12 +888,13 @@ Screens:
                       Control: GroupContainer
                       Variant: AutoLayout
                       Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
                         BorderColor: =RGBA(203,213,225,1)
                         BorderThickness: =1
                         DropShadow: =DropShadow.Semilight
                         Fill: =RGBA(255,255,255,1)
                         FillPortions: =0
-                        Height: =If(App.Width>=1320,420,360)
+                        Height: =If(App.Width>=1320,500,460)
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Vertical
                         LayoutGap: =8
@@ -809,7 +948,9 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
                               DropShadow: =DropShadow.None
+                              FillPortions: =1
                               LayoutAlignItems: =LayoutAlignItems.Stretch
                               LayoutDirection: =LayoutDirection.Vertical
                               LayoutGap: =8
@@ -854,7 +995,9 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
                               DropShadow: =DropShadow.None
+                              FillPortions: =1
                               LayoutAlignItems: =LayoutAlignItems.Stretch
                               LayoutDirection: =LayoutDirection.Vertical
                               LayoutGap: =6
@@ -868,6 +1011,7 @@ Screens:
                                     AccessibleLabel: ="Meeting type " & varCalProofSelectedEvent.EventType
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(37,99,235,1)
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
                                     Height: =22
@@ -885,6 +1029,7 @@ Screens:
                                     AccessibleLabel: ="Selected meeting " & varCalProofSelectedEvent.EventName
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
                                     Height: =52
@@ -902,6 +1047,7 @@ Screens:
                                     AccessibleLabel: ="Stable event ID " & varCalProofSelectedEvent.EventId
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(71,85,105,1)
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     Height: =20
                                     LayoutMinWidth: =0
@@ -913,12 +1059,31 @@ Screens:
                                     Text: |-
                                       ="Event ID: " & varCalProofSelectedEvent.EventId
                                     Wrap: =false
+                              - txtCalProofSelectedRuleId:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Source rule " & varCalProofSelectedEvent.SourceRuleId
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(71,85,105,1)
+                                    FillPortions: =0
+                                    Font: =Font.'Segoe UI'
+                                    Height: =22
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: |-
+                                      ="Source rule: " & varCalProofSelectedEvent.SourceRuleId
+                                    Wrap: =false
                               - txtCalProofSelectedDate:
                                   Control: ModernText
                                   Properties:
                                     AccessibleLabel: ="Meeting date " & Text(varCalProofSelectedEvent.EventDate,"dddd, mmmm d, yyyy")
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =24
@@ -936,6 +1101,7 @@ Screens:
                                     AccessibleLabel: ="Meeting time " & Text(varCalProofSelectedEvent.StartTime,"[$-en-US]h:mm AM/PM") & " to " & Text(varCalProofSelectedEvent.EndTime,"[$-en-US]h:mm AM/PM")
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =24
@@ -953,6 +1119,7 @@ Screens:
                                     AccessibleLabel: ="Scheduling source"
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(71,85,105,1)
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -970,6 +1137,7 @@ Screens:
                                     AccessibleLabel: ="Scheduling source " & varCalProofSelectedEvent.SchedulingSource
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(71,85,105,1)
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     Height: =76
                                     LayoutMinWidth: =0
@@ -980,3 +1148,40 @@ Screens:
                                     Size: =13
                                     Text: =varCalProofSelectedEvent.SchedulingSource
                                     VerticalAlign: =VerticalAlign.Top
+                              - btnCalProofEditSourceRule:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Edit source rule " & varCalProofSelectedEvent.SourceRuleId
+                                    Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(37,99,235,1)
+                                    Color: =RGBA(15,43,91,1)
+                                    DisplayMode: =If(!IsBlank(varCalProofSelectedEventId) && !IsBlank(varCalProofSelectedEvent.SourceRuleId),DisplayMode.Edit,DisplayMode.Disabled)
+                                    FillPortions: =0
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Layout: =ButtonLayout.TextOnly
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =If(
+                                        !IsBlank(varCalProofSelectedEventId) && !IsBlank(varCalProofSelectedEvent.SourceRuleId),
+                                        Set(varBrvSelectedRuleId,varCalProofSelectedEvent.SourceRuleId);
+                                        Set(varBrvReceiptVisible,false);
+                                        Set(varBrvSaveAttempted,false);
+                                        Navigate(BoardRulesReview,ScreenTransition.None)
+                                      )
+                                    PaddingBottom: =0
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =0
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Size: =14
+                                    Text: ="Edit source rule"
+                                    Tooltip: ="Open the Board rule that generated this meeting"
+                                    Visible: =!IsBlank(varCalProofSelectedEventId) && !IsBlank(varCalProofSelectedEvent.SourceRuleId)
+                                    Width: =Parent.Width
