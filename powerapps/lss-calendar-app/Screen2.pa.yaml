@@ -1,0 +1,928 @@
+Screens:
+  Screen2:
+    Properties:
+      Fill: =RGBA(244,247,251,1)
+      LoadingSpinnerColor: =RGBA(37,99,235,1)
+      OnVisible: |-
+        =ClearCollect(colBoardRules,Filter('LSS Meeting Types',Category.Value="Board"));
+        ClearCollect(colBoardEvents,SortByColumns(Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1) && EventDate<Date(2028,1,1) && Category="Board"),"EventDate",SortOrder.Ascending));
+        ClearCollect(colClosures,Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1) && EventDate<Date(2028,1,1) && Category="Closure"));
+        ClearCollect(colBoardCalendarContext,SortByColumns(Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1) && EventDate<Date(2028,1,1)),"EventDate",SortOrder.Ascending));
+        Clear(colBoardIssues);
+        Clear(colBoardConfirmReceipt);
+        ForAll(Filter(colBoardEvents,Status="Blocked" || Status="Needs Decision"),Collect(colBoardIssues,{IssueType:"Date conflict",EventId:ID,GroupTitle:Title,CurrentDate:EventDate,State:Status,Reason:Coalesce('Planning Notes',"Conflict needs review"),Recommendation:"Keep this candidate date. Review the next open weekday within 14 days; do not move it automatically."}));
+        ForAll(Filter(colBoardRules,Coalesce(RuleStatus.Value,"Needs validation")<>"Confirmed" || !Coalesce(Completed,false) || !IsBlank(Coalesce('Questions/Comments',""))),Collect(colBoardIssues,{IssueType:"Unresolved Board rule",EventId:Blank(),GroupTitle:Title,CurrentDate:Blank(),State:Coalesce(RuleStatus.Value,"Needs validation"),Reason:If(!Coalesce(Completed,false),"This Board rule is incomplete.",If(!IsBlank(Coalesce('Questions/Comments',"")),"This Board rule has an open question.","This Board rule has not been confirmed.")),Recommendation:"Return to Board rules and complete or confirm this group before confirming the Board."}));
+        Set(varBoardLocked,CountRows(colBoardEvents)>0 && CountRows(Filter(colBoardEvents,Status="Approved" && "Board confirmed and locked: Yes" in Coalesce('Planning Notes',"")))=CountRows(colBoardEvents));
+        Set(varSelectedEvent,Blank());
+        Set(varBoardYearSelectedIssue,Blank())
+    Children:
+      - conBoardYearRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(244,247,251,1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =12
+            LayoutOverflowX: =LayoutOverflow.Scroll
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =16
+            PaddingLeft: =If(App.Width<640,12,24)
+            PaddingRight: =If(App.Width<640,12,24)
+            PaddingTop: =16
+            Width: =Parent.Width
+          Children:
+            - conBoardYearHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  Fill: =RGBA(15,43,91,1)
+                  Height: =If(Parent.Width<640,164,88)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(Parent.Width<640,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =12
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =14
+                  Width: =Parent.Width
+                Children:
+                  - conBoardYearHeaderCopy:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtBoardYearTitle:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Board calendar title"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(255,255,255,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =34
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =26
+                              Text: ="2027 Board calendar"
+                              Wrap: =false
+                        - txtBoardYearState:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Board calendar state"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(219,234,254,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =24
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: =If(varBoardLocked,"Board confirmed and locked — dates remain visible and cannot be changed.","Board draft — review conflicts, then confirm the Board.")
+                              Wrap: =false
+                  - btnBoardYearRules:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Return to Board rules"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =ButtonAppearance.Outline
+                        BasePaletteColor: =RGBA(255,255,255,1)
+                        Color: =RGBA(255,255,255,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =150
+                        OnSelect: =Navigate(MainScreen1,ScreenTransition.Fade)
+                        Size: =14
+                        Text: ="Board rules"
+                        Tooltip: ="Return to Board rules"
+                        Width: =If(Parent.Width<640,Parent.Width,150)
+            - conBoardYearSummary:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =If(Parent.Width<640,178,64)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(Parent.Width<640,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  LayoutWrap: =true
+                  PaddingBottom: =10
+                  PaddingLeft: =14
+                  PaddingRight: =14
+                  PaddingTop: =10
+                  Width: =Parent.Width
+                Children:
+                  - txtBoardYearRulesCount:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Confirmed Board rule count"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: =CountRows(Filter(colBoardRules,RuleStatus.Value="Confirmed" && Coalesce(Completed,false))) & " confirmed rules"
+                        Width: =If(Parent.Width<640,Parent.Width,170)
+                        Wrap: =false
+                  - txtBoardYearDateCount:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Generated Board date count"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: =CountRows(colBoardEvents) & " Board dates"
+                        Width: =If(Parent.Width<640,Parent.Width,150)
+                        Wrap: =false
+                  - txtBoardYearConflictCount:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Blocking Board conflict count"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(185,28,28,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: =CountRows(Filter(colBoardEvents,Status="Blocked" || Status="Needs Decision")) & " blocking conflicts"
+                        Width: =If(Parent.Width<640,Parent.Width,170)
+                        Wrap: =false
+                  - txtBoardYearOverrideCount:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Manual Board override count"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: =CountRows(Filter(colBoardEvents,"Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""))) & " manual overrides"
+                        Width: =If(Parent.Width<640,Parent.Width,170)
+                        Wrap: =false
+            - conBoardYearCalendar:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  Fill: =RGBA(226,232,240,1)
+                  Height: =If(Parent.Width<640,3180,1100)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  LayoutWrap: =true
+                  PaddingBottom: =10
+                  PaddingLeft: =10
+                  PaddingRight: =10
+                  PaddingTop: =10
+                  Width: =Parent.Width
+                Children:
+                  - conBoardYearJan:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearJan:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="January 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="January" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=1))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=1),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearFeb:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearFeb:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="February 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="February" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=2))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=2),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearMar:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearMar:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="March 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="March" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=3))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=3),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearApr:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearApr:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="April 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="April" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=4))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=4),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearMay:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearMay:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="May 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="May" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=5))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=5),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearJun:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearJun:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="June 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="June" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=6))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=6),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearJul:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearJul:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="July 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="July" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=7))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=7),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearAug:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearAug:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="August 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="August" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=8))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=8),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearSep:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearSep:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="September 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="September" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=9))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=9),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearOct:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearOct:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="October 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="October" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=10))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=10),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearNov:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearNov:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="November 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="November" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=11))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=11),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearDec:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<640,255,265)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        Width: =If(Parent.Width<640,Parent.Width,(Parent.Width-20)/3)
+                      Children:
+                        - txtBoardYearDec:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="December 2027 calendar entries"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =235
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="December" & Char(10) & If(CountRows(Filter(colBoardCalendarContext,Month(EventDate)=12))=0,"No calendar entries.",Concat(Filter(colBoardCalendarContext,Month(EventDate)=12),Text(EventDate,"d") & " — " & If(Category="Board",If(Status="Approved","Approved Board",If(Status="Blocked","Blocked",If(Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',""),"Manually moved","Board draft")))),If(Category="Closure","Closure","Other calendar context")) & " — " & Title,Char(10)))
+                              VerticalAlign: =VerticalAlign.Top
+            - conBoardYearReview:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  Fill: =RGBA(244,247,251,1)
+                  Height: =If(Parent.Width<900,1120,490)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(Parent.Width<900,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =12
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  Width: =Parent.Width
+                Children:
+                  - conBoardYearConflictQueue:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<900,420,490)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =6
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =12
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        PaddingTop: =12
+                        Width: =If(Parent.Width<900,Parent.Width,(Parent.Width-12)/2)
+                      Children:
+                        - txtBoardYearConflictHeading:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Board conflicts and unresolved rules"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =26
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =17
+                              Text: ="Conflicts and unresolved rules"
+                              Wrap: =false
+                        - galBoardYearConflict:
+                            Control: Gallery
+                            Variant: Vertical
+                            Properties:
+                              AccessibleLabel: ="Board conflict and unresolved rule queue"
+                              Fill: =RGBA(248,250,252,1)
+                              Height: =360
+                              Items: =colBoardIssues
+                              OnSelect: |-
+                                =Set(varBoardYearSelectedIssue,ThisItem);
+                                If(!IsBlank(ThisItem.EventId),Set(varSelectedEvent,LookUp('LSS Planned Calendar',ID=ThisItem.EventId)))
+                              TemplateSize: =92
+                              Width: =Parent.Width
+                            Children:
+                              - conBoardYearIssueRow:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    Fill: =RGBA(255,255,255,1)
+                                    Height: =Parent.TemplateHeight
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =2
+                                    PaddingBottom: =5
+                                    PaddingLeft: =7
+                                    PaddingRight: =7
+                                    PaddingTop: =5
+                                    Width: =Parent.TemplateWidth
+                                  Children:
+                                    - txtBoardYearIssueTitle:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Issue group and status"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(15,43,91,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =19
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: =ThisItem.GroupTitle & " — " & ThisItem.State
+                                          Wrap: =false
+                                    - txtBoardYearIssueDetail:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Issue reason and recommendation"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =58
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: =If(!IsBlank(ThisItem.CurrentDate),Text(ThisItem.CurrentDate,"mmm d, yyyy") & " — ","") & ThisItem.Reason & Char(10) & "Recommendation — " & ThisItem.Recommendation
+                                          VerticalAlign: =VerticalAlign.Top
+                  - conBoardYearDetail:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255,255,255,1)
+                        Height: =If(Parent.Width<900,688,490)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =6
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =12
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        PaddingTop: =12
+                        Width: =If(Parent.Width<900,Parent.Width,(Parent.Width-12)/2)
+                      Children:
+                        - txtBoardYearDetailHeading:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Board event detail"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =25
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =17
+                              Text: =If(IsBlank(varSelectedEvent),"Select a Board event",varSelectedEvent.Title & " — event " & varSelectedEvent.ID)
+                              Wrap: =false
+                        - galBoardYearEvents:
+                            Control: Gallery
+                            Variant: Vertical
+                            Properties:
+                              AccessibleLabel: ="Board events with read-only calendar context"
+                              Fill: =RGBA(248,250,252,1)
+                              Height: =150
+                              Items: =colBoardCalendarContext
+                              OnSelect: =If(ThisItem.Category="Board",Set(varSelectedEvent,ThisItem))
+                              TemplatePadding: =4
+                              TemplateSize: =36
+                              Width: =Parent.Width
+                            Children:
+                              - txtBoardYearEventRow:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Calendar event row"
+                                    Color: =RGBA(51,65,85,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =6
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: =Text(ThisItem.EventDate,"mmm d") & " — " & ThisItem.Title & " — " & If(ThisItem.Category="Board",If(ThisItem.Status="Approved","Approved Board",If(ThisItem.Status="Blocked","Blocked",If(ThisItem.Status="Exception Approved","Exception approved",If("Manual override" & Char(58) & " Yes" in Coalesce(ThisItem.'Planning Notes',""),"Manually moved","Board draft")))),If(ThisItem.Category="Closure","Closure","Other calendar context"))
+                                    Width: =Parent.TemplateWidth
+                                    Wrap: =false
+                        - txtBoardYearDetailValues:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Selected Board event source group, generated date, current date, manual reason and status"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(51,65,85,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =135
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: =If(IsBlank(varSelectedEvent),"Select a Board event above or select a conflict to inspect its source group, generated date, current date, manual reason, and status.","Source group — " & Coalesce(varSelectedEvent.'Source Rule',"Not recorded") & Char(10) & "Generated date — " & IfError(Mid(Coalesce(varSelectedEvent.'Planning Notes',""),Find("Generated date" & Char(58) & " ",Coalesce(varSelectedEvent.'Planning Notes',""))+Len("Generated date" & Char(58) & " "),10),"Not recorded") & Char(10) & "Current date — " & Text(varSelectedEvent.EventDate,"mmmm d, yyyy") & Char(10) & "Manual reason — " & IfError(Mid(Coalesce(varSelectedEvent.'Planning Notes',""),Find("Override reason" & Char(58) & " ",Coalesce(varSelectedEvent.'Planning Notes',""))+Len("Override reason" & Char(58) & " "),120),"No reason supplied") & Char(10) & "Status — " & Coalesce(varSelectedEvent.Status,"Not recorded"))
+                              VerticalAlign: =VerticalAlign.Top
+                        - btnBoardYearChangeDate:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Change date for selected Board event"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(15,43,91,1)
+                              Color: =RGBA(15,43,91,1)
+                              DisplayMode: =If(!IsBlank(varSelectedEvent) && !varBoardLocked && varSelectedEvent.Category="Board" && StartsWith(Coalesce(varSelectedEvent.'Source Rule',""),"BOARD|"),DisplayMode.Edit,DisplayMode.Disabled)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =160
+                              OnSelect: =Navigate(MeetingEditorScreen,ScreenTransition.Fade)
+                              Size: =14
+                              Text: ="Change date"
+                              Tooltip: ="Open selected generated Board event for a date change"
+                              Width: =If(Parent.Width<640,Parent.Width,180)
+                        - txtBoardYearReadOnly:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Change date availability explanation"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(127,29,29,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =36
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: =If(varBoardLocked,"Board is locked, so dates cannot be changed.",If(!IsBlank(varSelectedEvent) && varSelectedEvent.Category<>"Board","Other calendar context is read-only.","Only selected generated Board events can be changed."))
+                              VerticalAlign: =VerticalAlign.Top
+            - conBoardYearConfirm:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =If(Parent.Width<640,350,235)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =7
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =14
+                  PaddingRight: =14
+                  PaddingTop: =14
+                  Width: =Parent.Width
+                Children:
+                  - txtBoardYearConfirmHeading:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Confirm Board heading"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =26
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =18
+                        Text: ="Confirm Board"
+                        Wrap: =false
+                  - txtBoardYearConfirmReason:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Confirm Board availability explanation"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(71,85,105,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =42
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =12
+                        Text: =If(varBoardLocked,"Board is already confirmed and locked.",If(CountRows(Filter(colBoardRules,RuleStatus.Value<>"Confirmed" || !Coalesce(Completed,false) || !IsBlank(Coalesce('Questions/Comments',""))))>0,"Blocked — resolve or confirm every Board rule.",If(CountRows(colBoardEvents)=0,"Blocked — generate at least one Board date.",If(CountRows(Filter(colBoardEvents,Status="Blocked" || Status="Needs Decision"))>0,"Blocked — resolve every blocked date or decision before confirmation.",If(CountRows(Filter(colBoardEvents,"Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',"") && !(Status="Ready for Review" || Status="Exception Approved")))>0,"Blocked — every manual change needs review or an approved exception.","Ready — confirmation locks all Board dates as Approved Board.")))))
+                        VerticalAlign: =VerticalAlign.Top
+                  - btnBoardYearConfirm:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Confirm and lock Board calendar"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Color: =RGBA(255,255,255,1)
+                        DisplayMode: =If(!varBoardLocked && CountRows(colBoardEvents)>0 && CountRows(Filter(colBoardRules,RuleStatus.Value<>"Confirmed" || !Coalesce(Completed,false) || !IsBlank(Coalesce('Questions/Comments',""))))=0 && CountRows(Filter(colBoardEvents,Status="Blocked" || Status="Needs Decision"))=0 && CountRows(Filter(colBoardEvents,"Manual override" & Char(58) & " Yes" in Coalesce('Planning Notes',"") && !(Status="Ready for Review" || Status="Exception Approved")))=0,DisplayMode.Edit,DisplayMode.Disabled)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =46
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =200
+                        OnSelect: |-
+                          =ClearCollect(colBoardConfirmReceipt,ForAll(colBoardEvents As EventToConfirm,Patch('LSS Planned Calendar',LookUp('LSS Planned Calendar',ID=EventToConfirm.ID),{Status:"Approved",'Planning Notes':Coalesce(EventToConfirm.'Planning Notes',"") & Char(10) & "Board confirmed and locked: Yes"})));
+                          ClearCollect(colBoardEvents,SortByColumns(Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1) && EventDate<Date(2028,1,1) && Category="Board"),"EventDate",SortOrder.Ascending));
+                          ClearCollect(colBoardCalendarContext,SortByColumns(Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1) && EventDate<Date(2028,1,1)),"EventDate",SortOrder.Ascending));
+                          Set(varBoardLocked,true)
+                        Size: =14
+                        Text: ="Confirm Board and lock dates"
+                        Tooltip: ="Confirm eligible Board dates and lock them as Approved Board"
+                        Width: =If(Parent.Width<640,Parent.Width,260)
+                  - galBoardYearConfirmReceipt:
+                      Control: Gallery
+                      Variant: Vertical
+                      Properties:
+                        AccessibleLabel: ="Board confirmation receipt with event IDs, dates and statuses"
+                        Fill: =RGBA(240,253,244,1)
+                        Height: =85
+                        Items: =colBoardConfirmReceipt
+                        OnSelect: =Set(varSelectedEvent,ThisItem)
+                        TemplatePadding: =4
+                        TemplateSize: =28
+                        Visible: =CountRows(colBoardConfirmReceipt)>0
+                        Width: =Parent.Width
+                      Children:
+                        - txtBoardYearConfirmReceipt:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Confirmed Board event receipt row"
+                              Color: =RGBA(22,101,52,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =26
+                              PaddingBottom: =0
+                              PaddingLeft: =6
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =12
+                              Text: ="Confirmed event " & ThisItem.ID & " — " & Text(ThisItem.EventDate,"mmm d, yyyy") & " — " & ThisItem.Status
+                              Width: =Parent.TemplateWidth
+                              Wrap: =false

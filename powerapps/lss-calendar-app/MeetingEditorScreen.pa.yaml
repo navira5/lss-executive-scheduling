@@ -1,0 +1,518 @@
+Screens:
+  MeetingEditorScreen:
+    Properties:
+      Fill: =RGBA(244,247,251,1)
+      LoadingSpinnerColor: =RGBA(37,99,235,1)
+      OnVisible: |-
+        =Refresh('LSS Planned Calendar');
+        ClearCollect(colBoardAdjustCalendar,Filter('LSS Planned Calendar',EventDate >= Date(2027,1,1) && EventDate < Date(2028,1,1)));
+        ClearCollect(colBoardAdjustClosures,Filter(colBoardAdjustCalendar,Category="Closure"));
+        ClearCollect(colBoardAdjustEvents,Filter(colBoardAdjustCalendar,Category="Board"));
+        Set(varBoardAdjustSelectionValid,!IsBlank(varSelectedEvent.ID) && StartsWith(Coalesce(varSelectedEvent.'Source Rule',""),"BOARD|RuleId="));
+        Set(varBoardAdjustLocked,varSelectedEvent.Status="Approved" || "Board confirmed and locked: Yes" in Coalesce(varSelectedEvent.'Planning Notes',""));
+        Set(varBoardAdjustAttempted,false);
+        Set(varBoardAdjustReceiptVisible,false)
+    Children:
+      - conBoardAdjustRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(244,247,251,1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =16
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =If(App.Width < 640,16,24)
+            PaddingLeft: =If(App.Width < 640,16,24)
+            PaddingRight: =If(App.Width < 640,16,24)
+            PaddingTop: =If(App.Width < 640,16,24)
+            Width: =Parent.Width
+          Children:
+            - conBoardAdjustHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Semilight
+                  Fill: =RGBA(15,43,91,1)
+                  FillPortions: =0
+                  Height: =If(Parent.Width < 640,148,84)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(Parent.Width < 640,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =12
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  LayoutWrap: =true
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                Children:
+                  - txtBoardAdjustTitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Change Board meeting date"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255,255,255,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =44
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =If(Parent.Width < 640,22,28)
+                        Text: ="Change Board meeting date"
+                        Width: =If(Parent.Width < 640,Parent.Width,Parent.Width-232)
+                        Wrap: =false
+                  - btnBoardAdjustReturnCalendar:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Return to the Board calendar without making a change"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =ButtonAppearance.Outline
+                        BasePaletteColor: =RGBA(255,255,255,1)
+                        Color: =RGBA(255,255,255,1)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =220
+                        OnSelect: |-
+                          =Set(varBoardAdjustAttempted,false);
+                          Set(varBoardAdjustReceiptVisible,false);
+                          Navigate(Screen2)
+                        Size: =14
+                        Text: ="Return to Board calendar"
+                        Tooltip: ="Return without writing any calendar fields"
+                        Width: =If(Parent.Width < 640,Parent.Width,220)
+            - conBoardAdjustReadOnly:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =If(varBoardAdjustSelectionValid,RGBA(255,251,235,1),RGBA(254,242,242,1))
+                  FillPortions: =0
+                  Height: =If(Parent.Width < 640,136,68)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =12
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Visible: =!varBoardAdjustSelectionValid || varBoardAdjustLocked
+                Children:
+                  - txtBoardAdjustReadOnly:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Board event selection or lock explanation"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =If(varBoardAdjustSelectionValid,RGBA(146,64,14,1),RGBA(185,28,28,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =If(Parent.Width < 640,104,40)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: =If(!varBoardAdjustSelectionValid,"Choose a generated Board event from the Board calendar. This protected screen has no add, delete, generic edit, or later-system action.", "This Board event is confirmed and locked. Its dates and source remain visible, but no change or exception action is available.")
+                        VerticalAlign: =VerticalAlign.Top
+            - conBoardAdjustIdentity:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Semilight
+                  Fill: =RGBA(255,255,255,1)
+                  FillPortions: =0
+                  Height: =If(Parent.Width < 640,382,236)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Visible: =varBoardAdjustSelectionValid
+                Children:
+                  - txtBoardAdjustIdentityHeading:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Selected Board meeting identity"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =18
+                        Text: ="Selected Board meeting"
+                        Wrap: =false
+                  - txtBoardAdjustIdentity:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Title, calendar ID, source rule, original generated date, current date, state, and lock status"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(30,41,59,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =If(Parent.Width < 640,278,154)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: |-
+                          ="Group / title: " & varSelectedEvent.Title & Char(10) &
+                          "Calendar ID: " & Text(varSelectedEvent.ID) & Char(10) &
+                          "Source rule: " & varSelectedEvent.'Source Rule' & Char(10) &
+                          "Original generated date: " & Text(IfError(DateValue(Mid(varSelectedEvent.'Planning Notes',Find("Generated date: ",varSelectedEvent.'Planning Notes') + 16,10)),varSelectedEvent.EventDate),"[$-en-US]mmmm d, yyyy") & Char(10) &
+                          "Current date: " & Text(varSelectedEvent.EventDate,"[$-en-US]mmmm d, yyyy") & Char(10) &
+                          "State: " & Coalesce(varSelectedEvent.Status,"Needs Decision") & Char(10) &
+                          "Lock status: " & If(varBoardAdjustLocked,"Confirmed and locked","Open for Board adjustment")
+                        VerticalAlign: =VerticalAlign.Top
+                  - bdgBoardAdjustState:
+                      Control: Badge
+                      Properties:
+                        AccessibleLabel: ="Current Board event state " & Coalesce(varSelectedEvent.Status,"Needs Decision")
+                        Appearance: ='BadgeCanvas.Appearance'.Tint
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Content: =Coalesce(varSelectedEvent.Status,"Needs Decision")
+                        FontColor: =RGBA(15,43,91,1)
+                        FontSize: =12
+                        Shape: ='BadgeCanvas.Shape'.Rounded
+                        ThemeColor: =If(varBoardAdjustLocked,'BadgeCanvas.ThemeColor'.Success,If(varSelectedEvent.Status="Blocked",'BadgeCanvas.ThemeColor'.Danger,'BadgeCanvas.ThemeColor'.Warning))
+            - conBoardAdjustForm:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Semilight
+                  Fill: =RGBA(255,255,255,1)
+                  FillPortions: =0
+                  Height: =If(Parent.Width < 640,480,286)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Visible: =varBoardAdjustSelectionValid && !varBoardAdjustLocked && !varBoardAdjustReceiptVisible
+                Children:
+                  - txtBoardAdjustFormHeading:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Board date adjustment section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =18
+                        Text: ="Change only the meeting date"
+                        Wrap: =false
+                  - txtBoardAdjustDateLabel:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="New date label"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(30,41,59,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =If(Parent.Width < 640,44,22)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: ="New date"
+                  - dteBoardAdjustNewDate:
+                      Control: ModernDatePicker
+                      Properties:
+                        AccessibleLabel: ="Choose the new Board meeting date"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Color: =RGBA(15,23,42,1)
+                        DefaultDate: =varSelectedEvent.EventDate
+                        DisplayMode: =If(varBoardAdjustLocked,DisplayMode.Disabled,DisplayMode.Edit)
+                        Font: =Font.'Segoe UI'
+                        Height: =44
+                        IsEditable: =true
+                        ValidationState: =If(varBoardAdjustAttempted && IsBlank(Self.SelectedDate),ValidationState.Error,ValidationState.None)
+                        Width: =Parent.Width
+                  - txtBoardAdjustReasonLabel:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Reason label"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(30,41,59,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =If(Parent.Width < 640,44,22)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: ="Why is this date changing? Optional for save; required to approve an exception."
+                  - inpBoardAdjustReason:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Reason for changing this Board meeting date"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Color: =RGBA(15,23,42,1)
+                        DisplayMode: =If(varBoardAdjustLocked,DisplayMode.Disabled,DisplayMode.Edit)
+                        Font: =Font.'Segoe UI'
+                        Height: =68
+                        Placeholder: ="For example, Board availability"
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Type: =TextInputType.Multiline
+                        Width: =Parent.Width
+                  - txtBoardAdjustConflict:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Closure and Board collision check"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =If(CountRows(Filter(colBoardAdjustClosures,EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0 || CountRows(Filter(colBoardAdjustEvents,ID <> varSelectedEvent.ID && EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0,RGBA(185,28,28,1),RGBA(4,120,87,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =If(Parent.Width < 640,54,28)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: |-
+                          =If(CountRows(Filter(colBoardAdjustClosures,EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0,"Blocked: this is a closure; exception approval is unavailable.",If(CountRows(Filter(colBoardAdjustEvents,ID <> varSelectedEvent.ID && EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0,"Blocked: another Board meeting is already on this date; exception approval is unavailable.","No closure or Board collision found for this date."))
+                        VerticalAlign: =VerticalAlign.Top
+            - conBoardAdjustRecommendation:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(239,246,255,1)
+                  FillPortions: =0
+                  Height: =If(Parent.Width < 640,118,64)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =12
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Visible: =varBoardAdjustSelectionValid && !varBoardAdjustLocked && !varBoardAdjustReceiptVisible && (CountRows(Filter(colBoardAdjustClosures,EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0 || CountRows(Filter(colBoardAdjustEvents,ID <> varSelectedEvent.ID && EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0)
+                Children:
+                  - txtBoardAdjustRecommendation:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Recommendation for a blocked date"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(30,64,175,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =If(Parent.Width < 640,86,40)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: |-
+                          =With({candidate:First(Filter(Sequence(14),Weekday(DateAdd(dteBoardAdjustNewDate.SelectedDate,Value)) <> 1 && Weekday(DateAdd(dteBoardAdjustNewDate.SelectedDate,Value)) <> 7 && CountRows(Filter(colBoardAdjustClosures,EventDate=DateAdd(dteBoardAdjustNewDate.SelectedDate,Value)))=0 && CountRows(Filter(colBoardAdjustEvents,ID <> varSelectedEvent.ID && EventDate=DateAdd(dteBoardAdjustNewDate.SelectedDate,Value)))=0))},If(IsBlank(candidate.Value),"Recommendation only: no recommended alternative found in the next 14 days.","Recommendation only: consider " & Text(DateAdd(dteBoardAdjustNewDate.SelectedDate,candidate.Value),"[$-en-US]mmmm d, yyyy") & ". This does not change your selected date."))
+                        VerticalAlign: =VerticalAlign.Top
+            - conBoardAdjustActions:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =0
+                  Height: =If(Parent.Width < 640,168,52)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(Parent.Width < 640,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  LayoutWrap: =true
+                  Visible: =varBoardAdjustSelectionValid && !varBoardAdjustLocked && !varBoardAdjustReceiptVisible
+                Children:
+                  - btnBoardAdjustSaveDateChange:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Save the selected Board meeting date change"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Color: =RGBA(255,255,255,1)
+                        DisplayMode: =If(!IsBlank(dteBoardAdjustNewDate.SelectedDate),DisplayMode.Edit,DisplayMode.Disabled)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =180
+                        OnSelect: |-
+                          =Set(varBoardAdjustAttempted,true);
+                          With(
+                              {
+                                  selectedDate:dteBoardAdjustNewDate.SelectedDate,
+                                  originalDate:IfError(DateValue(Mid(varSelectedEvent.'Planning Notes',Find("Generated date: ",varSelectedEvent.'Planning Notes') + 16,10)),varSelectedEvent.EventDate),
+                                  closureConflict:CountRows(Filter(colBoardAdjustClosures,EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0,
+                                  collisionConflict:CountRows(Filter(colBoardAdjustEvents,ID <> varSelectedEvent.ID && EventDate=dteBoardAdjustNewDate.SelectedDate)) > 0,
+                                  reasonText:If(IsBlank(Trim(inpBoardAdjustReason.Text)),"No reason supplied",Trim(inpBoardAdjustReason.Text))
+                              },
+                              Set(varBoardAdjustReceipt,Patch('LSS Planned Calendar',LookUp('LSS Planned Calendar',ID=varSelectedEvent.ID),{EventDate:selectedDate,Status:If(closureConflict || collisionConflict,"Blocked","Ready for Review"),'Planning Notes':"Board workflow" & Char(10) & "Generated date: " & Text(originalDate,"yyyy-mm-dd") & Char(10) & "Current date: " & Text(selectedDate,"yyyy-mm-dd") & Char(10) & "Manual override: Yes" & Char(10) & "Override reason: " & reasonText & Char(10) & "Exception approved: No" & Char(10) & "Conflict: " & If(closureConflict,"Closure",If(collisionConflict,"Board collision","None")) & Char(10) & "Additional planning notes: " & Coalesce(varSelectedEvent.'Planning Notes',"")}));
+                              Refresh('LSS Planned Calendar');
+                              ClearCollect(colBoardAdjustCalendar,Filter('LSS Planned Calendar',EventDate >= Date(2027,1,1) && EventDate < Date(2028,1,1)));
+                              ClearCollect(colBoardAdjustClosures,Filter(colBoardAdjustCalendar,Category="Closure"));
+                              ClearCollect(colBoardAdjustEvents,Filter(colBoardAdjustCalendar,Category="Board"));
+                              Set(varSelectedEvent,varBoardAdjustReceipt);
+                              Set(varBoardAdjustReceiptAction,"Date change saved");
+                              Set(varBoardAdjustReceiptVisible,true)
+                          )
+                        Size: =14
+                        Text: ="Save date change"
+                        Tooltip: ="Updates only EventDate, Status, and Planning Notes for this Board event"
+                        Width: =If(Parent.Width < 640,Parent.Width,180)
+                  - btnBoardAdjustApproveException:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Approve a valid moved Board meeting exception"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =ButtonAppearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,43,91,1)
+                        DisplayMode: |-
+                          =If(varSelectedEvent.EventDate <> IfError(DateValue(Mid(varSelectedEvent.'Planning Notes',Find("Generated date: ",varSelectedEvent.'Planning Notes') + 16,10)),varSelectedEvent.EventDate) && !IsBlank(Trim(inpBoardAdjustReason.Text)) && CountRows(Filter(colBoardAdjustClosures,EventDate=varSelectedEvent.EventDate))=0 && CountRows(Filter(colBoardAdjustEvents,ID <> varSelectedEvent.ID && EventDate=varSelectedEvent.EventDate))=0,DisplayMode.Edit,DisplayMode.Disabled)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =180
+                        OnSelect: |-
+                          =With(
+                              {originalDate:IfError(DateValue(Mid(varSelectedEvent.'Planning Notes',Find("Generated date: ",varSelectedEvent.'Planning Notes') + 16,10)),varSelectedEvent.EventDate),rationale:Trim(inpBoardAdjustReason.Text)},
+                              Set(varBoardAdjustReceipt,Patch('LSS Planned Calendar',LookUp('LSS Planned Calendar',ID=varSelectedEvent.ID),{Status:"Exception Approved",'Planning Notes':"Board workflow" & Char(10) & "Generated date: " & Text(originalDate,"yyyy-mm-dd") & Char(10) & "Current date: " & Text(varSelectedEvent.EventDate,"yyyy-mm-dd") & Char(10) & "Manual override: Yes" & Char(10) & "Override reason: " & rationale & Char(10) & "Exception approved: Yes" & Char(10) & "Conflict: None" & Char(10) & "Additional planning notes: " & Coalesce(varSelectedEvent.'Planning Notes',"")}));
+                              Refresh('LSS Planned Calendar');
+                              ClearCollect(colBoardAdjustCalendar,Filter('LSS Planned Calendar',EventDate >= Date(2027,1,1) && EventDate < Date(2028,1,1)));
+                              ClearCollect(colBoardAdjustClosures,Filter(colBoardAdjustCalendar,Category="Closure"));
+                              ClearCollect(colBoardAdjustEvents,Filter(colBoardAdjustCalendar,Category="Board"));
+                              Set(varSelectedEvent,varBoardAdjustReceipt);
+                              Set(varBoardAdjustReceiptAction,"Exception approved");
+                              Set(varBoardAdjustReceiptVisible,true)
+                          )
+                        Size: =14
+                        Text: ="Approve exception"
+                        Tooltip: ="Available only for a moved, conflict-free Board event with a typed rationale"
+                        Width: =If(Parent.Width < 640,Parent.Width,180)
+                  - btnBoardAdjustCancel:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Cancel this Board date adjustment"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =ButtonAppearance.Subtle
+                        BasePaletteColor: =RGBA(255,255,255,1)
+                        Color: =RGBA(15,43,91,1)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =120
+                        OnSelect: =Navigate(Screen2)
+                        Size: =14
+                        Text: ="Cancel"
+                        Tooltip: ="Return without writing any calendar fields"
+                        Width: =If(Parent.Width < 640,Parent.Width,120)
+            - conBoardAdjustReceipt:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Semilight
+                  Fill: =RGBA(236,253,245,1)
+                  FillPortions: =0
+                  Height: =If(Parent.Width < 640,348,246)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Visible: =varBoardAdjustReceiptVisible
+                Children:
+                  - txtBoardAdjustReceipt:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Saved Board adjustment receipt"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(6,78,59,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =If(Parent.Width < 640,242,156)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: |-
+                          ="Action: " & varBoardAdjustReceiptAction & Char(10) &
+                          "Calendar ID: " & Text(varBoardAdjustReceipt.ID) & Char(10) &
+                          "Original generated date: " & Text(IfError(DateValue(Mid(varBoardAdjustReceipt.'Planning Notes',Find("Generated date: ",varBoardAdjustReceipt.'Planning Notes') + 16,10)),varBoardAdjustReceipt.EventDate),"[$-en-US]mmmm d, yyyy") & Char(10) &
+                          "New / current date: " & Text(varBoardAdjustReceipt.EventDate,"[$-en-US]mmmm d, yyyy") & Char(10) &
+                          "Recorded reason: " & With({reasonStart:Find("Override reason: ",varBoardAdjustReceipt.'Planning Notes')},If(reasonStart > 0,Mid(varBoardAdjustReceipt.'Planning Notes',reasonStart + 17,Find(Char(10),varBoardAdjustReceipt.'Planning Notes' & Char(10),reasonStart + 17)-(reasonStart + 17)),"No reason supplied")) & Char(10) &
+                          "Source rule: " & varBoardAdjustReceipt.'Source Rule' & Char(10) &
+                          "Status / conflict result: " & varBoardAdjustReceipt.Status & Char(10) &
+                          "Manual override: Yes — see persisted Planning Notes for the recorded reason."
+                        VerticalAlign: =VerticalAlign.Top
+                  - btnBoardAdjustReceiptReturn:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Return to Board calendar after reviewing the adjustment receipt"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Color: =RGBA(255,255,255,1)
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =220
+                        OnSelect: |-
+                          =Set(varBoardAdjustReceiptVisible,false);
+                          Navigate(Screen2)
+                        Size: =14
+                        Text: ="Return to Board calendar"
+                        Tooltip: ="Review this saved Board change in the year calendar"
+                        Width: =If(Parent.Width < 640,Parent.Width,220)

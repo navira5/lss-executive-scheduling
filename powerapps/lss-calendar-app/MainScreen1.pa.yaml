@@ -1,0 +1,877 @@
+Screens:
+  MainScreen1:
+    Properties:
+      Fill: =RGBA(244,247,251,1)
+      LoadingSpinnerColor: =RGBA(15,43,91,1)
+      OnVisible: |-
+        =Refresh('LSS Meeting Types'); Refresh('LSS Planned Calendar');
+        ClearCollect(colBoardRules,Filter('LSS Meeting Types',Category.Value="Board"&&(Title="Full Board"||Title="Board Critical Issue Check-in"||Title="Board Retreat")));
+        ClearCollect(colBoardEvents,Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1)&&EventDate<Date(2028,1,1)&&Category="Board"));
+        ClearCollect(colClosures,Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1)&&EventDate<Date(2028,1,1)&&Category="Closure"));
+        If(IsBlank(varSelectedBoardRuleID)&&!IsEmpty(colBoardRules),Set(varSelectedBoardRuleID,First(colBoardRules).ID));
+        Set(varBoardRuleReceiptVisible,false); Set(varBoardDraftReceiptVisible,false)
+    Children:
+      - conBoardRuleRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(244,247,251,1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =14
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =16
+            PaddingLeft: =16
+            PaddingRight: =16
+            PaddingTop: =16
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - conBoardRuleHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Semilight
+                  Fill: =RGBA(15,43,91,1)
+                  Height: =If(App.Width<640,170,144)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =6
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =12
+                  RadiusBottomLeft: =12
+                  RadiusBottomRight: =12
+                  RadiusTopLeft: =12
+                  RadiusTopRight: =12
+                Children:
+                  - txtBoardRuleTitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Board planning"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255,255,255,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =24
+                        Text: ="Board planning"
+                        Wrap: =false
+                  - txtBoardRuleSubtitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Choose a Board meeting group, confirm its rule, then generate a draft."
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(226,232,240,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =24
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: ="Choose a Board meeting group, confirm its rule, then generate a draft."
+                        Wrap: =false
+                  - conBoardRuleNav:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutWrap: =true
+                      Children:
+                        - btnBoardRuleCurrent:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Current Board rules workspace"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BasePaletteColor: =RGBA(37,99,235,1)
+                              Color: =RGBA(255,255,255,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =140
+                              Size: =14
+                              Text: ="Board rules"
+                              Tooltip: ="Current workspace"
+                              Width: =If(App.Width<640,Parent.Width,170)
+                        - btnBoardRuleCalendar:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Open Board calendar"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(255,255,255,1)
+                              Color: =RGBA(255,255,255,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =150
+                              OnSelect: =Navigate(Screen2)
+                              Size: =14
+                              Text: ="Board calendar"
+                              Tooltip: ="Open Board calendar"
+                              Width: =If(App.Width<640,Parent.Width,180)
+            - txtBoardRuleGroupsHeading:
+                Control: ModernText
+                Properties:
+                  AccessibleLabel: ="Board meeting groups"
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Color: =RGBA(15,43,91,1)
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =26
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =18
+                  Text: ="Board meeting groups"
+                  Wrap: =false
+            - galBoardRuleGroups:
+                Control: Gallery
+                Variant: Vertical
+                Properties:
+                  AccessibleLabel: ="Board meeting groups"
+                  Fill: =RGBA(244,247,251,1)
+                  Height: =Min(330,Max(100,CountRows(colBoardRules)*98))
+                  Items: =colBoardRules
+                  OnSelect: =Set(varSelectedBoardRuleID,ThisItem.ID);Set(varBoardRuleReceiptVisible,false);Set(varBoardDraftReceiptVisible,false)
+                  TabIndex: =0
+                  TemplatePadding: =6
+                  TemplateSize: =92
+                  Visible: =!IsEmpty(colBoardRules)
+                  Width: =Parent.Width
+                Children:
+                  - conBoardRuleGroupRow:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =If(ThisItem.ID=varSelectedBoardRuleID,RGBA(219,234,254,1),RGBA(255,255,255,1))
+                        Height: =Parent.TemplateHeight
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =3
+                        PaddingBottom: =8
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        PaddingTop: =8
+                        RadiusBottomLeft: =10
+                        RadiusBottomRight: =10
+                        RadiusTopLeft: =10
+                        RadiusTopRight: =10
+                        Width: =Parent.TemplateWidth
+                      Children:
+                        - txtBoardRuleGroupName:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Board meeting group " & ThisItem.Title
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,23,42,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =22
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Text: =ThisItem.Title
+                              Wrap: =false
+                        - txtBoardRuleGroupState:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Status and generated count for " & ThisItem.Title
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(71,85,105,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =20
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =12
+                              Text: =If(ThisItem.RuleStatus.Value="Confirmed"&&ThisItem.Completed,"Confirmed","Needs validation") & " · " & Text(CountRows(Filter(colBoardEvents,Find("BOARD|RuleId="&Text(ThisItem.ID)&"|",'Source Rule')>0))) & " generated"
+                              Wrap: =false
+                        - bdgBoardRuleSelected:
+                            Control: Badge
+                            Properties:
+                              AccessibleLabel: ="Selection state for " & ThisItem.Title
+                              Appearance: ='BadgeCanvas.Appearance'.Tint
+                              BasePaletteColor: =RGBA(15,43,91,1)
+                              Content: =If(ThisItem.ID=varSelectedBoardRuleID,"Selected",If(ThisItem.RuleStatus.Value="Confirmed"&&ThisItem.Completed,"Confirmed","Needs validation"))
+                              FontColor: =RGBA(15,43,91,1)
+                              FontSize: =12
+                              Shape: ='BadgeCanvas.Shape'.Rounded
+                              ThemeColor: =If(ThisItem.RuleStatus.Value="Confirmed"&&ThisItem.Completed,'BadgeCanvas.ThemeColor'.Success,'BadgeCanvas.ThemeColor'.Warning)
+            - txtBoardRuleRetreatMissing:
+                Control: ModernText
+                Properties:
+                  AccessibleLabel: ="Board Retreat is not configured"
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Color: =RGBA(146,64,14,1)
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =34
+                  PaddingBottom: =0
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =0
+                  Size: =13
+                  Text: ="Board Retreat — not configured — no Board Retreat dates will be generated."
+                  Visible: =IsBlank(LookUp(colBoardRules,Title="Board Retreat"))
+            - conBoardRuleForm:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =If(App.Width<640,1460,1260)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  RadiusBottomLeft: =12
+                  RadiusBottomRight: =12
+                  RadiusTopLeft: =12
+                  RadiusTopRight: =12
+                  Visible: =!IsBlank(varSelectedBoardRuleID)
+                Children:
+                  - txtBoardRuleSelectedName:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Selected Board meeting group"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =20
+                        Text: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Title
+                        Wrap: =false
+                  - txtBoardRuleLocked:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Board rule lock status"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(185,28,28,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =38
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: ="This rule is locked because generated Board dates are confirmed."
+                        Visible: |-
+                          =CountRows(Filter(colBoardEvents,Find("BOARD|RuleId="&Text(varSelectedBoardRuleID)&"|",'Source Rule')>0&&(Status="Approved"||Find("Board confirmed and locked: Yes",'Planning Notes')>0)))>0
+                  - txtBoardRuleMeetingHead:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Meeting section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Meeting"
+                        Wrap: =false
+                  - inpBoardRuleName:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Meeting name"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Title
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Placeholder: ="Meeting name"
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Width: =Parent.Width
+                  - inpBoardRulePurpose:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Purpose"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Purpose
+                        Font: =Font.'Segoe UI'
+                        Height: =48
+                        Placeholder: ="Purpose"
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Type: =TextInputType.Multiline
+                        Width: =Parent.Width
+                  - txtBoardRuleScheduleHead:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Scheduling pattern section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Scheduling pattern"
+                        Wrap: =false
+                  - txtBoardRuleCadenceLabel:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="How often does this meeting happen?"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(51,65,85,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =20
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: ="How often does this meeting happen?"
+                        Wrap: =false
+                  - drpBoardRuleCadence:
+                      Control: ModernDropdown
+                      Properties:
+                        AccessibleLabel: ="How often does this meeting happen?"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Cadence
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        ItemDisplayText: =ThisItem.Value
+                        Items: =[{Value:"Monthly"},{Value:"Every other month"},{Value:"Quarterly"},{Value:"Semiannual"},{Value:"Annual"},{Value:"Custom annual count"}]
+                        Required: =true
+                        Width: =Parent.Width
+                  - drpBoardRuleStartMonth:
+                      Control: ModernDropdown
+                      Properties:
+                        AccessibleLabel: ="Starting month"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).'Start Month'
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Items: =[{Value1:"January",Value:"January"},{Value1:"February",Value:"February"},{Value1:"March",Value:"March"},{Value1:"April",Value:"April"},{Value1:"May",Value:"May"},{Value1:"June",Value:"June"},{Value1:"July",Value:"July"},{Value1:"August",Value:"August"},{Value1:"September",Value:"September"},{Value1:"October",Value:"October"},{Value1:"November",Value:"November"},{Value1:"December",Value:"December"}]
+                        Required: =true
+                        Width: =Parent.Width
+                  - drpBoardRuleWeek:
+                      Control: ModernDropdown
+                      Properties:
+                        AccessibleLabel: ="Week of month"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).WeekOfMonth
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        ItemDisplayText: =ThisItem.Value
+                        Items: =[{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Fifth"}]
+                        Required: =true
+                        Width: =Parent.Width
+                  - drpBoardRuleDay:
+                      Control: ModernDropdown
+                      Properties:
+                        AccessibleLabel: ="Preferred day"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).DayOfWeek
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        ItemDisplayText: =ThisItem.Value
+                        Items: =[{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}]
+                        Required: =true
+                        Width: =Parent.Width
+                  - numBoardRuleCustomCount:
+                      Control: ModernNumberInput
+                      Properties:
+                        AccessibleLabel: ="Custom annual meeting count"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =1
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Max: =12
+                        Min: =1
+                        Precision: =DecimalPrecision.'0'
+                        Visible: =drpBoardRuleCadence.Selected.Value="Custom annual count"
+                        Width: =Parent.Width
+                  - inpBoardRuleTime:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Time"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).PreferredTime
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Placeholder: ="Time"
+                        Required: =true
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Width: =Parent.Width
+                  - numBoardRuleDuration:
+                      Control: ModernNumberInput
+                      Properties:
+                        AccessibleLabel: ="Duration in minutes"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).DurationMinutes
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Max: =1440
+                        Min: =1
+                        Precision: =DecimalPrecision.'0'
+                        Width: =Parent.Width
+                  - txtBoardRuleAttendanceHead:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Attendance section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Attendance"
+                        Wrap: =false
+                  - inpBoardRuleLeader:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Leader"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Leader
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Placeholder: ="Leader"
+                        Required: =true
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Width: =Parent.Width
+                  - inpBoardRuleAttendees:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Attendees"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Attendees
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Placeholder: ="Attendees"
+                        Required: =true
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Width: =Parent.Width
+                  - inpBoardRuleAttendance:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Attendance requirement"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).AttendanceRule.Value
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Placeholder: ="Attendance requirement"
+                        Required: =true
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Width: =Parent.Width
+                  - txtBoardRuleSetupHead:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Meeting setup section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Meeting setup"
+                        Wrap: =false
+                  - drpBoardRuleModality:
+                      Control: ModernDropdown
+                      Properties:
+                        AccessibleLabel: ="Meeting format"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Modality
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        ItemDisplayText: =ThisItem.Value
+                        Items: =[{Value:"In person"},{Value:"Virtual"},{Value:"Hybrid"}]
+                        Required: =true
+                        Width: =Parent.Width
+                  - inpBoardRuleLocation:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Location"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Location
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        Placeholder: ="Location"
+                        Required: =true
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Width: =Parent.Width
+                  - txtBoardRuleFlexHead:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Flexibility section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Flexibility"
+                        Wrap: =false
+                  - drpBoardRuleFlexibility:
+                      Control: ModernDropdown
+                      Properties:
+                        AccessibleLabel: ="Scheduling flexibility"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Flexibility
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        ItemDisplayText: =ThisItem.Value
+                        Items: =[{Value:"Fixed / approval required to move"},{Value:"Movable"},{Value:"Preference only"}]
+                        Required: =true
+                        Width: =Parent.Width
+                  - txtBoardRuleQuestionHead:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Status and open questions section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Status / open questions"
+                        Wrap: =false
+                  - inpBoardRuleQuestions:
+                      Control: ModernTextInput
+                      Properties:
+                        AccessibleLabel: ="Open questions or notes"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =Appearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,23,42,1)
+                        Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).'Questions/Comments'
+                        Font: =Font.'Segoe UI'
+                        Height: =50
+                        Placeholder: ="Open questions or notes"
+                        TriggerOutput: =TriggerOutput.FocusOut
+                        Type: =TextInputType.Multiline
+                        Width: =Parent.Width
+                  - txtBoardRuleValidation:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Missing information for selected Board rule"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(146,64,14,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =40
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =13
+                        Text: |-
+                          =LookUp(colBoardRules,ID=varSelectedBoardRuleID).Title & " still needs: " & Concat(Filter(Table({Label:"meeting name",Missing:IsBlank(inpBoardRuleName.Text)},{Label:"purpose",Missing:IsBlank(inpBoardRulePurpose.Text)},{Label:"starting month",Missing:IsBlank(drpBoardRuleStartMonth.Selected.Value)},{Label:"week of month",Missing:IsBlank(drpBoardRuleWeek.Selected.Value)},{Label:"preferred day",Missing:IsBlank(drpBoardRuleDay.Selected.Value)},{Label:"time",Missing:IsBlank(inpBoardRuleTime.Text)},{Label:"duration",Missing:IsBlank(numBoardRuleDuration.Value)},{Label:"leader",Missing:IsBlank(inpBoardRuleLeader.Text)},{Label:"attendees",Missing:IsBlank(inpBoardRuleAttendees.Text)},{Label:"attendance requirement",Missing:IsBlank(inpBoardRuleAttendance.Text)},{Label:"meeting format",Missing:IsBlank(drpBoardRuleModality.Selected.Value)},{Label:"location",Missing:IsBlank(inpBoardRuleLocation.Text)},{Label:"flexibility",Missing:IsBlank(drpBoardRuleFlexibility.Selected.Value)},{Label:"open questions",Missing:!IsBlank(inpBoardRuleQuestions.Text)}),Missing),Label,", ")
+                        VerticalAlign: =VerticalAlign.Top
+            - conBoardRuleReceipt:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(236,253,245,1)
+                  Height: =154
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =14
+                  PaddingRight: =14
+                  PaddingTop: =12
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                  Visible: =varBoardRuleReceiptVisible
+                Children:
+                  - txtBoardRuleReceiptTitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Board rule receipt action"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(6,78,59,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =22
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =varBoardRuleReceiptAction
+                        Wrap: =false
+                  - txtBoardRuleReceiptDetails:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Board rule receipt details"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(6,78,59,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =104
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =12
+                        Text: |-
+                          ="Rule ID: " & Text(varBoardRuleReceipt.ID) & Char(10) &
+                          "Meeting name: " & Coalesce(varBoardRuleReceipt.Title,"—") & " · Purpose: " & Coalesce(varBoardRuleReceipt.Purpose,"—") & Char(10) &
+                          "Cadence: " & Coalesce(varBoardRuleReceipt.Cadence.Value,"—") & " · Starting month: " & Coalesce(varBoardRuleReceipt.'Start Month'.Value,"—") & " · Week of month: " & Coalesce(varBoardRuleReceipt.WeekOfMonth.Value,"—") & " · Preferred day: " & Coalesce(varBoardRuleReceipt.DayOfWeek.Value,"—") & Char(10) &
+                          "Time: " & Coalesce(varBoardRuleReceipt.PreferredTime,"—") & " · Duration: " & Text(varBoardRuleReceipt.DurationMinutes) & " · Leader: " & Coalesce(varBoardRuleReceipt.Leader,"—") & " · Attendees: " & Coalesce(varBoardRuleReceipt.Attendees,"—") & Char(10) &
+                          "Attendance requirement: " & Coalesce(varBoardRuleReceipt.AttendanceRule.Value,"—") & " · Format: " & Coalesce(varBoardRuleReceipt.Modality.Value,"—") & " · Location: " & Coalesce(varBoardRuleReceipt.Location,"—") & " · Flexibility: " & Coalesce(varBoardRuleReceipt.Flexibility.Value,"—") & Char(10) &
+                          "Status: " & Coalesce(varBoardRuleReceipt.RuleStatus.Value,"Needs validation") & " · Completed: " & If(varBoardRuleReceipt.Completed,"Yes","No") & " · Open questions: " & Coalesce(varBoardRuleReceipt.'Questions/Comments',"None") & " · Custom annual count: " & Coalesce(varBoardRuleReceipt.Frequency,"Not used")
+                        VerticalAlign: =VerticalAlign.Top
+            - conBoardRuleDraftReceipt:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(239,246,255,1)
+                  Height: =160
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =14
+                  PaddingRight: =14
+                  PaddingTop: =12
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                  Visible: =varBoardDraftReceiptVisible
+                Children:
+                  - txtBoardRuleDraftReceipt:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Generated Board draft receipt"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(30,64,175,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =134
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =12
+                        Text: |-
+                          ="Board draft generated" & Char(10) & Concat(colBoardDraftReceipt,"Event ID: " & Text(EventID) & " · " & GroupName & " · Generated date: " & Text(GeneratedDate,"yyyy-mm-dd") & " · Current date: " & Text(CurrentDate,"yyyy-mm-dd") & " · State: " & State & Char(10) & Recommendation,Char(10))
+                        VerticalAlign: =VerticalAlign.Top
+            - conBoardRuleActions:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =If(App.Width<640,190,56)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(App.Width<640,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =6
+                  PaddingTop: =6
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - btnBoardRuleSave:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Save Board rule for validation"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =ButtonAppearance.Outline
+                        BasePaletteColor: =RGBA(15,43,91,1)
+                        Color: =RGBA(15,43,91,1)
+                        DisplayMode: |-
+                          =If(IsBlank(varSelectedBoardRuleID)||CountRows(Filter(colBoardEvents,Find("BOARD|RuleId="&Text(varSelectedBoardRuleID)&"|",'Source Rule')>0&&(Status="Approved"||Find("Board confirmed and locked: Yes",'Planning Notes')>0)))>0,DisplayMode.Disabled,DisplayMode.Edit)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =180
+                        OnSelect: |-
+                          =With({r:LookUp('LSS Meeting Types',ID=varSelectedBoardRuleID)},Set(varBoardRuleReceipt,Patch('LSS Meeting Types',r,{Title:inpBoardRuleName.Text,Purpose:inpBoardRulePurpose.Text,Cadence:{Value:drpBoardRuleCadence.Selected.Value},'Start Month':{Value:drpBoardRuleStartMonth.Selected.Value},WeekOfMonth:{Value:drpBoardRuleWeek.Selected.Value},DayOfWeek:{Value:drpBoardRuleDay.Selected.Value},PreferredTime:inpBoardRuleTime.Text,DurationMinutes:numBoardRuleDuration.Value,Leader:inpBoardRuleLeader.Text,Attendees:inpBoardRuleAttendees.Text,AttendanceRule:{Value:inpBoardRuleAttendance.Text},Modality:{Value:drpBoardRuleModality.Selected.Value},Location:inpBoardRuleLocation.Text,Flexibility:{Value:drpBoardRuleFlexibility.Selected.Value},'Questions/Comments':inpBoardRuleQuestions.Text,Frequency:If(drpBoardRuleCadence.Selected.Value="Custom annual count","Custom annual count: "&Text(numBoardRuleCustomCount.Value),r.Frequency),RuleStatus:{Value:"Needs validation"},Completed:false}));Set(varBoardRuleReceiptAction,"Saved for validation");Set(varBoardRuleReceiptVisible,true);Refresh('LSS Meeting Types');ClearCollect(colBoardRules,Filter('LSS Meeting Types',Category.Value="Board"&&(Title="Full Board"||Title="Board Critical Issue Check-in"||Title="Board Retreat"))))
+                        Size: =14
+                        Text: ="Save for validation"
+                        Tooltip: ="Save this Board rule without confirming it"
+                        Width: =If(App.Width<640,Parent.Width,Parent.Width/3)
+                  - btnBoardRuleConfirm:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Confirm Board rule"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BasePaletteColor: =RGBA(5,150,105,1)
+                        Color: =RGBA(255,255,255,1)
+                        DisplayMode: |-
+                          =If(IsBlank(varSelectedBoardRuleID)||CountRows(Filter(colBoardEvents,Find("BOARD|RuleId="&Text(varSelectedBoardRuleID)&"|",'Source Rule')>0&&(Status="Approved"||Find("Board confirmed and locked: Yes",'Planning Notes')>0)))>0,DisplayMode.Disabled,DisplayMode.Edit)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =160
+                        OnSelect: |-
+                          =With({r:LookUp('LSS Meeting Types',ID=varSelectedBoardRuleID),missing:Concat(Filter(Table({Label:"meeting name",Missing:IsBlank(inpBoardRuleName.Text)},{Label:"purpose",Missing:IsBlank(inpBoardRulePurpose.Text)},{Label:"starting month",Missing:IsBlank(drpBoardRuleStartMonth.Selected.Value)},{Label:"week of month",Missing:IsBlank(drpBoardRuleWeek.Selected.Value)},{Label:"preferred day",Missing:IsBlank(drpBoardRuleDay.Selected.Value)},{Label:"time",Missing:IsBlank(inpBoardRuleTime.Text)},{Label:"duration",Missing:IsBlank(numBoardRuleDuration.Value)},{Label:"leader",Missing:IsBlank(inpBoardRuleLeader.Text)},{Label:"attendees",Missing:IsBlank(inpBoardRuleAttendees.Text)},{Label:"attendance requirement",Missing:IsBlank(inpBoardRuleAttendance.Text)},{Label:"meeting format",Missing:IsBlank(drpBoardRuleModality.Selected.Value)},{Label:"location",Missing:IsBlank(inpBoardRuleLocation.Text)},{Label:"flexibility",Missing:IsBlank(drpBoardRuleFlexibility.Selected.Value)},{Label:"open questions",Missing:!IsBlank(inpBoardRuleQuestions.Text)}),Missing),Label,", ")},If(!IsBlank(missing),Set(varBoardRuleReceipt,r);Set(varBoardRuleReceiptAction,r.Title&" still needs: "&missing);Set(varBoardRuleReceiptVisible,true),Set(varBoardRuleReceipt,Patch('LSS Meeting Types',r,{Title:inpBoardRuleName.Text,Purpose:inpBoardRulePurpose.Text,Cadence:{Value:drpBoardRuleCadence.Selected.Value},'Start Month':{Value:drpBoardRuleStartMonth.Selected.Value},WeekOfMonth:{Value:drpBoardRuleWeek.Selected.Value},DayOfWeek:{Value:drpBoardRuleDay.Selected.Value},PreferredTime:inpBoardRuleTime.Text,DurationMinutes:numBoardRuleDuration.Value,Leader:inpBoardRuleLeader.Text,Attendees:inpBoardRuleAttendees.Text,AttendanceRule:{Value:inpBoardRuleAttendance.Text},Modality:{Value:drpBoardRuleModality.Selected.Value},Location:inpBoardRuleLocation.Text,Flexibility:{Value:drpBoardRuleFlexibility.Selected.Value},'Questions/Comments':inpBoardRuleQuestions.Text,Frequency:If(drpBoardRuleCadence.Selected.Value="Custom annual count","Custom annual count: "&Text(numBoardRuleCustomCount.Value),r.Frequency),RuleStatus:{Value:"Confirmed"},Completed:true}));Set(varBoardRuleReceiptAction,"Board rule confirmed");Set(varBoardRuleReceiptVisible,true);Refresh('LSS Meeting Types');ClearCollect(colBoardRules,Filter('LSS Meeting Types',Category.Value="Board"&&(Title="Full Board"||Title="Board Critical Issue Check-in"||Title="Board Retreat")))))
+                        Size: =14
+                        Text: ="Confirm rule"
+                        Tooltip: ="Confirm this complete Board rule"
+                        Width: =If(App.Width<640,Parent.Width,Parent.Width/3)
+                  - btnBoardRuleGenerate:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Generate Board draft"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Color: =RGBA(255,255,255,1)
+                        DisplayMode: |-
+                          =If(IsBlank(varSelectedBoardRuleID)||!(LookUp(colBoardRules,ID=varSelectedBoardRuleID).RuleStatus.Value="Confirmed"&&LookUp(colBoardRules,ID=varSelectedBoardRuleID).Completed)||CountRows(Filter(colBoardEvents,Find("BOARD|RuleId="&Text(varSelectedBoardRuleID)&"|",'Source Rule')>0&&(Status="Approved"||Find("Board confirmed and locked: Yes",'Planning Notes')>0)))>0,DisplayMode.Disabled,DisplayMode.Edit)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =180
+                        OnSelect: |-
+                          =With(
+                              {r:LookUp(colBoardRules,ID=varSelectedBoardRuleID)},
+                              With(
+                                  {startMonth:Switch(r.'Start Month'.Value,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),cadence:r.Cadence.Value,weekNumber:Switch(r.WeekOfMonth.Value,"First",1,"Second",2,"Third",3,"Fourth",4,"Fifth",5,1),dayNumber:Switch(r.DayOfWeek.Value,"Sunday",1,"Monday",2,"Tuesday",3,"Wednesday",4,"Thursday",5,"Friday",6,"Saturday",7,1),customCount:If(r.Cadence.Value="Custom annual count",Max(1,Value(Substitute(r.Frequency,"Custom annual count: ",""))),1)},
+                                  With(
+                                      {meetingCount:Switch(cadence,"Monthly",12,"Every other month",6,"Quarterly",4,"Semiannual",2,"Annual",1,"Custom annual count",customCount,1),monthStep:Switch(cadence,"Monthly",1,"Every other month",2,"Quarterly",3,"Semiannual",6,"Annual",12,"Custom annual count",Max(1,RoundDown(12/customCount,0)),12)},
+                                      Clear(colBoardDraftReceipt);
+                                      ForAll(
+                                          Sequence(meetingCount),
+                                          With(
+                                              {monthStart:Date(2027,startMonth+(Value-1)*monthStep,1)},
+                                              With(
+                                                  {candidate:DateAdd(monthStart,Mod(dayNumber-Weekday(monthStart,StartOfWeek.Sunday)+7,7)+7*(weekNumber-1),TimeUnit.Days)},
+                                                  With(
+                                                      {outsideSelectedMonth:Month(candidate)<>Month(monthStart),existing:LookUp(colBoardEvents,Find("BOARD|RuleId="&Text(r.ID)&"|",'Source Rule')>0&&Find("Generated date: "&Text(candidate,"yyyy-mm-dd"),'Planning Notes')>0),blocked:Month(candidate)<>Month(monthStart)||CountRows(Filter(colClosures,EventDate=candidate))>0||CountRows(Filter(colBoardEvents,EventDate=candidate&&Find("BOARD|RuleId="&Text(r.ID)&"|",'Source Rule')=0))>0},
+                                                      With(
+                                                          {saved:Patch('LSS Planned Calendar',If(IsBlank(existing.ID),Defaults('LSS Planned Calendar'),existing),{Title:r.Title,EventDate:candidate,Category:"Board",Status:If(blocked,"Blocked","Ready for Review"),'Source Rule':"BOARD|RuleId="&Text(r.ID)&"|"&r.Title,'Planning Notes':"Board workflow"&Char(10)&"Generated date: "&Text(candidate,"yyyy-mm-dd")&Char(10)&"Current date: "&Text(candidate,"yyyy-mm-dd")&Char(10)&"Manual override: No"&Char(10)&"Override reason: No reason supplied"&Char(10)&"Exception approved: No"&Char(10)&"Conflict: "&If(outsideSelectedMonth,"The selected fifth weekday does not occur in this month. Recommendation only; no date was automatically changed.",If(blocked,"Closure or Board collision. Recommendation only; no date was automatically changed.","None"))})},
+                                                          Collect(colBoardDraftReceipt,{EventID:saved.ID,GroupName:r.Title,GeneratedDate:candidate,CurrentDate:candidate,State:saved.Status,Recommendation:If(blocked,"Recommendation only; no date was automatically changed.","")})
+                                                      )
+                                                  )
+                                              )
+                                          )
+                                      );
+                                      Refresh('LSS Planned Calendar');
+                                      ClearCollect(colBoardEvents,Filter('LSS Planned Calendar',EventDate>=Date(2027,1,1)&&EventDate<Date(2028,1,1)&&Category="Board"));
+                                      Set(varBoardDraftReceiptVisible,true);
+                                      Navigate(Screen2)
+                                  )
+                              )
+                          )
+                        Size: =14
+                        Text: ="Generate Board draft"
+                        Tooltip: ="Generate 2027 Board draft dates from this confirmed rule"
+                        Width: =If(App.Width<640,Parent.Width,Parent.Width/3)
+            - txtBoardRuleCriticalMissing:
+                Control: ModernText
+                Properties:
+                  AccessibleLabel: ="Board Critical Issue Check-in source rule is not configured"
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Color: =RGBA(146,64,14,1)
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =34
+                  PaddingBottom: =0
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =0
+                  Size: =13
+                  Text: ="Board Critical Issue Check-in — needs a source rule before it can be scheduled."
+                  Visible: =IsBlank(LookUp(colBoardRules,Title="Board Critical Issue Check-in"))

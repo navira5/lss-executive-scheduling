@@ -1,0 +1,1082 @@
+Screens:
+  Screen1:
+    Properties:
+      Fill: =RGBA(244, 247, 251, 1)
+      OnVisible: |-
+        =Refresh('LSS Calendar Planning Steps');
+        Refresh('LSS Planned Calendar');
+        Refresh('LSS Meeting Types');
+        ClearCollect(colHubSteps, Filter('LSS Calendar Planning Steps', StartsWith(Title, "")));
+        ClearCollect(colHubCalendar, Filter('LSS Planned Calendar', EventDate >= Date(2027,1,1) && EventDate < Date(2028,1,1)));
+        ClearCollect(colHubRules, Filter('LSS Meeting Types', StartsWith(Title, "")))
+    Children:
+      - conHubRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(244, 247, 251, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =16
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =If(App.Width < 640, 16, 24)
+            PaddingLeft: =If(App.Width < 640, 16, 24)
+            PaddingRight: =If(App.Width < 640, 16, 24)
+            PaddingTop: =If(App.Width < 640, 16, 24)
+            Width: =Parent.Width
+          Children:
+            - conHubHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Semilight
+                  Fill: =RGBA(15, 43, 91, 1)
+                  FillPortions: =0
+                  Height: =If(App.Width < 640, 320, 184)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =8
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                Children:
+                  - txtHubTitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="LSS 2027 Calendar Planning"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =42
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =28
+                        Text: ="LSS 2027 Calendar Planning"
+                        VerticalAlign: =VerticalAlign.Top
+                  - txtHubSubtitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Six guided steps for Felise"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =If(App.Width < 640, 24, 22)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: ="Start with Step 1 — the app will guide you"
+                        VerticalAlign: =VerticalAlign.Top
+                        Wrap: =false
+                  - txtHubSafety:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Outlook safety note"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Segoe UI'
+                        Height: =If(App.Width < 640, 50, 36)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =12
+                        Text: ="This only marks SharePoint records for IT review. It does not send invitations."
+                        VerticalAlign: =VerticalAlign.Top
+                  - conHubNav:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(15, 43, 91, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 148, 44)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutWrap: =true
+                      Children:
+                        - btnHubHome:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Home and final checks, current page"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BasePaletteColor: =RGBA(37, 99, 235, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Set(varHubFocus, "home")
+                              Size: =14
+                              Text: ="Home & final checks"
+                              Width: =If(App.Width < 640, Parent.Width, 180)
+                        - btnHubRules:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Go to rules and build"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(15, 43, 91, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Navigate(MainScreen1)
+                              Size: =14
+                              Text: ="1–2 Rules & build"
+                              Width: =If(App.Width < 640, Parent.Width, 180)
+                        - btnHubYear:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Go to full year calendar"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(15, 43, 91, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Navigate(Screen2)
+                              Size: =14
+                              Text: ="3 Full year"
+                              Width: =If(App.Width < 640, Parent.Width, 180)
+            - conHubReceipts:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(244, 247, 251, 1)
+                  FillPortions: =0
+                  Height: =If(App.Width < 640, If(varStepReceiptVisible && varMeetingReceiptVisible, 336, 164), 112)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  Visible: =varStepReceiptVisible || varMeetingReceiptVisible
+                Children:
+                  - conHubStepReceipt:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(5, 150, 105, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 164, 112)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Visible: =varStepReceiptVisible
+                        Width: =If(App.Width < 640, Parent.Width, If(varMeetingReceiptVisible, (Parent.Width - 8) / 2, Parent.Width))
+                      Children:
+                        - txtHubStepReceipt:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Planning step update receipt"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 96, 44)
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =12
+                              Text: |-
+                                ="Step saved · ID: " & varStepReceipt.ID & " · Step: " & varStepReceipt.'Step Number' & " · Title: " & varStepReceipt.Title & " · Completed: " & If(varStepReceipt.Completed, "Yes", "No") & " · Completed by: " & If(IsBlank(varStepReceipt.'Completed By'), "Cleared", varStepReceipt.'Completed By') & " · Completed date: " & If(IsBlank(varStepReceipt.'Completed Date'), "Cleared", Text(varStepReceipt.'Completed Date', "mmm d, yyyy"))
+                              VerticalAlign: =VerticalAlign.Top
+                        - btnHubDismissStepReceipt:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Dismiss planning step receipt"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Subtle
+                              BasePaletteColor: =RGBA(5, 150, 105, 1)
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              OnSelect: =Set(varStepReceiptVisible, false)
+                              Size: =14
+                              Text: ="Dismiss step receipt"
+                              Width: =Parent.Width
+                  - conHubReadyReceipt:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(5, 150, 105, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 164, 112)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =8
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =8
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Visible: =varMeetingReceiptVisible
+                        Width: =If(App.Width < 640, Parent.Width, If(varStepReceiptVisible, (Parent.Width - 8) / 2, Parent.Width))
+                      Children:
+                        - txtHubReadyReceipt:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Meeting readiness update receipt"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 96, 44)
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =12
+                              Text: |-
+                                =varMeetingReceiptAction & " · ID: " & varMeetingReceipt.ID & " · Title: " & varMeetingReceipt.Title & " · Date: " & Text(varMeetingReceipt.EventDate, "mmm d, yyyy") & " · Ready for Outlook: " & If(varMeetingReceipt.'Ready for Outlook', "Yes", "No") & " · Outlook Sync Status: " & varMeetingReceipt.'Outlook Sync Status'.Value
+                              VerticalAlign: =VerticalAlign.Top
+                        - btnHubDismissReadyReceipt:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Dismiss meeting readiness receipt"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Subtle
+                              BasePaletteColor: =RGBA(5, 150, 105, 1)
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              OnSelect: =Set(varMeetingReceiptVisible, false)
+                              Size: =14
+                              Text: ="Dismiss readiness receipt"
+                              Width: =Parent.Width
+            - conHubWorkflow:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(244, 247, 251, 1)
+                  FillPortions: =0
+                  Height: =If(App.Width < 640, 872, 608)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                Children:
+                  - txtHubWorkflowHeading:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Guided planning workflow"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15, 23, 42, 1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =20
+                        Text: ="Guided planning workflow"
+                        VerticalAlign: =VerticalAlign.Top
+                        Wrap: =false
+                  - conHubWorkflow1:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 132, 88)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                      Children:
+                        - txtHubWorkflow1:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Step 1 Review calendar rules"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 80, 88)
+                              PaddingBottom: =8
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =8
+                              Size: =14
+                              Text: ="1  Review calendar rules" & Char(10) & "Confirm meeting patterns, timing, and open questions."
+                              VerticalAlign: =VerticalAlign.Top
+                              Width: =If(App.Width < 640, Parent.Width, Parent.Width - 220)
+                        - btnHubStep1:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Open step 1 Review calendar rules"
+                              AlignInContainer: =AlignInContainer.Center
+                              BasePaletteColor: =RGBA(37, 99, 235, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Navigate(MainScreen1)
+                              Size: =14
+                              Text: ="Review calendar rules"
+                              Width: =If(App.Width < 640, Parent.Width, 212)
+                  - conHubWorkflow2:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 132, 88)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                      Children:
+                        - txtHubWorkflow2:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Step 2 Build the 2027 working calendar"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 80, 88)
+                              PaddingBottom: =8
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =8
+                              Size: =14
+                              Text: ="2  Build the 2027 working calendar" & Char(10) & "Generate the working calendar from confirmed rules."
+                              VerticalAlign: =VerticalAlign.Top
+                              Width: =If(App.Width < 640, Parent.Width, Parent.Width - 220)
+                        - btnHubStep2:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Open step 2 Build the 2027 working calendar"
+                              AlignInContainer: =AlignInContainer.Center
+                              BasePaletteColor: =RGBA(37, 99, 235, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Navigate(MainScreen1)
+                              Size: =14
+                              Text: ="Build working calendar"
+                              Width: =If(App.Width < 640, Parent.Width, 212)
+                  - conHubWorkflow3:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 132, 88)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                      Children:
+                        - txtHubWorkflow3:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Step 3 Review the full year"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 80, 88)
+                              PaddingBottom: =8
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =8
+                              Size: =14
+                              Text: ="3  Review the full year" & Char(10) & "Scan every month for spacing, closures, and conflicts."
+                              VerticalAlign: =VerticalAlign.Top
+                              Width: =If(App.Width < 640, Parent.Width, Parent.Width - 220)
+                        - btnHubStep3:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Open step 3 Review the full year"
+                              AlignInContainer: =AlignInContainer.Center
+                              BasePaletteColor: =RGBA(37, 99, 235, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Navigate(Screen2)
+                              Size: =14
+                              Text: ="Review the full year"
+                              Width: =If(App.Width < 640, Parent.Width, 212)
+                  - conHubWorkflow4:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 132, 88)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                      Children:
+                        - txtHubWorkflow4:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Step 4 Adjust meetings"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 80, 88)
+                              PaddingBottom: =8
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =8
+                              Size: =14
+                              Text: ="4  Adjust meetings" & Char(10) & "Open the full year, then select a date or meeting to edit."
+                              VerticalAlign: =VerticalAlign.Top
+                              Width: =If(App.Width < 640, Parent.Width, Parent.Width - 220)
+                        - btnHubStep4:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Open step 4 Adjust meetings"
+                              AlignInContainer: =AlignInContainer.Center
+                              BasePaletteColor: =RGBA(37, 99, 235, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: |-
+                                =Set(varShowDay, false);
+                                Navigate(Screen2)
+                              Size: =14
+                              Text: ="Adjust meetings"
+                              Width: =If(App.Width < 640, Parent.Width, 212)
+                  - conHubWorkflow5:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 132, 88)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                      Children:
+                        - txtHubWorkflow5:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Step 5 Complete final checks"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 80, 88)
+                              PaddingBottom: =8
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =8
+                              Size: =14
+                              Text: ="5  Complete final checks" & Char(10) & "Complete each checklist item and record who finished it."
+                              VerticalAlign: =VerticalAlign.Top
+                              Width: =If(App.Width < 640, Parent.Width, Parent.Width - 220)
+                        - btnHubStep5:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Focus step 5 final checks panel"
+                              AlignInContainer: =AlignInContainer.Center
+                              BasePaletteColor: =RGBA(37, 99, 235, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Set(varHubFocus, "checks")
+                              Size: =14
+                              Text: ="Complete final checks"
+                              Width: =If(App.Width < 640, Parent.Width, 212)
+                  - conHubWorkflow6:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =If(App.Width < 640, 132, 88)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                      Children:
+                        - txtHubWorkflow6:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Step 6 Prepare for Outlook"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width < 640, 80, 88)
+                              PaddingBottom: =8
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =8
+                              Size: =14
+                              Text: ="6  Prepare for Outlook" & Char(10) & "Fix blocked details, then mark eligible SharePoint records for IT review."
+                              VerticalAlign: =VerticalAlign.Top
+                              Width: =If(App.Width < 640, Parent.Width, Parent.Width - 220)
+                        - btnHubStep6:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Focus step 6 readiness panel"
+                              AlignInContainer: =AlignInContainer.Center
+                              BasePaletteColor: =RGBA(37, 99, 235, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =180
+                              OnSelect: =Set(varHubFocus, "readiness")
+                              Size: =14
+                              Text: ="Prepare for Outlook"
+                              Width: =If(App.Width < 640, Parent.Width, 212)
+            - conHubChecklist:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: |-
+                    =With(
+                      {rowCount: CountRows(SortByColumns(colHubSteps, "StepNumber"))},
+                      If(rowCount = 0, 160, 108 + rowCount * If(App.Width < 640, 128, 86) + ((rowCount + 1) * 4))
+                    )
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =8
+                  PaddingLeft: =8
+                  PaddingRight: =8
+                  PaddingTop: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Visible: =varHubFocus = "checks"
+                Children:
+                  - txtHubChecklistHeading:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Final checks section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15, 23, 42, 1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =20
+                        Text: =If(varHubFocus = "checks", "5. Complete final checks •", "5. Complete final checks")
+                        VerticalAlign: =VerticalAlign.Top
+                        Wrap: =false
+                  - txtHubChecklistInstruction:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Final checks instructions"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Segoe UI'
+                        Height: =44
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: ="Check each item when it is complete. Reopen it if more work is needed."
+                        VerticalAlign: =VerticalAlign.Top
+                  - galHubSteps:
+                      Control: Gallery
+                      Variant: Vertical
+                      Properties:
+                        AccessibleLabel: ="Final planning checks"
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: |-
+                          =With(
+                            {rowCount: CountRows(SortByColumns(colHubSteps, "StepNumber"))},
+                            rowCount * If(App.Width < 640, 128, 86) + ((rowCount + 1) * 4)
+                          )
+                        Items: =SortByColumns(colHubSteps, "StepNumber")
+                        ShowScrollbar: =false
+                        TabIndex: =0
+                        TemplatePadding: =4
+                        TemplateSize: =If(App.Width < 640, 128, 86)
+                        Visible: =CountRows(SortByColumns(colHubSteps, "StepNumber")) > 0
+                        Width: =Parent.Width
+                      Children:
+                        - conHubStepRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(203, 213, 225, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(244, 247, 251, 1)
+                              Height: =Parent.TemplateHeight
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(Parent.TemplateWidth < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                              LayoutGap: =4
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Width: =Parent.TemplateWidth
+                            Children:
+                              - txtHubStepIdentity:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Planning step " & ThisItem.'Step Number' & " " & ThisItem.Title
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =If(App.Width < 640, 42, Parent.Height)
+                                    PaddingBottom: =4
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    PaddingTop: =4
+                                    Size: =14
+                                    Text: ="Step " & ThisItem.'Step Number' & " — " & ThisItem.Title & " · ID " & ThisItem.ID
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =If(App.Width < 640, Parent.Width, (Parent.Width - 192) * 0.55)
+                              - txtHubStepStatus:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Completion status for " & ThisItem.Title
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =If(ThisItem.Completed, RGBA(5, 150, 105, 1), RGBA(71, 85, 105, 1))
+                                    Font: =Font.'Segoe UI'
+                                    Height: =If(App.Width < 640, 34, Parent.Height)
+                                    PaddingBottom: =4
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    PaddingTop: =4
+                                    Size: =12
+                                    Text: =If(ThisItem.Completed, "Complete · By " & ThisItem.'Completed By' & " · " & Text(ThisItem.'Completed Date', "mmm d, yyyy"), "Open · By — · Date —")
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =If(App.Width < 640, Parent.Width, (Parent.Width - 192) * 0.45)
+                              - chkHubStepComplete:
+                                  Control: ModernCheckbox
+                                  Properties:
+                                    AccessibleLabel: ="Set completion for " & ThisItem.Title
+                                    AlignInContainer: =AlignInContainer.Center
+                                    BasePaletteColor: =RGBA(37, 99, 235, 1)
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Default: =ThisItem.Completed
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Normal
+                                    Height: =44
+                                    Label: =If(ThisItem.Completed, "Reopen if needed", "Mark complete")
+                                    OnCheck: |-
+                                      =With(
+                                        {targetId: ThisItem.ID, nextComplete: true},
+                                        Set(varStepReceipt, Patch('LSS Calendar Planning Steps', LookUp('LSS Calendar Planning Steps', ID = targetId), {Completed: nextComplete, 'Completed By': User().FullName, 'Completed Date': Today()}));
+                                        Refresh('LSS Calendar Planning Steps');
+                                        ClearCollect(colHubSteps, Filter('LSS Calendar Planning Steps', StartsWith(Title, "")));
+                                        Set(varStepReceiptVisible, true)
+                                      )
+                                    OnUncheck: |-
+                                      =With(
+                                        {targetId: ThisItem.ID, nextComplete: false},
+                                        Set(varStepReceipt, Patch('LSS Calendar Planning Steps', LookUp('LSS Calendar Planning Steps', ID = targetId), {Completed: nextComplete, 'Completed By': "", 'Completed Date': Blank()}));
+                                        Refresh('LSS Calendar Planning Steps');
+                                        ClearCollect(colHubSteps, Filter('LSS Calendar Planning Steps', StartsWith(Title, "")));
+                                        Set(varStepReceiptVisible, true)
+                                      )
+                                    Size: =14
+                                    Width: =If(App.Width < 640, Parent.Width, 180)
+                  - txtHubStepEmpty:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="No planning steps found"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Segoe UI'
+                        Height: =44
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: ="No final-check steps are available yet."
+                        VerticalAlign: =VerticalAlign.Top
+                        Visible: =CountRows(SortByColumns(colHubSteps, "StepNumber")) = 0
+            - conHubReadiness:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =If(CountRows(Filter(colHubCalendar, Year(EventDate) = 2027 && Category <> "Closure")) = 0, 158, 634)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =8
+                  PaddingLeft: =8
+                  PaddingRight: =8
+                  PaddingTop: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Visible: =varHubFocus = "readiness"
+                Children:
+                  - txtHubReadinessHeading:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Prepare for Outlook section"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(15, 23, 42, 1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =20
+                        Text: =If(varHubFocus = "readiness", "6. Prepare for Outlook •", "6. Prepare for Outlook")
+                        VerticalAlign: =VerticalAlign.Top
+                        Wrap: =false
+                  - txtHubReadinessInstruction:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Readiness review instructions"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Segoe UI'
+                        Height: =50
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: ="Review every 2027 non-closure meeting. Fix blocked details, then mark eligible SharePoint records for IT review."
+                        VerticalAlign: =VerticalAlign.Top
+                  - galHubReadiness:
+                      Control: Gallery
+                      Variant: Vertical
+                      Properties:
+                        AccessibleLabel: ="2027 meeting readiness review"
+                        BorderColor: =RGBA(203, 213, 225, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        Height: =520
+                        Items: |-
+                          =AddColumns(
+                            AddColumns(
+                              SortByColumns(Filter(colHubCalendar, Year(EventDate) = 2027 && Category <> "Closure"), "EventDate"),
+                              IsReady,
+                              With(
+                                {plannedId: ID, plannedTitle: Title, plannedDate: EventDate, plannedSourceRule: 'Source Rule'},
+                                With(
+                                  {matchedRule: LookUp(colHubRules, Title = plannedSourceRule)},
+                                  !IsBlank(plannedTitle) &&
+                                  !IsBlank(plannedDate) &&
+                                  !IsBlank('Start Time') &&
+                                  !IsBlank(Duration) &&
+                                  !IsBlank('Planning Stage'.Value) &&
+                                  !IsBlank(Calendar.Value) &&
+                                  !IsBlank('Outlook Sync Status'.Value) &&
+                                  CountRows(Filter(colHubCalendar, Title = plannedTitle && EventDate = plannedDate && ID <> plannedId)) = 0 &&
+                                  CountRows(Filter(colHubCalendar, Category = "Closure" && EventDate = plannedDate)) = 0 &&
+                                  If(
+                                    plannedSourceRule = "Manual entry",
+                                    !IsBlank('Planning Notes'),
+                                    !IsBlank(matchedRule) &&
+                                    matchedRule.Completed &&
+                                    matchedRule.RuleStatus.Value = "Confirmed" &&
+                                    !IsBlank(matchedRule.Frequency) &&
+                                    !IsBlank(matchedRule.StartMonth.Value) &&
+                                    !IsBlank(matchedRule.PreferredTime) &&
+                                    (!IsBlank(matchedRule.Duration0) || !IsBlank(matchedRule.Duration)) &&
+                                    !IsBlank(matchedRule.Calendar) &&
+                                    matchedRule.Calendar <> "To confirm" &&
+                                    IsBlank(matchedRule.'Questions/Comments')
+                                  )
+                                )
+                              )
+                            ),
+                            BlockReason,
+                            If(
+                              IsReady,
+                              "Ready — all checks complete",
+                              IsBlank(Title), "Blocked — Title is missing",
+                              IsBlank(EventDate), "Blocked — Event date is missing",
+                              IsBlank('Start Time'), "Blocked — Start time is missing",
+                              IsBlank(Duration), "Blocked — Duration is missing",
+                              IsBlank('Planning Stage'.Value), "Blocked — Planning stage is missing",
+                              IsBlank(Calendar.Value), "Blocked — Calendar is missing",
+                              IsBlank('Outlook Sync Status'.Value), "Blocked — Outlook sync review status is missing",
+                              'Source Rule' = "Manual entry" && IsBlank('Planning Notes'), "Blocked — Manual entry needs planning notes",
+                              "Blocked — linked rule needs confirmation or required details"
+                            )
+                          )
+                        TabIndex: =0
+                        TemplatePadding: =4
+                        TemplateSize: =If(App.Width < 640, 254, 150)
+                        Visible: =CountRows(Filter(colHubCalendar, Year(EventDate) = 2027 && Category <> "Closure")) > 0
+                        Width: =Parent.Width
+                      Children:
+                        - conHubReadinessRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(203, 213, 225, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(244, 247, 251, 1)
+                              Height: =Parent.TemplateHeight
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Width: =Parent.TemplateWidth
+                            Children:
+                              - txtHubReadinessTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Meeting " & ThisItem.Title
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =If(App.Width < 640, 48, 24)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    PaddingTop: =0
+                                    Size: =16
+                                    Text: =ThisItem.Title & " · ID " & ThisItem.ID
+                                    VerticalAlign: =VerticalAlign.Top
+                              - txtHubReadinessDetails:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Meeting details for " & ThisItem.Title
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(71, 85, 105, 1)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =If(App.Width < 640, 56, 42)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: |-
+                                      ="Date: " & Text(ThisItem.EventDate, "mmm d, yyyy") & " · Start: " & ThisItem.'Start Time' & " · Duration: " & ThisItem.Duration & " · Stage: " & ThisItem.'Planning Stage'.Value & " · Calendar: " & ThisItem.Calendar.Value & " · Source rule: " & ThisItem.'Source Rule'
+                                    VerticalAlign: =VerticalAlign.Top
+                              - txtHubReadinessStatus:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =ThisItem.BlockReason & " for " & ThisItem.Title
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =If(ThisItem.IsReady, RGBA(5, 150, 105, 1), RGBA(220, 38, 38, 1))
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =If(App.Width < 640, 38, 26)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: |-
+                                      =ThisItem.BlockReason & " · Ready: " & If(ThisItem.'Ready for Outlook', "Yes", "No") & " · IT status: " & ThisItem.'Outlook Sync Status'.Value
+                                    VerticalAlign: =VerticalAlign.Top
+                              - conHubReadyActions:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(244, 247, 251, 1)
+                                    FillPortions: =0
+                                    Height: =If(App.Width < 640, 92, 44)
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =If(Parent.Width < 640, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - btnHubFixMeeting:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: ="Fix details for " & ThisItem.Title
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =ButtonAppearance.Outline
+                                          BasePaletteColor: =RGBA(15, 43, 91, 1)
+                                          Color: =RGBA(15, 43, 91, 1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =140
+                                          OnSelect: |-
+                                            =Set(varSelectedEvent, LookUp('LSS Planned Calendar', ID = ThisItem.ID));
+                                            Navigate(MeetingEditorScreen)
+                                          Size: =14
+                                          Text: ="Fix details"
+                                          Width: =If(App.Width < 640, Parent.Width, (Parent.Width - 4) / 2)
+                                    - btnHubMarkReady:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: ="Mark " & ThisItem.Title & " ready for IT review"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BasePaletteColor: =RGBA(37, 99, 235, 1)
+                                          Color: =RGBA(255, 255, 255, 1)
+                                          DisplayMode: =If(ThisItem.IsReady && !ThisItem.'Ready for Outlook', DisplayMode.Edit, DisplayMode.Disabled)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =140
+                                          OnSelect: |-
+                                            =If(
+                                              ThisItem.IsReady,
+                                              With(
+                                                {targetId: ThisItem.ID},
+                                                Set(varMeetingReceipt, Patch('LSS Planned Calendar', LookUp('LSS Planned Calendar', ID = targetId), {'Ready for Outlook': true, 'Outlook Sync Status': {Value: "Ready for IT review"}}));
+                                                Refresh('LSS Planned Calendar');
+                                                ClearCollect(colHubRules, Filter('LSS Meeting Types', StartsWith(Title, "")));
+                                                ClearCollect(colHubCalendar, Filter('LSS Planned Calendar', EventDate >= Date(2027,1,1) && EventDate < Date(2028,1,1)));
+                                                ClearCollect(colPlannerEvents, Filter('LSS Planned Calendar', EventDate >= Date(2027,1,1) && EventDate < Date(2028,1,1)));
+                                                Set(varMeetingReceiptAction, "Marked ready");
+                                                Set(varMeetingReceiptVisible, true)
+                                              )
+                                            )
+                                          Size: =14
+                                          Text: =If(ThisItem.'Ready for Outlook', "Ready for IT review", "Mark ready")
+                                          Width: =If(App.Width < 640, Parent.Width, (Parent.Width - 4) / 2)
+                  - txtHubReadinessEmpty:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="No 2027 meetings need readiness review"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Segoe UI'
+                        Height: =44
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: ="No 2027 non-closure meetings are available for readiness review."
+                        VerticalAlign: =VerticalAlign.Top
+                        Visible: =CountRows(Filter(colHubCalendar, Year(EventDate) = 2027 && Category <> "Closure")) = 0
