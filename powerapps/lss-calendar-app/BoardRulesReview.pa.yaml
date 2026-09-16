@@ -38,8 +38,6 @@ Screens:
             LayoutAlignItems: =LayoutAlignItems.Stretch
             LayoutDirection: =LayoutDirection.Vertical
             LayoutGap: =16
-            LayoutMinHeight: =0
-            LayoutMinWidth: =0
             LayoutOverflowY: =LayoutOverflow.Scroll
             PaddingBottom: =If(App.Width<760,16,24)
             PaddingLeft: =If(App.Width<760,16,24)
@@ -51,7 +49,6 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
-                  AlignInContainer: =AlignInContainer.Stretch
                   BorderColor: =RGBA(203,213,225,1)
                   BorderThickness: =1
                   DropShadow: =DropShadow.Semilight
@@ -77,7 +74,6 @@ Screens:
                       Control: GroupContainer
                       Variant: AutoLayout
                       Properties:
-                        AlignInContainer: =AlignInContainer.Stretch
                         DropShadow: =DropShadow.None
                         FillPortions: =If(App.Width<760,0,1)
                         Height: =If(App.Width<760,96,80)
@@ -93,7 +89,6 @@ Screens:
                               AccessibleLabel: ="Board layer"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Bold
                               Height: =18
@@ -111,7 +106,6 @@ Screens:
                               AccessibleLabel: ="Review Board rules"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(15,23,42,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Bold
                               Height: =34
@@ -129,7 +123,6 @@ Screens:
                               AccessibleLabel: ="Local session proof. No Outlook or SharePoint. Dates are not regenerated yet."
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               Height: =If(App.Width<760,38,20)
                               LayoutMinWidth: =0
@@ -149,7 +142,6 @@ Screens:
                         Appearance: =ButtonAppearance.Outline
                         BasePaletteColor: =RGBA(15,43,91,1)
                         Color: =RGBA(15,43,91,1)
-                        FillPortions: =0
                         Font: =Font.'Segoe UI'
                         FontWeight: =FontWeight.Semibold
                         Height: =44
@@ -171,7 +163,6 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
-                  AlignInContainer: =AlignInContainer.Stretch
                   BorderColor: =RGBA(191,219,254,1)
                   BorderThickness: =1
                   DropShadow: =DropShadow.None
@@ -198,7 +189,6 @@ Screens:
                         AccessibleLabel: ="Edit only recurrence-driving fields. Saving is local and does not change the annual calendar."
                         AlignInContainer: =AlignInContainer.Stretch
                         Color: =RGBA(30,64,175,1)
-                        FillPortions: =0
                         Font: =Font.'Segoe UI'
                         FontWeight: =FontWeight.Semibold
                         Height: =If(App.Width<760,64,40)
@@ -213,7 +203,6 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
-                  AlignInContainer: =AlignInContainer.Stretch
                   DropShadow: =DropShadow.None
                   FillPortions: =0
                   Height: =If(App.Width<760,608+16+conBrvEditorPane.Height,conBrvEditorPane.Height)
@@ -255,7 +244,6 @@ Screens:
                               AccessibleLabel: ="Board meeting groups"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(15,23,42,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Bold
                               Height: =28
@@ -273,7 +261,6 @@ Screens:
                               AccessibleLabel: ="Select a meeting group to review its local rule."
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               Height: =38
                               LayoutMinWidth: =0
@@ -289,7 +276,6 @@ Screens:
                             Variant: Vertical
                             Properties:
                               AccessibleLabel: ="Board rules. Select a rule to edit."
-                              AlignInContainer: =AlignInContainer.Stretch
                               BorderColor: =RGBA(203,213,225,1)
                               DelayItemLoading: =false
                               FillPortions: =0
@@ -316,8 +302,6 @@ Screens:
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
                                     LayoutDirection: =LayoutDirection.Vertical
                                     LayoutGap: =4
-                                    LayoutMinHeight: =0
-                                    LayoutMinWidth: =0
                                     PaddingBottom: =8
                                     PaddingLeft: =10
                                     PaddingRight: =10
@@ -334,7 +318,6 @@ Screens:
                                           AccessibleLabel: ="Meeting group " & ThisItem.MeetingName
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =22
@@ -352,7 +335,6 @@ Screens:
                                           AccessibleLabel: ="Schedule summary for " & ThisItem.MeetingName
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(71,85,105,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           Height: =58
                                           LayoutMinWidth: =0
@@ -383,7 +365,6 @@ Screens:
                                         Control: GroupContainer
                                         Variant: AutoLayout
                                         Properties:
-                                          AlignInContainer: =AlignInContainer.Stretch
                                           FillPortions: =0
                                           Height: =44
                                           LayoutAlignItems: =LayoutAlignItems.Center
@@ -403,7 +384,6 @@ Screens:
                                                 DisplayMode: =DisplayMode.View
                                                 Font: =Font.'Segoe UI'
                                                 FontColor: =If(ThisItem.RuleStatus="Confirmed",RGBA(6,78,59,1),RGBA(146,64,14,1))
-                                                FillPortions: =0
                                                 FontSize: =11
                                                 FontWeight: =FontWeight.Semibold
                                                 Height: =28
@@ -419,7 +399,6 @@ Screens:
                                                 Appearance: =If(ThisItem.RuleId=varBrvSelectedRuleId,ButtonAppearance.Primary,ButtonAppearance.Outline)
                                                 BasePaletteColor: =RGBA(37,99,235,1)
                                                 Color: =If(ThisItem.RuleId=varBrvSelectedRuleId,RGBA(255,255,255,1),RGBA(15,43,91,1))
-                                                FillPortions: =0
                                                 Font: =Font.'Segoe UI'
                                                 FontWeight: =FontWeight.Semibold
                                                 Height: =44
@@ -476,7 +455,6 @@ Screens:
                       Control: GroupContainer
                       Variant: AutoLayout
                       Properties:
-                        AlignInContainer: =AlignInContainer.Stretch
                         BorderColor: =RGBA(203,213,225,1)
                         BorderThickness: =1
                         DropShadow: =DropShadow.Semilight
@@ -515,7 +493,6 @@ Screens:
                               AccessibleLabel: ="Selected rule"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Bold
                               Height: =18
@@ -531,7 +508,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =If(App.Width<760,106,52)
                               LayoutAlignItems: =LayoutAlignItems.Center
@@ -567,7 +543,6 @@ Screens:
                                     Appearance: ='BadgeCanvas.Appearance'.Tint
                                     Content: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus
                                     DisplayMode: =DisplayMode.View
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontColor: =If(LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus="Confirmed",RGBA(6,78,59,1),RGBA(146,64,14,1))
                                     FontSize: =12
@@ -582,7 +557,6 @@ Screens:
                               AccessibleLabel: ="Current schedule summary"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               Height: =If(App.Width<760,72,52)
                               LayoutMinWidth: =0
@@ -616,7 +590,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =76
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -631,7 +604,6 @@ Screens:
                                     AccessibleLabel: ="Meeting name label"
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =24
@@ -651,7 +623,6 @@ Screens:
                                     Appearance: =Appearance.Outline
                                     BasePaletteColor: =RGBA(37,99,235,1)
                                     Color: =RGBA(15,23,42,1)
-                                    FillPortions: =0
                                     Default: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).MeetingName
                                     Font: =Font.'Segoe UI'
                                     Height: =44
@@ -664,7 +635,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =With({cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},If(App.Width<760,112+If(cadence.UsesStartMonth,84,0),112))
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -677,7 +647,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =112
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -692,7 +661,6 @@ Screens:
                                           AccessibleLabel: ="How often label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -712,7 +680,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp(colBrvCadenceOptions,Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).Cadence)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -725,10 +692,10 @@ Screens:
                                     - txtBrvCadenceHelp:
                                         Control: ModernText
                                         Properties:
-                                          AccessibleLabel: '="Cadence guidance: " & LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).HelpText'
+                                          AccessibleLabel: |-
+                                            ="Cadence guidance: " & LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).HelpText
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(71,85,105,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           Height: =36
                                           LayoutMinWidth: =0
@@ -743,7 +710,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -759,7 +725,6 @@ Screens:
                                           AccessibleLabel: =If(drpBrvCadence.Selected.Value="Annually","Month label","Starting month label")
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -779,7 +744,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).StartMonth)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -793,7 +757,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =If(App.Width<760,188,104)
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -809,7 +772,6 @@ Screens:
                                     AccessibleLabel: =If(drpBrvCadence.Selected.Value="One time","Meeting date in 2027","First occurrence in 2027")
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =24
@@ -825,7 +787,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =0
                                     Height: =If(App.Width<760,160,76)
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -838,7 +799,6 @@ Screens:
                                         Control: GroupContainer
                                         Variant: AutoLayout
                                         Properties:
-                                          AlignInContainer: =AlignInContainer.Stretch
                                           FillPortions: =If(App.Width<760,0,1)
                                           Height: =76
                                           LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -853,7 +813,6 @@ Screens:
                                                 AccessibleLabel: ="Anchor month label"
                                                 AlignInContainer: =AlignInContainer.Stretch
                                                 Color: =RGBA(15,23,42,1)
-                                                FillPortions: =0
                                                 Font: =Font.'Segoe UI'
                                                 FontWeight: =FontWeight.Semibold
                                                 Height: =24
@@ -873,7 +832,6 @@ Screens:
                                                 Appearance: =Appearance.Outline
                                                 BasePaletteColor: =RGBA(37,99,235,1)
                                                 Color: =RGBA(15,23,42,1)
-                                                FillPortions: =0
                                                 Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).AnchorMonth)
                                                 Font: =Font.'Segoe UI'
                                                 Height: =44
@@ -887,7 +845,6 @@ Screens:
                                         Control: GroupContainer
                                         Variant: AutoLayout
                                         Properties:
-                                          AlignInContainer: =AlignInContainer.Stretch
                                           FillPortions: =If(App.Width<760,0,1)
                                           Height: =76
                                           LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -902,7 +859,6 @@ Screens:
                                                 AccessibleLabel: ="Anchor day label"
                                                 AlignInContainer: =AlignInContainer.Stretch
                                                 Color: =RGBA(15,23,42,1)
-                                                FillPortions: =0
                                                 Font: =Font.'Segoe UI'
                                                 FontWeight: =FontWeight.Semibold
                                                 Height: =24
@@ -922,7 +878,6 @@ Screens:
                                                 Appearance: =Appearance.Outline
                                                 BasePaletteColor: =RGBA(37,99,235,1)
                                                 Color: =RGBA(15,23,42,1)
-                                                FillPortions: =0
                                                 Default: =LookUp(Sequence(Switch(drpBrvCadAnchorMonth.Selected.Value,"February",28,"April",30,"June",30,"September",30,"November",30,31)),Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).AnchorDay)
                                                 Font: =Font.'Segoe UI'
                                                 Height: =44
@@ -936,7 +891,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =312
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -952,7 +906,6 @@ Screens:
                                     AccessibleLabel: ="Choose all months that apply"
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =24
@@ -970,7 +923,6 @@ Screens:
                                     AccessibleLabel: ="Select one or more months. You can change your choices before saving."
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(71,85,105,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     Height: =38
                                     LayoutMinWidth: =0
@@ -985,7 +937,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =0
                                     Height: =44
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1064,7 +1015,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =0
                                     Height: =44
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1143,7 +1093,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =0
                                     Height: =44
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1222,7 +1171,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =0
                                     Height: =44
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1303,7 +1251,6 @@ Screens:
                                     AccessibleLabel: =If(CountRows(Filter(colBrvMonthSelection,IsSelected))=0,"No months selected","Selected months " & Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "))
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,43,91,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =50
@@ -1313,13 +1260,13 @@ Screens:
                                     PaddingRight: =0
                                     PaddingTop: =0
                                     Size: =12
-                                    Text: '=If(CountRows(Filter(colBrvMonthSelection,IsSelected))=0,"No months selected","Selected: " & Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "))'
+                                    Text: |-
+                                      =If(CountRows(Filter(colBrvMonthSelection,IsSelected))=0,"No months selected","Selected: " & Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "))
                                     VerticalAlign: =VerticalAlign.Top
                         - conBrvWeekDayRow:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =With({cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},If(App.Width<760 && cadence.UsesWeek && cadence.UsesDay,160,76))
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1333,7 +1280,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1349,7 +1295,6 @@ Screens:
                                           AccessibleLabel: ="Which week label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1369,7 +1314,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).WeekOfMonth)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1383,7 +1327,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1399,7 +1342,6 @@ Screens:
                                           AccessibleLabel: ="Preferred day label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1419,7 +1361,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).PreferredDay)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1433,7 +1374,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =76
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1447,7 +1387,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1463,7 +1402,6 @@ Screens:
                                           AccessibleLabel: ="Second weekday label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1483,7 +1421,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).SecondPreferredDay)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1497,7 +1434,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1513,7 +1449,6 @@ Screens:
                                           AccessibleLabel: ="Second week label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1533,7 +1468,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).SecondWeekOfMonth)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1547,7 +1481,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =If(App.Width<760,160,76)
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1560,7 +1493,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1575,7 +1507,6 @@ Screens:
                                           AccessibleLabel: ="Start time label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1595,7 +1526,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).StartTimeText
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1609,7 +1539,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1624,7 +1553,6 @@ Screens:
                                           AccessibleLabel: ="Duration minutes label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1644,7 +1572,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).DurationMinutes
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1658,7 +1585,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =If(App.Width<760,160,76)
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1671,7 +1597,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1686,7 +1611,6 @@ Screens:
                                           AccessibleLabel: ="Format label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1706,7 +1630,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp([{Value:"In person"},{Value:"Virtual"},{Value:"Hybrid"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).Format)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1720,7 +1643,6 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    AlignInContainer: =AlignInContainer.Stretch
                                     FillPortions: =If(App.Width<760,0,1)
                                     Height: =76
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1735,7 +1657,6 @@ Screens:
                                           AccessibleLabel: ="Flexibility label"
                                           AlignInContainer: =AlignInContainer.Stretch
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
                                           Height: =24
@@ -1755,7 +1676,6 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          FillPortions: =0
                                           Default: =LookUp([{Value:"Fixed"},{Value:"Flexible"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).Flexibility)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
@@ -1769,7 +1689,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =76
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1784,7 +1703,6 @@ Screens:
                                     AccessibleLabel: ="Rule status label"
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =24
@@ -1804,7 +1722,6 @@ Screens:
                                     Appearance: =Appearance.Outline
                                     BasePaletteColor: =RGBA(37,99,235,1)
                                     Color: =RGBA(15,23,42,1)
-                                    FillPortions: =0
                                     Default: =LookUp([{Value:"Confirmed"},{Value:"Needs validation"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus)
                                     Font: =Font.'Segoe UI'
                                     Height: =44
@@ -1820,7 +1737,6 @@ Screens:
                               AccessibleLabel: ="Rule validation message"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(185,28,28,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =40
@@ -1868,7 +1784,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               FillPortions: =0
                               Height: =If(App.Width<760,100,44)
                               LayoutAlignItems: =LayoutAlignItems.Stretch
@@ -1887,7 +1802,6 @@ Screens:
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(15,43,91,1)
                                     Color: =RGBA(15,43,91,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =44
@@ -1947,7 +1861,6 @@ Screens:
                                     AlignInContainer: =AlignInContainer.Stretch
                                     BasePaletteColor: =RGBA(37,99,235,1)
                                     Color: =RGBA(255,255,255,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =44
@@ -2020,7 +1933,6 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
                               BorderColor: =RGBA(167,243,208,1)
                               BorderThickness: =1
                               DropShadow: =DropShadow.None
@@ -2048,7 +1960,6 @@ Screens:
                                     AccessibleLabel: ="Rule saved locally"
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(6,78,59,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
                                     Height: =28
@@ -2066,7 +1977,6 @@ Screens:
                                     AccessibleLabel: ="Saved local rule proof with all edited fields"
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(6,78,59,1)
-                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     Height: =380
                                     LayoutMinWidth: =0
@@ -2101,7 +2011,6 @@ Screens:
                               AccessibleLabel: ="Saving a rule updates this local review only. Calendar dates are not regenerated in this slice."
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
-                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               Height: =36
                               LayoutMinWidth: =0

@@ -78,6 +78,29 @@ App:
       Set(varCalProofSelectedEvent,Blank());
       Set(varCalProofChoosingAlternate,false);
       Set(varCalProofActionMessage,"");
+      Set(varCalProofMoreDetailsExpanded,false);
+      Set(varCalProofUndoConfirmationPending,false);
+      Set(varCalProofUndoIssue,"");
+      Set(varCalProofReceiptVisible,false);
+      Set(varCalProofReceiptAction,"");
+      Set(varCalProofLastMutation,First(colCalProofEvents));
+      Set(varCalProofLastMutation,Blank());
+      ClearCollect(
+        colCalProofMoveSnapshot,
+        {
+          EventId:"",
+          EventName:"",
+          PreviousDate:Date(2027,1,1),
+          PreviousStartTime:Time(0,0,0),
+          PreviousEndTime:Time(0,0,0),
+          PreviousDecisionStatus:"",
+          PreviousIsManualOverride:false,
+          ResultDate:Date(2027,1,1),
+          ResultStartTime:Time(0,0,0),
+          ResultEndTime:Time(0,0,0)
+        }
+      );
+      Clear(colCalProofMoveSnapshot);
       ClearCollect(
         colBoardRuleProof,
         {SortOrder:1,RuleId:"BOARD-FULL",MeetingName:"Full Board",Cadence:"Quarterly",MonthsText:"January, April, July, October",StartMonth:"January",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"January",AnchorDay:12,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:120,Format:"In person",Flexibility:"Fixed",RuleStatus:"Confirmed"},
