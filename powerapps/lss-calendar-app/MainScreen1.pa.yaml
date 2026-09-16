@@ -38,7 +38,7 @@ Screens:
                 Properties:
                   DropShadow: =DropShadow.Semilight
                   Fill: =RGBA(15,43,91,1)
-                  Height: =If(App.Width<640,170,144)
+                  Height: =If(App.Width<640,170,116)
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =LayoutDirection.Vertical
                   LayoutGap: =6
@@ -394,7 +394,8 @@ Screens:
                         Default: =LookUp(colBoardRules,ID=varSelectedBoardRuleID).'Start Month'
                         Font: =Font.'Segoe UI'
                         Height: =40
-                        Items: =[{Value1:"January",Value:"January"},{Value1:"February",Value:"February"},{Value1:"March",Value:"March"},{Value1:"April",Value:"April"},{Value1:"May",Value:"May"},{Value1:"June",Value:"June"},{Value1:"July",Value:"July"},{Value1:"August",Value:"August"},{Value1:"September",Value:"September"},{Value1:"October",Value:"October"},{Value1:"November",Value:"November"},{Value1:"December",Value:"December"}]
+                        ItemDisplayText: =ThisItem.Value
+                        Items: =[{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}]
                         Required: =true
                         Width: =Parent.Width
                   - drpBoardRuleWeek:
@@ -859,19 +860,3 @@ Screens:
                         Text: ="Generate Board draft"
                         Tooltip: ="Generate 2027 Board draft dates from this confirmed rule"
                         Width: =If(App.Width<640,Parent.Width,Parent.Width/3)
-            - txtBoardRuleCriticalMissing:
-                Control: ModernText
-                Properties:
-                  AccessibleLabel: ="Board Critical Issue Check-in source rule is not configured"
-                  AlignInContainer: =AlignInContainer.Stretch
-                  Color: =RGBA(146,64,14,1)
-                  Font: =Font.'Segoe UI'
-                  FontWeight: =FontWeight.Semibold
-                  Height: =34
-                  PaddingBottom: =0
-                  PaddingLeft: =12
-                  PaddingRight: =12
-                  PaddingTop: =0
-                  Size: =13
-                  Text: ="Board Critical Issue Check-in — needs a source rule before it can be scheduled."
-                  Visible: =IsBlank(LookUp(colBoardRules,Title="Board Critical Issue Check-in"))

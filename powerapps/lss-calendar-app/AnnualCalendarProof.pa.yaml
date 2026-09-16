@@ -1,0 +1,982 @@
+Screens:
+  AnnualCalendarProof:
+    Properties:
+      Fill: =RGBA(244,247,251,1)
+      LoadingSpinnerColor: =RGBA(15,43,91,1)
+    Children:
+      - conCalProofRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(244,247,251,1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =16
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =If(App.Width<760,16,24)
+            PaddingLeft: =If(App.Width<760,16,24)
+            PaddingRight: =If(App.Width<760,16,24)
+            PaddingTop: =If(App.Width<760,16,24)
+            Width: =Parent.Width
+          Children:
+            - conCalProofHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(203,213,225,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.Semilight
+                  Fill: =RGBA(255,255,255,1)
+                  FillPortions: =0
+                  Height: =If(App.Width<760,148,96)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =If(App.Width<760,8,12)
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =16
+                  PaddingLeft: =20
+                  PaddingRight: =20
+                  PaddingTop: =16
+                  RadiusBottomLeft: =12
+                  RadiusBottomRight: =12
+                  RadiusTopLeft: =12
+                  RadiusTopRight: =12
+                Children:
+                  - conCalProofHeaderCopy:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtCalProofTitle:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Plan Year 2027"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,23,42,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =34
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =28
+                              Text: ="Plan Year 2027"
+                              Wrap: =false
+                        - txtCalProofSubtitle:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Annual calendar proof using local sample data"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(71,85,105,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =20
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: ="Annual calendar proof · local sample data"
+                              Wrap: =false
+                  - txtCalProofSafety:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Local proof. No Outlook or SharePoint connection."
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BorderColor: =RGBA(203,213,225,1)
+                        BorderStyle: =BorderStyle.Solid
+                        BorderThickness: =1
+                        Color: =RGBA(15,43,91,1)
+                        Fill: =RGBA(248,250,252,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =36
+                        LayoutMinWidth: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =8
+                        PaddingRight: =8
+                        PaddingTop: =0
+                        RadiusBottomLeft: =18
+                        RadiusBottomRight: =18
+                        RadiusTopLeft: =18
+                        RadiusTopRight: =18
+                        Size: =12
+                        Text: ="Local proof · no Outlook or SharePoint"
+                        Width: =If(App.Width<760,Parent.Width,230)
+                        Wrap: =false
+            - conCalProofRulesNavBanner:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(203,213,225,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  FillPortions: =0
+                  Height: =If(App.Width<760,132,76)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =12
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =If(App.Width<760,8,16)
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =If(App.Width<760,8,16)
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                Children:
+                  - conCalProofRulesNavCopy:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =If(App.Width<760,0,1)
+                        Height: =If(App.Width<760,60,44)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtCalProofRulesNavTitle:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Board rules are ready to review"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =24
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =18
+                              Text: ="Board rules are ready to review"
+                              Wrap: =false
+                        - txtCalProofRulesNavHelp:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Review and edit the three Board patterns. Dates stay unchanged in this slice."
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(71,85,105,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width<760,34,18)
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: ="Review and edit the three Board patterns. Dates stay unchanged in this slice."
+                              VerticalAlign: =VerticalAlign.Top
+                  - btnCalProofRulesNavOpen:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Open Board rules review"
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        Color: =RGBA(255,255,255,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =160
+                        OnSelect: |-
+                          =Set(varBrvReceiptVisible,false);
+                          Set(varBrvSaveAttempted,false);
+                          Navigate(BoardRulesReview,ScreenTransition.None)
+                        PaddingBottom: =0
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        PaddingTop: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =14
+                        Text: ="Board rules"
+                        Width: =If(App.Width<760,Parent.Width,160)
+            - conCalProofYearIntro:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(203,213,225,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  FillPortions: =0
+                  Height: =If(App.Width<760,164,104)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =If(App.Width<760,8,16)
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =12
+                  RadiusBottomLeft: =12
+                  RadiusBottomRight: =12
+                  RadiusTopLeft: =12
+                  RadiusTopRight: =12
+                Children:
+                  - conCalProofYearCopy:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtCalProofEyebrow:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Year at a glance"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(71,85,105,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="YEAR AT A GLANCE"
+                              Wrap: =false
+                        - txtCalProofYearRange:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="January through December 2027"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,23,42,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =28
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =22
+                              Text: ="January–December 2027"
+                              Wrap: =false
+                        - txtCalProofYearHelp:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Select a Board meeting to inspect its scheduling source"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(71,85,105,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =24
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: ="Select a Board meeting to inspect its source."
+                              Wrap: =false
+                  - conCalProofLegend:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =If(App.Width<760,44,80)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutWrap: =true
+                        Width: =If(App.Width<760,Parent.Width,300)
+                      Children:
+                        - txtCalProofLegendBoard:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Navy marks Board meetings"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,43,91,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =24
+                              LayoutMinWidth: =84
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =12
+                              Text: ="● Board"
+                              Width: =84
+                              Wrap: =false
+                        - txtCalProofLegendClosure:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Red marks closures"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(185,28,28,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =24
+                              LayoutMinWidth: =86
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =12
+                              Text: ="● Closure"
+                              Width: =86
+                              Wrap: =false
+                        - txtCalProofLegendSelected:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Blue marks the selected meeting"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(37,99,235,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =24
+                              LayoutMinWidth: =94
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =12
+                              Text: ="● Selected"
+                              Width: =94
+                              Wrap: =false
+            - conCalProofWorkspace:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =With({calendarHeight:With({rows:If(App.Width>=1320,4,If(App.Width>=760,6,12))},rows*348+4)},If(App.Width>=1320,calendarHeight,calendarHeight+16+360))
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(App.Width>=1320,LayoutDirection.Horizontal,LayoutDirection.Vertical)
+                  LayoutGap: =16
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                Children:
+                  - galCalProofMonths:
+                      Control: Gallery
+                      Variant: Vertical
+                      Properties:
+                        AccessibleLabel: ="Twelve month calendar for 2027"
+                        DelayItemLoading: =false
+                        Fill: =RGBA(244,247,251,1)
+                        Items: =SortByColumns(colCalProofMonths,"MonthNumber",SortOrder.Ascending)
+                        LayoutMinHeight: =With({rows:If(App.Width>=1320,4,If(App.Width>=760,6,12))},rows*348+4)
+                        LayoutMinWidth: =0
+                        LoadingSpinner: =LoadingSpinner.None
+                        Selectable: =false
+                        ShowScrollbar: =false
+                        TabIndex: =0
+                        TemplatePadding: =4
+                        TemplateSize: =344
+                        WrapCount: =If(App.Width>=1320,3,If(App.Width>=760,2,1))
+                      Children:
+                        - conCalProofMonthCard:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(203,213,225,1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.Semilight
+                              Fill: =RGBA(255,255,255,1)
+                              Height: =Parent.TemplateHeight
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              PaddingBottom: =8
+                              PaddingLeft: =8
+                              PaddingRight: =8
+                              PaddingTop: =8
+                              RadiusBottomLeft: =10
+                              RadiusBottomRight: =10
+                              RadiusTopLeft: =10
+                              RadiusTopRight: =10
+                              Width: =Parent.TemplateWidth
+                            Children:
+                              - conCalProofMonthHeader:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =28
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =4
+                                    LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtCalProofMonthName:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: =ThisItem.MonthName & " 2027"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(15,23,42,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =28
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =16
+                                          Text: =ThisItem.MonthName
+                                          Wrap: =false
+                                    - txtCalProofMonthCount:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: =CountRows(Filter(colCalProofEvents,Month(EventDate)=ThisItem.MonthNumber)) & " Board meetings in " & ThisItem.MonthName
+                                          Align: =Align.Right
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =28
+                                          LayoutMinWidth: =72
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: =CountRows(Filter(colCalProofEvents,Month(EventDate)=ThisItem.MonthNumber)) & " Board"
+                                          Width: =72
+                                          Wrap: =false
+                              - conCalProofWeekHeader:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =22
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtCalProofSun:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Sunday"
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: ="S"
+                                          Wrap: =false
+                                    - txtCalProofMon:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Monday"
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: ="M"
+                                          Wrap: =false
+                                    - txtCalProofTue:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Tuesday"
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: ="T"
+                                          Wrap: =false
+                                    - txtCalProofWed:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Wednesday"
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: ="W"
+                                          Wrap: =false
+                                    - txtCalProofThu:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Thursday"
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: ="T"
+                                          Wrap: =false
+                                    - txtCalProofFri:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Friday"
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: ="F"
+                                          Wrap: =false
+                                    - txtCalProofSat:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Saturday"
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(71,85,105,1)
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: ="S"
+                                          Wrap: =false
+                              - galCalProofDays:
+                                  Control: Gallery
+                                  Variant: Vertical
+                                  Properties:
+                                    AccessibleLabel: =ThisItem.MonthName & " 2027 date grid"
+                                    DelayItemLoading: =false
+                                    Fill: =RGBA(255,255,255,1)
+                                    FillPortions: =0
+                                    Height: =270
+                                    Items: |-
+                                      =With(
+                                        {monthStart:ThisItem.MonthStart},
+                                        AddColumns(
+                                          Sequence(42),
+                                          CellDate,
+                                          DateAdd(monthStart,Value-Weekday(monthStart,StartOfWeek.Sunday),TimeUnit.Days),
+                                          IsCurrentMonth,
+                                          Month(DateAdd(monthStart,Value-Weekday(monthStart,StartOfWeek.Sunday),TimeUnit.Days))=Month(monthStart)
+                                        )
+                                      )
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    LoadingSpinner: =LoadingSpinner.None
+                                    Selectable: =false
+                                    ShowScrollbar: =false
+                                    TabIndex: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =45
+                                    WrapCount: =7
+                                  Children:
+                                    - conCalProofDayCell:
+                                        Control: GroupContainer
+                                        Variant: AutoLayout
+                                        Properties:
+                                          BorderColor: =If(LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,EventId)=varCalProofSelectedEventId,RGBA(37,99,235,1),RGBA(226,232,240,1))
+                                          BorderThickness: =If(LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,EventId)=varCalProofSelectedEventId,2,1)
+                                          DropShadow: =DropShadow.None
+                                          Fill: |-
+                                            =If(
+                                              !ThisItem.IsCurrentMonth,
+                                              RGBA(248,250,252,1),
+                                              !IsBlank(LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate,ClosureId)),
+                                              RGBA(254,242,242,1),
+                                              LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,EventId)=varCalProofSelectedEventId,
+                                              RGBA(239,246,255,1),
+                                              RGBA(255,255,255,1)
+                                            )
+                                          Height: =Parent.TemplateHeight
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          PaddingBottom: =1
+                                          PaddingLeft: =1
+                                          PaddingRight: =1
+                                          PaddingTop: =1
+                                          Width: =Parent.TemplateWidth
+                                        Children:
+                                          - txtCalProofDayNumber:
+                                              Control: ModernText
+                                              Properties:
+                                                AccessibleLabel: =Text(ThisItem.CellDate,"dddd, mmmm d, yyyy")
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =If(ThisItem.IsCurrentMonth,RGBA(71,85,105,1),RGBA(148,163,184,1))
+                                                Font: =Font.'Segoe UI'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =13
+                                                LayoutMinWidth: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =2
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =9
+                                                Text: =Text(ThisItem.CellDate,"d")
+                                                Wrap: =false
+                                          - txtCalProofClosure:
+                                              Control: ModernText
+                                              Properties:
+                                                AccessibleLabel: =Coalesce(LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate,ClosureName),"")
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =RGBA(185,28,28,1)
+                                                Font: =Font.'Segoe UI'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =10
+                                                LayoutMinWidth: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =2
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =7
+                                                Text: =Coalesce(LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate,ClosureLabel),"")
+                                                Visible: =ThisItem.IsCurrentMonth && !IsBlank(LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate,ClosureId))
+                                                Wrap: =false
+                                          - btnCalProofEventChip:
+                                              Control: ModernButton
+                                              Properties:
+                                                AccessibleLabel: =With({eventRow:LookUp(colCalProofEvents,EventDate=ThisItem.CellDate)},If(IsBlank(eventRow.EventId),"", "Select " & eventRow.EventName & " on " & Text(eventRow.EventDate,"dddd, mmmm d, yyyy")))
+                                                Align: =Align.Center
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                BasePaletteColor: =If(LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,EventId)=varCalProofSelectedEventId,RGBA(37,99,235,1),RGBA(15,43,91,1))
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =0
+                                                Color: =RGBA(255,255,255,1)
+                                                Font: =Font.'Segoe UI'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =20
+                                                Layout: =ButtonLayout.TextOnly
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =With(
+                                                    {selectedId:LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,EventId)},
+                                                    If(
+                                                      !IsBlank(selectedId),
+                                                      Set(varCalProofSelectedEventId,selectedId);
+                                                      Set(varCalProofSelectedEvent,LookUp(colCalProofEvents,EventId=selectedId))
+                                                    )
+                                                  )
+                                                PaddingBottom: =0
+                                                PaddingLeft: =1
+                                                PaddingRight: =1
+                                                PaddingTop: =0
+                                                RadiusBottomLeft: =3
+                                                RadiusBottomRight: =3
+                                                RadiusTopLeft: =3
+                                                RadiusTopRight: =3
+                                                Size: =8
+                                                Text: =Coalesce(LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,ChipText),"")
+                                                Tooltip: =Coalesce(LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,EventName),"")
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Visible: =ThisItem.IsCurrentMonth && !IsBlank(LookUp(colCalProofEvents,EventDate=ThisItem.CellDate,EventId))
+                  - conCalProofDetail:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203,213,225,1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.Semilight
+                        Fill: =RGBA(255,255,255,1)
+                        FillPortions: =0
+                        Height: =If(App.Width>=1320,420,360)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =16
+                        PaddingLeft: =16
+                        PaddingRight: =16
+                        PaddingTop: =16
+                        RadiusBottomLeft: =12
+                        RadiusBottomRight: =12
+                        RadiusTopLeft: =12
+                        RadiusTopRight: =12
+                        Width: =If(App.Width>=1320,320,Parent.Width)
+                      Children:
+                        - txtCalProofDetailEyebrow:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Context panel"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(71,85,105,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="CONTEXT PANEL"
+                              Wrap: =false
+                        - txtCalProofDetailHeading:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Meeting details"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(15,23,42,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =30
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =22
+                              Text: ="Meeting details"
+                              Wrap: =false
+                        - conCalProofEmptyDetail:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingTop: =24
+                              Visible: =IsBlank(varCalProofSelectedEventId)
+                            Children:
+                              - txtCalProofEmptyTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Select a Board meeting"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15,23,42,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =18
+                                    Text: ="Select a Board meeting"
+                                    Wrap: =false
+                              - txtCalProofEmptyBody:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Choose a Board, check-in, or retreat chip in the calendar to inspect its local record"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(71,85,105,1)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =72
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =14
+                                    Text: ="Choose a BOARD, CHECK, or RETREAT chip in the calendar to see its exact local record."
+                                    VerticalAlign: =VerticalAlign.Top
+                        - conCalProofSelectedDetail:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =6
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =!IsBlank(varCalProofSelectedEventId)
+                            Children:
+                              - txtCalProofSelectedType:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Meeting type " & varCalProofSelectedEvent.EventType
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(37,99,235,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =22
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: =Upper(varCalProofSelectedEvent.EventType)
+                                    Wrap: =false
+                              - txtCalProofSelectedName:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Selected meeting " & varCalProofSelectedEvent.EventName
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15,23,42,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =52
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: =varCalProofSelectedEvent.EventName
+                                    VerticalAlign: =VerticalAlign.Top
+                              - txtCalProofSelectedId:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Stable event ID " & varCalProofSelectedEvent.EventId
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(71,85,105,1)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =20
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: |-
+                                      ="Event ID: " & varCalProofSelectedEvent.EventId
+                                    Wrap: =false
+                              - txtCalProofSelectedDate:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Meeting date " & Text(varCalProofSelectedEvent.EventDate,"dddd, mmmm d, yyyy")
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15,23,42,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =24
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =14
+                                    Text: =Text(varCalProofSelectedEvent.EventDate,"dddd, mmmm d, yyyy")
+                                    Wrap: =false
+                              - txtCalProofSelectedTime:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Meeting time " & Text(varCalProofSelectedEvent.StartTime,"[$-en-US]h:mm AM/PM") & " to " & Text(varCalProofSelectedEvent.EndTime,"[$-en-US]h:mm AM/PM")
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15,23,42,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =24
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =14
+                                    Text: =Text(varCalProofSelectedEvent.StartTime,"[$-en-US]h:mm AM/PM") & "–" & Text(varCalProofSelectedEvent.EndTime,"[$-en-US]h:mm AM/PM")
+                                    Wrap: =false
+                              - txtCalProofSelectedSourceLabel:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Scheduling source"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(71,85,105,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: ="Scheduling source"
+                                    Wrap: =false
+                              - txtCalProofSelectedSource:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Scheduling source " & varCalProofSelectedEvent.SchedulingSource
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(71,85,105,1)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =76
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =13
+                                    Text: =varCalProofSelectedEvent.SchedulingSource
+                                    VerticalAlign: =VerticalAlign.Top

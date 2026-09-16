@@ -1,4 +1,89 @@
 App:
   Properties:
-    StartScreen: =Screen1
+    OnStart: |-
+      =ClearCollect(
+        colCalProofMonths,
+        {MonthNumber:1,MonthName:"January",MonthStart:Date(2027,1,1)},
+        {MonthNumber:2,MonthName:"February",MonthStart:Date(2027,2,1)},
+        {MonthNumber:3,MonthName:"March",MonthStart:Date(2027,3,1)},
+        {MonthNumber:4,MonthName:"April",MonthStart:Date(2027,4,1)},
+        {MonthNumber:5,MonthName:"May",MonthStart:Date(2027,5,1)},
+        {MonthNumber:6,MonthName:"June",MonthStart:Date(2027,6,1)},
+        {MonthNumber:7,MonthName:"July",MonthStart:Date(2027,7,1)},
+        {MonthNumber:8,MonthName:"August",MonthStart:Date(2027,8,1)},
+        {MonthNumber:9,MonthName:"September",MonthStart:Date(2027,9,1)},
+        {MonthNumber:10,MonthName:"October",MonthStart:Date(2027,10,1)},
+        {MonthNumber:11,MonthName:"November",MonthStart:Date(2027,11,1)},
+        {MonthNumber:12,MonthName:"December",MonthStart:Date(2027,12,1)}
+      );
+      ClearCollect(
+        colCalProofEvents,
+        {EventId:"FB-2027-01",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,1,12),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
+        {EventId:"BCI-2027-02",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,2,9),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
+        {EventId:"BCI-2027-03",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,3,9),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
+        {EventId:"FB-2027-04",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,4,13),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
+        {EventId:"RET-2027-05",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,5,27),StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date"},
+        {EventId:"BCI-2027-06",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,6,8),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
+        {EventId:"FB-2027-07",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,7,13),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
+        {EventId:"BCI-2027-08",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,8,10),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
+        {EventId:"BCI-2027-09",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,9,14),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"},
+        {EventId:"FB-2027-10",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2027,10,12),StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · quarterly · second Tuesday"},
+        {EventId:"RET-2027-11",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,11,18),StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date"},
+        {EventId:"BCI-2027-12",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,12,14),StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday"}
+      );
+      ClearCollect(
+        colCalProofClosures,
+        {ClosureId:"CLOSE-2027-0101",ClosureName:"New Year's Day",ClosureLabel:"New Year",ClosureDate:Date(2027,1,1)},
+        {ClosureId:"CLOSE-2027-0118",ClosureName:"Martin Luther King Jr. Day",ClosureLabel:"MLK Day",ClosureDate:Date(2027,1,18)},
+        {ClosureId:"CLOSE-2027-0531",ClosureName:"Memorial Day",ClosureLabel:"Memorial",ClosureDate:Date(2027,5,31)},
+        {ClosureId:"CLOSE-2027-0618",ClosureName:"Juneteenth observed",ClosureLabel:"Juneteenth",ClosureDate:Date(2027,6,18)},
+        {ClosureId:"CLOSE-2027-0705",ClosureName:"Independence Day observed",ClosureLabel:"July 4 obs.",ClosureDate:Date(2027,7,5)},
+        {ClosureId:"CLOSE-2027-0906",ClosureName:"Labor Day",ClosureLabel:"Labor Day",ClosureDate:Date(2027,9,6)},
+        {ClosureId:"CLOSE-2027-1125",ClosureName:"Thanksgiving Day",ClosureLabel:"Thanks.",ClosureDate:Date(2027,11,25)},
+        {ClosureId:"CLOSE-2027-1224",ClosureName:"Christmas Day observed",ClosureLabel:"Xmas obs.",ClosureDate:Date(2027,12,24)}
+      );
+      Set(varCalProofSelectedEventId,"");
+      Set(varCalProofSelectedEvent,First(colCalProofEvents));
+      Set(varCalProofSelectedEvent,Blank());
+      ClearCollect(
+        colBoardRuleProof,
+        {SortOrder:1,RuleId:"BOARD-FULL",MeetingName:"Full Board",Cadence:"Quarterly",MonthsText:"January, April, July, October",StartMonth:"January",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"January",AnchorDay:12,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:120,Format:"In person",Flexibility:"Fixed",RuleStatus:"Confirmed"},
+        {SortOrder:2,RuleId:"BOARD-CHECKIN",MeetingName:"Board Critical Issue Check-in",Cadence:"Specific months",MonthsText:"February, March, June, August, September, December",StartMonth:"February",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:9,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:30,Format:"Virtual",Flexibility:"Fixed",RuleStatus:"Confirmed"},
+        {SortOrder:3,RuleId:"BOARD-RETREAT",MeetingName:"Board Retreat",Cadence:"Specific months",MonthsText:"May, November",StartMonth:"May",WeekOfMonth:"Last",PreferredDay:"Thursday",AnchorMonth:"May",AnchorDay:27,SecondPreferredDay:"Friday",SecondWeekOfMonth:"Fourth",StartTimeText:"8:00 AM",DurationMinutes:300,Format:"In person",Flexibility:"Fixed",RuleStatus:"Needs validation"}
+      );
+      ClearCollect(
+        colBrvCadenceOptions,
+        {SortOrder:1,Value:"One time",HelpText:"Choose one date in the 2027 planning year.",UsesAnchorDate:true,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:false,UsesDay:false,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:2,Value:"Twice a week",HelpText:"Choose two different weekdays.",UsesAnchorDate:false,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:false,UsesDay:true,UsesSecondDay:true,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:3,Value:"Weekly",HelpText:"Choose the weekday for the meeting.",UsesAnchorDate:false,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:false,UsesDay:true,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:4,Value:"Every two weeks",HelpText:"Choose the first occurrence; later occurrences follow every two weeks.",UsesAnchorDate:true,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:false,UsesDay:false,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:5,Value:"Twice a month",HelpText:"Choose two different weeks of the month and one weekday.",UsesAnchorDate:false,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:true,UsesDay:true,UsesSecondDay:false,UsesSecondWeek:true,AutoGenerates:true},
+        {SortOrder:6,Value:"Monthly",HelpText:"Choose the week of the month and weekday.",UsesAnchorDate:false,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:true,UsesDay:true,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:7,Value:"Every two months",HelpText:"Choose a starting month, week of the month, and weekday.",UsesAnchorDate:false,UsesStartMonth:true,UsesSpecificMonths:false,UsesWeek:true,UsesDay:true,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:8,Value:"Quarterly",HelpText:"Choose a starting month, week of the month, and weekday.",UsesAnchorDate:false,UsesStartMonth:true,UsesSpecificMonths:false,UsesWeek:true,UsesDay:true,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:9,Value:"Specific months",HelpText:"Choose every month in which this meeting should occur.",UsesAnchorDate:false,UsesStartMonth:false,UsesSpecificMonths:true,UsesWeek:true,UsesDay:true,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:10,Value:"Annually",HelpText:"Choose the month, week of the month, and weekday.",UsesAnchorDate:false,UsesStartMonth:true,UsesSpecificMonths:false,UsesWeek:true,UsesDay:true,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},
+        {SortOrder:11,Value:"As needed — no dates generated automatically",HelpText:"No dates will be generated automatically for this rule.",UsesAnchorDate:false,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:false,UsesDay:false,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:false}
+      );
+      ClearCollect(
+        colBrvMonthSelection,
+        {MonthNumber:1,MonthName:"January",IsSelected:true},
+        {MonthNumber:2,MonthName:"February",IsSelected:false},
+        {MonthNumber:3,MonthName:"March",IsSelected:false},
+        {MonthNumber:4,MonthName:"April",IsSelected:true},
+        {MonthNumber:5,MonthName:"May",IsSelected:false},
+        {MonthNumber:6,MonthName:"June",IsSelected:false},
+        {MonthNumber:7,MonthName:"July",IsSelected:true},
+        {MonthNumber:8,MonthName:"August",IsSelected:false},
+        {MonthNumber:9,MonthName:"September",IsSelected:false},
+        {MonthNumber:10,MonthName:"October",IsSelected:true},
+        {MonthNumber:11,MonthName:"November",IsSelected:false},
+        {MonthNumber:12,MonthName:"December",IsSelected:false}
+      );
+      Set(varBrvSelectedRuleId,"BOARD-FULL");
+      Set(varBrvReceipt,First(colBoardRuleProof));
+      Set(varBrvReceipt,Blank());
+      Set(varBrvReceiptVisible,false);
+      Set(varBrvSaveAttempted,false)
+    StartScreen: =AnnualCalendarProof
     Theme: =PowerAppsTheme
