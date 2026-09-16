@@ -984,7 +984,7 @@ Screens:
                               IsBlank(varCalProofSelectedEventId),
                               If(reviewTotal>0,430,260),
                               varCalProofSelectedEvent.DecisionStatus="NeedsReview",
-                              If(varCalProofChoosingAlternate,If(App.Width>=1320,980,940),If(App.Width>=1320,900,860)),
+                              If(varCalProofChoosingAlternate,If(App.Width>=1320,980,940),If(varCalProofMoreDetailsExpanded,720,620)),
                               varCalProofSelectedEvent.DecisionStatus="Blocked",
                               900,
                               varCalProofSelectedEvent.AutoAdjusted,
@@ -1244,7 +1244,7 @@ Screens:
                               DropShadow: =DropShadow.None
                               Fill: =RGBA(255,251,235,1)
                               FillPortions: =0
-                              Height: =If(Self.Visible,58+74*Min(2,CountIf(colCalProofEvents,DecisionStatus="NeedsReview")+CountRows(colCalProofBlockedEvents))+If(CountIf(colCalProofEvents,DecisionStatus="NeedsReview")+CountRows(colCalProofBlockedEvents)>2,22,0),0)
+                              Height: =If(Self.Visible,68+74*Min(2,CountIf(colCalProofEvents,DecisionStatus="NeedsReview")+CountRows(colCalProofBlockedEvents))+If(varCalProofSelectedEvent.DecisionStatus="NeedsReview",If(App.Width<760,104,52),0)+If(CountIf(colCalProofEvents,DecisionStatus="NeedsReview")+CountRows(colCalProofBlockedEvents)>2,22,0),0)
                               LayoutAlignItems: =LayoutAlignItems.Stretch
                               LayoutDirection: =LayoutDirection.Vertical
                               LayoutGap: =6
@@ -1258,7 +1258,7 @@ Screens:
                               RadiusBottomRight: =8
                               RadiusTopLeft: =8
                               RadiusTopRight: =8
-                              Visible: =CountIf(colCalProofEvents,DecisionStatus="NeedsReview")+CountRows(colCalProofBlockedEvents)>0
+                              Visible: =CountIf(colCalProofEvents,DecisionStatus="NeedsReview")+CountRows(colCalProofBlockedEvents)>0 && !varCalProofChoosingAlternate
                             Children:
                               - txtCalProofReviewQueueCount:
                                   Control: ModernText
@@ -1280,7 +1280,7 @@ Screens:
                                           reviewRows:SortByColumns(Filter(Ungroup(Table({QueueRows:Filter(colCalProofEvents,DecisionStatus="NeedsReview")},{QueueRows:colCalProofBlockedEvents}),QueueRows),!IsBlank(EventId)),"OriginalGeneratedDate",SortOrder.Ascending),
                                           reviewCount:CountIf(colCalProofEvents,DecisionStatus="NeedsReview")+CountRows(colCalProofBlockedEvents)
                                         },
-                                        reviewCount & " change"&If(reviewCount=1,"","s")&" need approval" &
+                                        reviewCount & " change"&If(reviewCount=1," needs approval","s need approval") &
                                         If(!IsBlank(varCalProofSelectedEventId) && CountIf(reviewRows,EventId=varCalProofSelectedEventId)>0,Char(10) & (CountRows(Filter(reviewRows As queueItem,queueItem.OriginalGeneratedDate<LookUp(reviewRows As selectedItem,selectedItem.EventId=varCalProofSelectedEventId,selectedItem.OriginalGeneratedDate)))+1) & " of " & reviewCount & " — " & varCalProofSelectedEvent.EventName,"")
                                       )
                                     VerticalAlign: =VerticalAlign.Top
@@ -1312,8 +1312,6 @@ Screens:
                                           LayoutAlignItems: =LayoutAlignItems.Center
                                           LayoutDirection: =LayoutDirection.Horizontal
                                           LayoutGap: =6
-                                          LayoutMinHeight: =0
-                                          LayoutMinWidth: =0
                                           PaddingBottom: =2
                                           PaddingLeft: =2
                                           PaddingRight: =2
@@ -1336,8 +1334,7 @@ Screens:
                                                 PaddingRight: =4
                                                 PaddingTop: =4
                                                 Size: =11
-                                                Text: |-
-                                                  =ThisItem.EventName & " · " & Text(ThisItem.OriginalGeneratedDate,"mmm d") & If(ThisItem.DecisionStatus="Blocked"," → not placed"," → " & Text(ThisItem.EventDate,"mmm d")) & Char(10) & If(ThisItem.DecisionStatus="Blocked","Blocked",If(ThisItem.EventId=varCalProofSelectedEventId,"Current approval","Suggested date change"))
+                                                Text: =ThisItem.EventName & " · " & Text(ThisItem.OriginalGeneratedDate,"mmm d") & If(ThisItem.DecisionStatus="Blocked"," → not placed"," → " & Text(ThisItem.EventDate,"mmm d")) & Char(10) & If(ThisItem.DecisionStatus="Blocked","Blocked — no valid business day",If(ThisItem.AdjustmentSourceName="Weekend","Weekend",ThisItem.AdjustmentSourceName & If(ThisItem.AdjustmentReason="Holiday/Closure"," closure","")) & " · Approval required")
                                                 VerticalAlign: =VerticalAlign.Top
                                           - btnCalProofReviewQueueItem:
                                               Control: ModernButton
@@ -1350,7 +1347,7 @@ Screens:
                                                 Color: =RGBA(120,53,15,1)
                                                 Font: =Font.'Segoe UI'
                                                 FontWeight: =FontWeight.Semibold
-                                                Height: =44
+                                                Height: =If(Self.Visible,44,0)
                                                 Layout: =ButtonLayout.TextOnly
                                                 LayoutMinWidth: =72
                                                 OnSelect: |-
@@ -1363,9 +1360,84 @@ Screens:
                                                   Set(varCalProofReceiptVisible,false);
                                                   Set(varCalProofActionMessage,"")
                                                 Size: =12
-                                                Text: =If(ThisItem.EventId=varCalProofSelectedEventId,"Current","Open")
+                                                Text: ="Review"
                                                 Tooltip: ="Open this exception in the context panel"
-                                                Width: =72
+                                                Visible: =ThisItem.EventId<>varCalProofSelectedEventId
+                                                Width: =If(Self.Visible,72,0)
+                              - conCalProofReviewQueueActions:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =If(App.Width<760,96,44)
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    Visible: =varCalProofSelectedEvent.DecisionStatus="NeedsReview"
+                                  Children:
+                                    - btnCalProofQueueApproveProposed:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: ="Approve proposed date " & Text(varCalProofSelectedEvent.EventDate,"dddd, mmmm d")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BasePaletteColor: =RGBA(37,99,235,1)
+                                          Color: =RGBA(255,255,255,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =Set(varCalProofLastMutation,Patch(colCalProofEvents,LookUp(colCalProofEvents,EventId=varCalProofSelectedEventId),{DecisionStatus:"Approved"}));
+                                            Set(varCalProofReceiptAction,"Approve");
+                                            Set(varCalProofReceiptVisible,true);
+                                            Set(varCalProofChoosingAlternate,false);
+                                            Set(varCalProofMoreDetailsExpanded,false);
+                                            Set(varCalProofUndoConfirmationPending,false);
+                                            With(
+                                              {nextId:First(SortByColumns(Filter(colCalProofEvents,DecisionStatus="NeedsReview"),"OriginalGeneratedDate",SortOrder.Ascending)).EventId},
+                                              If(
+                                                IsBlank(nextId),
+                                                Set(varCalProofSelectedEventId,varCalProofLastMutation.EventId);
+                                                Set(varCalProofSelectedEvent,LookUp(colCalProofEvents,EventId=varCalProofLastMutation.EventId)),
+                                                Set(varCalProofSelectedEventId,nextId);
+                                                Set(varCalProofSelectedEvent,LookUp(colCalProofEvents,EventId=nextId))
+                                              )
+                                            )
+                                          Size: =13
+                                          Text: ="Approve " & Text(varCalProofSelectedEvent.EventDate,"mmm d")
+                                          Tooltip: ="Keep the proposed business-day replacement"
+                                          Width: =If(App.Width<760,Parent.Width,(Parent.Width-8)/2)
+                                    - btnCalProofQueueChooseAlternate:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: ="Choose another date or time for " & varCalProofSelectedEvent.EventName
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =ButtonAppearance.Outline
+                                          BasePaletteColor: =RGBA(37,99,235,1)
+                                          Color: =RGBA(15,43,91,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =Set(varCalProofChoosingAlternate,true);
+                                            Set(varCalProofMoreDetailsExpanded,false);
+                                            Set(varCalProofUndoConfirmationPending,false);
+                                            Set(varCalProofReceiptVisible,false);
+                                            Set(varCalProofActionMessage,"");
+                                            Reset(dteCalProofAlternateDate);
+                                            Reset(ddCalProofMoveTime)
+                                          Size: =13
+                                          Text: ="Choose another date or time"
+                                          Tooltip: ="Select a different valid date and time"
+                                          Width: =If(App.Width<760,Parent.Width,(Parent.Width-8)/2)
                               - txtCalProofReviewQueueMore:
                                   Control: ModernText
                                   Properties:
@@ -1437,7 +1509,7 @@ Screens:
                             Properties:
                               DropShadow: =DropShadow.None
                               FillPortions: =0
-                              Height: =If(varCalProofChoosingAlternate,If(App.Width<760,990,890),varCalProofSelectedEvent.DecisionStatus="NeedsReview",If(App.Width<760,720,650),varCalProofSelectedEvent.DecisionStatus="Blocked",570,If(varCalProofMoreDetailsExpanded,610,430))
+                              Height: =If(varCalProofChoosingAlternate,If(App.Width<760,990,890),varCalProofSelectedEvent.DecisionStatus="NeedsReview",If(varCalProofMoreDetailsExpanded,360,260),varCalProofSelectedEvent.DecisionStatus="Blocked",570,If(varCalProofMoreDetailsExpanded,610,430))
                               LayoutAlignItems: =LayoutAlignItems.Stretch
                               LayoutDirection: =LayoutDirection.Vertical
                               LayoutGap: =6
@@ -1453,7 +1525,7 @@ Screens:
                                     Color: =RGBA(37,99,235,1)
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
-                                    Height: =22
+                                    Height: =If(Self.Visible,22,0)
                                     LayoutMinWidth: =0
                                     PaddingBottom: =0
                                     PaddingLeft: =0
@@ -1461,6 +1533,7 @@ Screens:
                                     PaddingTop: =0
                                     Size: =11
                                     Text: =Upper(varCalProofSelectedEvent.EventType)
+                                    Visible: =varCalProofSelectedEvent.DecisionStatus<>"NeedsReview" || varCalProofChoosingAlternate
                                     Wrap: =false
                               - txtCalProofSelectedName:
                                   Control: ModernText
@@ -1470,7 +1543,7 @@ Screens:
                                     Color: =RGBA(15,23,42,1)
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
-                                    Height: =52
+                                    Height: =If(Self.Visible,52,0)
                                     LayoutMinWidth: =0
                                     PaddingBottom: =0
                                     PaddingLeft: =0
@@ -1479,6 +1552,7 @@ Screens:
                                     Size: =22
                                     Text: =varCalProofSelectedEvent.EventName
                                     VerticalAlign: =VerticalAlign.Top
+                                    Visible: =varCalProofSelectedEvent.DecisionStatus<>"NeedsReview" || varCalProofChoosingAlternate
                               - txtCalProofSelectedDecisionStatus:
                                   Control: ModernText
                                   Properties:
@@ -1496,7 +1570,7 @@ Screens:
                                     PaddingTop: =4
                                     Size: =12
                                     Text: =If(varCalProofSelectedEvent.DecisionStatus="Blocked","Blocked — no valid placement","● Needs approval")
-                                    Visible: =varCalProofSelectedEvent.DecisionStatus="NeedsReview" || varCalProofSelectedEvent.DecisionStatus="Blocked"
+                                    Visible: =varCalProofSelectedEvent.DecisionStatus="Blocked"
                               - txtCalProofSelectedId:
                                   Control: ModernText
                                   Properties:
@@ -1653,7 +1727,7 @@ Screens:
                                     DropShadow: =DropShadow.None
                                     Fill: =If(varCalProofSelectedEvent.DecisionStatus="Blocked",RGBA(254,242,242,1),RGBA(255,251,235,1))
                                     FillPortions: =0
-                                    Height: =If(varCalProofSelectedEvent.DecisionStatus="Blocked",172,If(varCalProofChoosingAlternate,If(App.Width<760,520,454),If(App.Width<760,250,226)))
+                                    Height: =If(Self.Visible,If(varCalProofSelectedEvent.DecisionStatus="Blocked",172,If(App.Width<760,520,454)),0)
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
                                     LayoutDirection: =LayoutDirection.Vertical
                                     LayoutGap: =8
@@ -1667,7 +1741,7 @@ Screens:
                                     RadiusBottomRight: =8
                                     RadiusTopLeft: =8
                                     RadiusTopRight: =8
-                                    Visible: =varCalProofSelectedEvent.DecisionStatus="NeedsReview" || varCalProofSelectedEvent.DecisionStatus="Blocked" || varCalProofChoosingAlternate
+                                    Visible: =varCalProofSelectedEvent.DecisionStatus="Blocked" || varCalProofChoosingAlternate
                                   Children:
                                     - txtCalProofAdjustmentStatus:
                                         Control: ModernText
@@ -1830,10 +1904,10 @@ Screens:
                                                 BasePaletteColor: =RGBA(37,99,235,1)
                                                 Color: =RGBA(15,23,42,1)
                                                 DefaultDate: =varCalProofSelectedEvent.EventDate
+                                                EndDate: =Date(2027,12,31)
                                                 Font: =Font.'Segoe UI'
                                                 Height: =44
                                                 IsEditable: =true
-                                                EndDate: =Date(2027,12,31)
                                                 StartDate: =Date(2027,1,1)
                                                 ValidationState: =If(IsBlank(Self.SelectedDate) || Year(Self.SelectedDate)<>2027 || IsCalProofHardStop(Self.SelectedDate),ValidationState.Error,ValidationState.None)
                                                 Width: =Parent.Width
