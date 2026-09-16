@@ -112,6 +112,12 @@ App:
         {BatchId:"",GeneratedCount:0,RuleCount:0,GeneratedAt:Now(),FirstDate:Date(2027,1,1),LastDate:Date(2027,1,1),RuleIds:""}
       );
       Clear(colCalProofGenerationReceipt);
+      Set(varCalProofBoardConfirmed,false);
+      ClearCollect(
+        colCalProofBoardConfirmationReceipt,
+        {ConfirmationId:"",BatchId:"",ConfirmedAt:Now(),EventCount:0,RuleCount:0,ManualAdjustmentCount:0,AutoAdjustedCount:0,Status:""}
+      );
+      Clear(colCalProofBoardConfirmationReceipt);
       ClearCollect(
         colBrvCadenceOptions,
         {SortOrder:1,Value:"One time",HelpText:"Choose one date in the 2027 planning year.",UsesAnchorDate:true,UsesStartMonth:false,UsesSpecificMonths:false,UsesWeek:false,UsesDay:false,UsesSecondDay:false,UsesSecondWeek:false,AutoGenerates:true},

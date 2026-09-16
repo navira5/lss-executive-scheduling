@@ -125,7 +125,7 @@ Screens:
                   DropShadow: =DropShadow.None
                   Fill: =RGBA(255,255,255,1)
                   FillPortions: =0
-                  Height: =If(App.Width<760,248,If(App.Width<1100,180,124))
+                  Height: =If(App.Width<760,300,If(App.Width<1100,180,124))
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
                   LayoutGap: =12
@@ -192,6 +192,8 @@ Screens:
                                     blockedCount:CountRows(colCalProofBlockedEvents)
                                   },
                                   If(
+                                    varCalProofBoardConfirmed && CountRows(colCalProofBoardConfirmationReceipt)>0,
+                                    "Board confirmed and " & Text(First(colCalProofBoardConfirmationReceipt).EventCount) & " dates locked locally on " & Text(First(colCalProofBoardConfirmationReceipt).ConfirmedAt,"mmm d, yyyy 'at' h:mm AM/PM") & ". No Outlook changes were made.",
                                     CountRows(colBoardRuleProof)=0,
                                     "No Board rules are available.",
                                     CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")>0,
@@ -214,13 +216,13 @@ Screens:
                       Properties:
                         DropShadow: =DropShadow.None
                         FillPortions: =0
-                        Height: =If(App.Width<760,96,44)
+                        Height: =If(App.Width<760,148,44)
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
                         LayoutGap: =8
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
-                        Width: =If(App.Width<760,Parent.Width,348)
+                        Width: =If(App.Width<760,Parent.Width,548)
                       Children:
                         - btnCalProofRulesNavOpen:
                             Control: ModernButton
@@ -231,6 +233,7 @@ Screens:
                               Appearance: =ButtonAppearance.Outline
                               BasePaletteColor: =RGBA(37,99,235,1)
                               Color: =RGBA(15,43,91,1)
+                              DisplayMode: =If(varCalProofBoardConfirmed,DisplayMode.Disabled,DisplayMode.Edit)
                               FillPortions: =If(App.Width<760,0,1)
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
@@ -260,7 +263,7 @@ Screens:
                               AlignInContainer: =AlignInContainer.Stretch
                               BasePaletteColor: =RGBA(37,99,235,1)
                               Color: =RGBA(255,255,255,1)
-                              DisplayMode: =If(CountRows(colBoardRuleProof)>0 && CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")=0,DisplayMode.Edit,DisplayMode.Disabled)
+                              DisplayMode: =If(!varCalProofBoardConfirmed && CountRows(colBoardRuleProof)>0 && CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")=0,DisplayMode.Edit,DisplayMode.Disabled)
                               FillPortions: =If(App.Width<760,0,1)
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
@@ -386,6 +389,8 @@ Screens:
                                     Set(varCalProofReceiptAction,"");
                                     Clear(colCalProofMoveSnapshot);
                                     Set(varCalProofActionMessage,"");
+                                    Set(varCalProofBoardConfirmed,false);
+                                    Clear(colCalProofBoardConfirmationReceipt);
                                     With(
                                         {generatedCount:CountRows(colCalProofEvents),batchTime:Now()},
                                         ClearCollect(
@@ -412,8 +417,90 @@ Screens:
                               RadiusTopRight: =8
                               Size: =14
                               Text: =If(CountRows(colCalProofGenerationReceipt)=0,"Generate Board draft","Regenerate Board draft")
-                              Tooltip: =If(Self.DisplayMode=DisplayMode.Disabled,"Confirm every Board rule before generating.",Self.Text)
+                              Tooltip: =If(varCalProofBoardConfirmed,"Board dates are locked.",If(Self.DisplayMode=DisplayMode.Disabled,"Confirm every Board rule before generating.",Self.Text))
                               Width: =If(App.Width<760,Parent.Width,208)
+                        - btnCalProofConfirmBoard:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: =If(varCalProofBoardConfirmed,"Board confirmed and dates locked","Confirm Board and lock dates")
+                              Align: =Align.Center
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BasePaletteColor: =If(varCalProofBoardConfirmed,RGBA(21,128,61,1),RGBA(15,43,91,1))
+                              Color: =RGBA(255,255,255,1)
+                              DisplayMode: |-
+                                =If(
+                                  !varCalProofBoardConfirmed &&
+                                  CountRows(colBoardRuleProof)>0 &&
+                                  CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")=0 &&
+                                  CountRows(colCalProofGenerationReceipt)>0 &&
+                                  CountRows(colCalProofEvents)>0 &&
+                                  CountIf(colCalProofEvents,DecisionStatus="NeedsReview")=0 &&
+                                  CountRows(colCalProofBlockedEvents)=0,
+                                  DisplayMode.Edit,
+                                  DisplayMode.Disabled
+                                )
+                              FillPortions: =If(App.Width<760,0,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =If(
+                                  !varCalProofBoardConfirmed &&
+                                  CountRows(colBoardRuleProof)>0 &&
+                                  CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")=0 &&
+                                  CountRows(colCalProofGenerationReceipt)>0 &&
+                                  CountRows(colCalProofEvents)>0 &&
+                                  CountIf(colCalProofEvents,DecisionStatus="NeedsReview")=0 &&
+                                  CountRows(colCalProofBlockedEvents)=0,
+                                  With(
+                                    {confirmedAt:Now(),confirmationId:"BOARD-CONFIRM-"&Text(Now(),"yyyymmddhhmmss")},
+                                    ClearCollect(
+                                      colCalProofBoardConfirmationReceipt,
+                                      {
+                                        ConfirmationId:confirmationId,
+                                        BatchId:First(colCalProofGenerationReceipt).BatchId,
+                                        ConfirmedAt:confirmedAt,
+                                        EventCount:CountRows(colCalProofEvents),
+                                        RuleCount:CountRows(Filter(colBoardRuleProof,RuleStatus="Confirmed")),
+                                        ManualAdjustmentCount:CountIf(colCalProofEvents,IsManualOverride),
+                                        AutoAdjustedCount:CountIf(colCalProofEvents,AutoAdjusted),
+                                        Status:"Confirmed"
+                                      }
+                                    );
+                                    Set(varCalProofBoardConfirmed,true);
+                                    Set(varCalProofChoosingAlternate,false);
+                                    Set(varCalProofUndoConfirmationPending,false);
+                                    Set(varCalProofReceiptVisible,false);
+                                    Set(varCalProofActionMessage,"Board confirmed and dates locked locally. No Outlook changes were made.")
+                                  )
+                                )
+                              PaddingBottom: =0
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =0
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Size: =14
+                              Text: =If(varCalProofBoardConfirmed,"Board confirmed","Confirm Board")
+                              Tooltip: |-
+                                =If(
+                                  varCalProofBoardConfirmed,
+                                  "Board dates are locked in this local proof.",
+                                  CountIf(colBoardRuleProof,RuleStatus<>"Confirmed")>0,
+                                  "Confirm every Board rule first.",
+                                  CountRows(colCalProofGenerationReceipt)=0 || CountRows(colCalProofEvents)=0,
+                                  "Generate the Board draft first.",
+                                  CountRows(colCalProofBlockedEvents)>0,
+                                  "Resolve every blocked date first.",
+                                  CountIf(colCalProofEvents,DecisionStatus="NeedsReview")>0,
+                                  "Approve or move every proposed date first.",
+                                  "Confirm Board and lock all dates locally."
+                                )
+                              Width: =If(App.Width<760,Parent.Width,200)
             - conCalProofYearIntro:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -1693,8 +1780,8 @@ Screens:
                                   Properties:
                                     AccessibleLabel: =Self.Text
                                     AlignInContainer: =AlignInContainer.Stretch
-                                    Color: =If(varCalProofSelectedEvent.DecisionStatus="Blocked",RGBA(185,28,28,1),RGBA(180,83,9,1))
-                                    Fill: =If(varCalProofSelectedEvent.DecisionStatus="Blocked",RGBA(254,242,242,1),RGBA(255,251,235,1))
+                                    Color: =If(varCalProofBoardConfirmed,RGBA(21,128,61,1),If(varCalProofSelectedEvent.DecisionStatus="Blocked",RGBA(185,28,28,1),RGBA(180,83,9,1)))
+                                    Fill: =If(varCalProofBoardConfirmed,RGBA(240,253,244,1),If(varCalProofSelectedEvent.DecisionStatus="Blocked",RGBA(254,242,242,1),RGBA(255,251,235,1)))
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
                                     Height: =If(Self.Visible,32,0)
@@ -1704,8 +1791,8 @@ Screens:
                                     PaddingRight: =8
                                     PaddingTop: =4
                                     Size: =12
-                                    Text: =If(varCalProofSelectedEvent.DecisionStatus="Blocked","Blocked — no valid placement","● Needs approval")
-                                    Visible: =varCalProofSelectedEvent.DecisionStatus="Blocked"
+                                    Text: =If(varCalProofBoardConfirmed,"✓ Board confirmed · date locked",If(varCalProofSelectedEvent.DecisionStatus="Blocked","Blocked — no valid placement","● Needs approval"))
+                                    Visible: =varCalProofBoardConfirmed || varCalProofSelectedEvent.DecisionStatus="Blocked"
                               - txtCalProofSelectedId:
                                   Control: ModernText
                                   Properties:
@@ -1851,7 +1938,7 @@ Screens:
                                       Reset(ddCalProofMoveTime)
                                     Size: =13
                                     Text: ="Move meeting"
-                                    Visible: =!varCalProofChoosingAlternate && varCalProofSelectedEvent.DecisionStatus<>"NeedsReview" && varCalProofSelectedEvent.DecisionStatus<>"Blocked"
+                                    Visible: =!varCalProofBoardConfirmed && !varCalProofChoosingAlternate && varCalProofSelectedEvent.DecisionStatus<>"NeedsReview" && varCalProofSelectedEvent.DecisionStatus<>"Blocked"
                                     Width: =Parent.Width
                               - conCalProofAdjustmentNotice:
                                   Control: GroupContainer
@@ -2132,7 +2219,7 @@ Screens:
                                                       AlignInContainer: =AlignInContainer.Stretch
                                                       BasePaletteColor: =RGBA(37,99,235,1)
                                                       Color: =RGBA(255,255,255,1)
-                                                      DisplayMode: =If(!IsBlank(dteCalProofAlternateDate.SelectedDate) && !IsBlank(ddCalProofMoveTime.Selected.Minutes) && Year(dteCalProofAlternateDate.SelectedDate)=2027 && !IsCalProofHardStop(dteCalProofAlternateDate.SelectedDate) && CountIf(colCalProofEvents,EventDate=dteCalProofAlternateDate.SelectedDate && EventId<>varCalProofSelectedEventId && Hour(StartTime)*60+Minute(StartTime)<ddCalProofMoveTime.Selected.Minutes+DateDiff(varCalProofSelectedEvent.StartTime,varCalProofSelectedEvent.EndTime,TimeUnit.Minutes) && Hour(EndTime)*60+Minute(EndTime)>ddCalProofMoveTime.Selected.Minutes)=0,DisplayMode.Edit,DisplayMode.Disabled)
+                                                      DisplayMode: =If(!varCalProofBoardConfirmed && !IsBlank(dteCalProofAlternateDate.SelectedDate) && !IsBlank(ddCalProofMoveTime.Selected.Minutes) && Year(dteCalProofAlternateDate.SelectedDate)=2027 && !IsCalProofHardStop(dteCalProofAlternateDate.SelectedDate) && CountIf(colCalProofEvents,EventDate=dteCalProofAlternateDate.SelectedDate && EventId<>varCalProofSelectedEventId && Hour(StartTime)*60+Minute(StartTime)<ddCalProofMoveTime.Selected.Minutes+DateDiff(varCalProofSelectedEvent.StartTime,varCalProofSelectedEvent.EndTime,TimeUnit.Minutes) && Hour(EndTime)*60+Minute(EndTime)>ddCalProofMoveTime.Selected.Minutes)=0,DisplayMode.Edit,DisplayMode.Disabled)
                                                       Font: =Font.'Segoe UI'
                                                       FontWeight: =FontWeight.Semibold
                                                       Height: =44
@@ -2208,7 +2295,7 @@ Screens:
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(37,99,235,1)
                                     Color: =RGBA(15,43,91,1)
-                                    DisplayMode: =If(!IsBlank(varCalProofSelectedEventId) && !IsBlank(varCalProofSelectedEvent.SourceRuleId),DisplayMode.Edit,DisplayMode.Disabled)
+                                    DisplayMode: =If(!varCalProofBoardConfirmed && !IsBlank(varCalProofSelectedEventId) && !IsBlank(varCalProofSelectedEvent.SourceRuleId),DisplayMode.Edit,DisplayMode.Disabled)
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Semibold
                                     Height: =44
