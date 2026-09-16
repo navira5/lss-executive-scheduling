@@ -120,7 +120,7 @@ Screens:
                         - txtBrvSubtitle:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Local session proof. No Outlook or SharePoint. Dates are not regenerated yet."
+                              AccessibleLabel: ="Local Board planning proof. No Outlook or SharePoint changes."
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
                               Font: =Font.'Segoe UI'
@@ -131,7 +131,7 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =13
-                              Text: ="Local session proof · no Outlook or SharePoint · dates are not regenerated yet"
+                              Text: ="Local Board planning · no Outlook or SharePoint changes"
                               VerticalAlign: =VerticalAlign.Top
                   - btnBrvBack:
                       Control: ModernButton
@@ -186,7 +186,7 @@ Screens:
                   - txtBrvScope:
                       Control: ModernText
                       Properties:
-                        AccessibleLabel: ="Edit only recurrence-driving fields. Saving is local and does not change the annual calendar."
+                        AccessibleLabel: ="Edit recurrence-driving fields. Saving marks an existing Board draft for regeneration."
                         AlignInContainer: =AlignInContainer.Stretch
                         Color: =RGBA(30,64,175,1)
                         Font: =Font.'Segoe UI'
@@ -198,7 +198,7 @@ Screens:
                         PaddingRight: =0
                         PaddingTop: =0
                         Size: =14
-                        Text: ="Edit only the recurrence-driving fields. Saving updates this local review; it does not change the annual calendar yet."
+                        Text: ="Edit the recurrence-driving fields. If a Board draft already exists, saving marks it for regeneration and preserves manual moves."
             - conBrvWorkspace:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -1912,6 +1912,10 @@ Screens:
                                                       }
                                                   )
                                               );
+                                              Set(varCalProofDraftNeedsRegeneration,CountRows(colCalProofGenerationReceipt)>0);
+                                              Set(varCalProofBoardConfirmed,false);
+                                              Clear(colCalProofBoardConfirmationReceipt);
+                                              Set(varCalProofActionMessage,If(CountRows(colCalProofGenerationReceipt)>0,"Board rule saved. Regenerate the draft to apply this change.","Board rule saved."));
                                               Set(varBrvReceiptVisible,true);
                                               Set(varBrvSaveAttempted,false),
                                               Set(varBrvSaveAttempted,true);
@@ -2008,7 +2012,7 @@ Screens:
                         - txtBrvSafetyFooter:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Saving a rule updates this local review only. Calendar dates are not regenerated in this slice."
+                              AccessibleLabel: ="Save the rule, then return to the annual calendar to generate or regenerate the Board draft."
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
                               Font: =Font.'Segoe UI'
@@ -2019,4 +2023,4 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =12
-                              Text: ="Saving a rule updates this local review only. Calendar dates are not regenerated in this slice."
+                              Text: ="Save the rule, then return to the annual calendar to generate or regenerate the Board draft."

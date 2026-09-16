@@ -55,8 +55,10 @@ App:
         {EventId:"RET-2027-11",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,11,18),GeneratedDate:Date(2027,11,18),OriginalGeneratedDate:Date(2027,11,18),CurrentDate:Date(2027,11,18),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date",SourceRuleId:"BOARD-RETREAT",IsManualOverride:false},
         {EventId:"BCI-2027-12",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,12,14),GeneratedDate:Date(2027,12,14),OriginalGeneratedDate:Date(2027,12,14),CurrentDate:Date(2027,12,14),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false}
       );
+      Clear(colCalProofEvents);
       ClearCollect(colCalProofGeneratedEvents,FirstN(colCalProofEvents,0));
       ClearCollect(colCalProofBlockedEvents,FirstN(colCalProofEvents,0));
+      ClearCollect(colCalProofPreservedOverrides,FirstN(colCalProofEvents,0));
       ClearCollect(
         colCalProofClosures,
         {ClosureId:"CLOSE-2027-0101",ClosureName:"New Year's Day",ClosureLabel:"New Year",ClosureDate:Date(2027,1,1)},
@@ -83,6 +85,7 @@ App:
       Set(varCalProofUndoIssue,"");
       Set(varCalProofReceiptVisible,false);
       Set(varCalProofReceiptAction,"");
+      Set(varCalProofDraftNeedsRegeneration,false);
       Set(varCalProofLastMutation,First(colCalProofEvents));
       Set(varCalProofLastMutation,Blank());
       ClearCollect(
@@ -109,7 +112,7 @@ App:
       );
       ClearCollect(
         colCalProofGenerationReceipt,
-        {BatchId:"",GeneratedCount:0,RuleCount:0,GeneratedAt:Now(),FirstDate:Date(2027,1,1),LastDate:Date(2027,1,1),RuleIds:""}
+        {BatchId:"",GeneratedCount:0,RuleCount:0,ManualOverrideCount:0,GeneratedAt:Now(),FirstDate:Date(2027,1,1),LastDate:Date(2027,1,1),RuleIds:""}
       );
       Clear(colCalProofGenerationReceipt);
       Set(varCalProofBoardConfirmed,false);
