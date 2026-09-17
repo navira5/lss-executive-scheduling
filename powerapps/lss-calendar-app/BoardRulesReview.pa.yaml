@@ -286,7 +286,6 @@ Screens:
                               LayoutMinHeight: =0
                               LayoutMinWidth: =0
                               LoadingSpinner: =LoadingSpinner.None
-                              ShowScrollbar: =true
                               TabIndex: =0
                               TemplatePadding: =4
                               TemplateSize: =156
@@ -1918,6 +1917,17 @@ Screens:
                                                           }
                                                       )
                                                   },
+                                                  If(
+                                                      savedLocal.PlanningLayer="Board",
+                                                      With(
+                                                          {existingBoardRule:LookUp(colBoardRuleProof,RuleId=savedLocal.RuleId)},
+                                                          If(
+                                                              IsBlank(existingBoardRule.RuleId),
+                                                              Collect(colBoardRuleProof,savedLocal),
+                                                              Patch(colBoardRuleProof,existingBoardRule,savedLocal)
+                                                          )
+                                                      )
+                                                  );
                                                   With(
                                                       {
                                                           sourceRule:LookUp(colMeetingSourceRules,ID=savedLocal.SourceRecordId || Title=currentRule.MeetingName || (savedLocal.PlanningLayer="Board" && ("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(Notes,"")))

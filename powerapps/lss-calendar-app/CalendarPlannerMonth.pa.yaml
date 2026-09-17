@@ -502,6 +502,7 @@ Screens:
                                   Properties:
                                     AccessibleLabel: ="Approve the proposed date for the selected meeting"
                                     BasePaletteColor: =RGBA(22,163,74,1)
+                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =With(
@@ -517,6 +518,7 @@ Screens:
                                   Properties:
                                     AccessibleLabel: ="Move selected meeting"
                                     BasePaletteColor: =RGBA(37,99,235,1)
+                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =Set(varPlannerContextMode,"Move");
@@ -536,6 +538,7 @@ Screens:
                                     AccessibleLabel: ="Delete selected meeting"
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(185,28,28,1)
+                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: =Set(varPlannerContextMode,"Delete");Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
                                     Text: ="Delete meeting"
@@ -619,7 +622,7 @@ Screens:
                                   Properties:
                                     AccessibleLabel: ="Confirm move"
                                     BasePaletteColor: =RGBA(37,99,235,1)
-                                    DisplayMode: =If(IsPlannerHardStop(varPlannerDraftDate) || (varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)) || ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate)>0 || varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate)) && !varPlannerWarningAcknowledged),DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =If((varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board") || IsPlannerHardStop(varPlannerDraftDate) || (varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)) || ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate)>0 || varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate)) && !varPlannerWarningAcknowledged),DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =With(

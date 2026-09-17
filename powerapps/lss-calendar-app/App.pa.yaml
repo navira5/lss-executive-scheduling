@@ -463,6 +463,11 @@ App:
       Set(varPlannerWarningAcknowledged,false);
       Set(varPlannerOverrideReason,"");
       Set(varPlannerReceipt,"");
+      Set(varPlannerShowBoardRegenPreview,false);
+      Set(varPlannerBoardPreviewReady,false);
+      Set(varPlannerBoardReceipt,"");
+      ClearCollect(colPlannerBoardPreview,FirstN(colCalProofEvents,0));
+      ClearCollect(colPlannerBoardPreviewBlocked,FirstN(colCalProofEvents,0));
       ClearCollect(colPlannerExclusions,{ExclusionId:"",EventId:"",PlanYear:2027,Reason:"",CreatedAt:Now()});
       Clear(colPlannerExclusions);
       ClearCollect(colPlannerHistory,{ChangeId:"",Action:"",SubjectId:"",Summary:"",ChangedAt:Now()});

@@ -667,6 +667,7 @@ Screens:
                               OnSelect: |-
                                 =Set(varBoardYearSelectedIssue,ThisItem);
                                 If(!IsBlank(ThisItem.EventId),Set(varSelectedEvent,LookUp('LSS Planned Calendar',ID=ThisItem.EventId)))
+                              TabIndex: =0
                               TemplateSize: =92
                               Width: =Parent.Width
                             Children:
@@ -758,6 +759,7 @@ Screens:
                               Height: =150
                               Items: =colBoardCalendarContext
                               OnSelect: =If(ThisItem.Category="Board",Set(varSelectedEvent,ThisItem))
+                              TabIndex: =0
                               TemplatePadding: =4
                               TemplateSize: =36
                               Width: =Parent.Width
@@ -905,6 +907,7 @@ Screens:
                         Height: =85
                         Items: =colBoardConfirmReceipt
                         OnSelect: =Set(varSelectedEvent,ThisItem)
+                        TabIndex: =0
                         TemplatePadding: =4
                         TemplateSize: =28
                         Visible: =CountRows(colBoardConfirmReceipt)>0
