@@ -14,6 +14,9 @@ Screens:
             LayoutAlignItems: =LayoutAlignItems.Stretch
             LayoutDirection: =LayoutDirection.Vertical
             LayoutGap: =12
+            LayoutMinHeight: =0
+            LayoutMinWidth: =0
+            LayoutOverflowY: =LayoutOverflow.Scroll
             PaddingBottom: =16
             PaddingLeft: =16
             PaddingRight: =16
@@ -24,18 +27,20 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
                   BorderColor: =RGBA(203,213,225,1)
                   BorderThickness: =1
                   DropShadow: =DropShadow.Semilight
                   Fill: =RGBA(255,255,255,1)
                   FillPortions: =0
-                  Height: =92
+                  Height: =If(App.Width<640,148,92)
                   LayoutAlignItems: =LayoutAlignItems.Center
                   LayoutDirection: =LayoutDirection.Horizontal
                   LayoutGap: =8
                   LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
                   LayoutMinHeight: =0
                   LayoutMinWidth: =0
+                  LayoutWrap: =true
                   PaddingBottom: =14
                   PaddingLeft: =18
                   PaddingRight: =18
@@ -49,12 +54,17 @@ Screens:
                       Control: ModernText
                       Properties:
                         AccessibleLabel: ="Calendar Planner month view for " & Text(varPlannerYear)
+                        AlignInContainer: =AlignInContainer.Center
                         Color: =RGBA(15,23,42,1)
                         FillPortions: =1
                         Font: =Font.'Segoe UI'
                         FontWeight: =FontWeight.Bold
                         Height: =44
                         LayoutMinWidth: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
                         Size: =25
                         Text: ="Calendar Planner " & Text(varPlannerYear)
                         Wrap: =false
@@ -62,8 +72,10 @@ Screens:
                       Control: ModernButton
                       Properties:
                         AccessibleLabel: ="Show year view"
+                        AlignInContainer: =AlignInContainer.Center
                         Appearance: =ButtonAppearance.Outline
                         BasePaletteColor: =RGBA(37,99,235,1)
+                        FillPortions: =0
                         Height: =44
                         LayoutMinWidth: =90
                         OnSelect: =Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
@@ -73,7 +85,9 @@ Screens:
                       Control: ModernButton
                       Properties:
                         AccessibleLabel: ="Month view selected"
+                        AlignInContainer: =AlignInContainer.Center
                         BasePaletteColor: =RGBA(37,99,235,1)
+                        FillPortions: =0
                         Height: =44
                         LayoutMinWidth: =90
                         Text: ="Month"
@@ -82,8 +96,10 @@ Screens:
                       Control: ModernButton
                       Properties:
                         AccessibleLabel: ="Show week view"
+                        AlignInContainer: =AlignInContainer.Center
                         Appearance: =ButtonAppearance.Outline
                         BasePaletteColor: =RGBA(37,99,235,1)
+                        FillPortions: =0
                         Height: =44
                         LayoutMinWidth: =90
                         OnSelect: =Set(varPlannerView,"Week");Navigate(CalendarPlannerWeek,ScreenTransition.None)
@@ -93,17 +109,19 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
                   BorderColor: =RGBA(203,213,225,1)
                   BorderThickness: =1
                   DropShadow: =DropShadow.None
                   Fill: =RGBA(255,255,255,1)
                   FillPortions: =0
-                  Height: =66
+                  Height: =If(App.Width<640,224,App.Width<1024,176,118)
                   LayoutAlignItems: =LayoutAlignItems.Center
                   LayoutDirection: =LayoutDirection.Horizontal
                   LayoutGap: =6
                   LayoutMinHeight: =0
                   LayoutMinWidth: =0
+                  LayoutWrap: =true
                   PaddingBottom: =9
                   PaddingLeft: =10
                   PaddingRight: =10
@@ -113,103 +131,112 @@ Screens:
                   RadiusTopLeft: =10
                   RadiusTopRight: =10
                 Children:
+                  - txtPlanMoShowLabel:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Calendar visibility filters"
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(71,85,105,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        FillPortions: =0
+                        Height: =44
+                        LayoutMinWidth: =126
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =12
+                        Text: ="Show on calendar:"
+                        Width: =138
+                        Wrap: =false
                   - btnPlannerMonthBoard:
                       Control: ModernButton
                       Properties:
-                        AccessibleLabel: =If(varPlannerShowBoard,"Hide Board","Show Board")
+                        AccessibleLabel: ="Toggle Board meetings"
+                        AlignInContainer: =AlignInContainer.Center
                         Appearance: =If(varPlannerShowBoard,ButtonAppearance.Primary,ButtonAppearance.Outline)
                         BasePaletteColor: =RGBA(30,64,175,1)
                         FillPortions: =1
                         Height: =44
                         LayoutMinWidth: =86
-                        OnSelect: |-
-                          =ForAll(
-                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board") As generatedMeeting,
-                            With(
-                              {generatedId:generatedMeeting.EventId},
-                              If(
-                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                Collect(colCalProofEvents,generatedMeeting)
-                              )
-                            )
-                          );
-                          Set(varPlannerShowBoard,!varPlannerShowBoard)
+                        OnSelect: =Set(varPlannerShowBoard,!varPlannerShowBoard)
                         Text: ="Board"
                   - btnPlannerMonthCommittees:
                       Control: ModernButton
                       Properties:
-                        AccessibleLabel: =If(varPlannerShowCommittees,"Hide Committees","Show Committees")
+                        AccessibleLabel: ="Toggle committee meetings"
+                        AlignInContainer: =AlignInContainer.Center
                         Appearance: =If(varPlannerShowCommittees,ButtonAppearance.Primary,ButtonAppearance.Outline)
                         BasePaletteColor: =RGBA(14,116,144,1)
                         FillPortions: =1
                         Height: =44
                         LayoutMinWidth: =105
-                        OnSelect: |-
-                          =ForAll(
-                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board Committees") As generatedMeeting,
-                            With(
-                              {generatedId:generatedMeeting.EventId},
-                              If(
-                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                Collect(colCalProofEvents,generatedMeeting)
-                              )
-                            )
-                          );
-                          Set(varPlannerShowCommittees,!varPlannerShowCommittees)
+                        OnSelect: =Set(varPlannerShowCommittees,!varPlannerShowCommittees)
                         Text: ="Committees"
                   - btnPlannerMonthExecutive:
                       Control: ModernButton
                       Properties:
-                        AccessibleLabel: =If(varPlannerShowExecutive,"Hide Executive","Show Executive")
+                        AccessibleLabel: ="Toggle executive meetings"
+                        AlignInContainer: =AlignInContainer.Center
                         Appearance: =If(varPlannerShowExecutive,ButtonAppearance.Primary,ButtonAppearance.Outline)
                         BasePaletteColor: =RGBA(124,58,237,1)
                         FillPortions: =1
                         Height: =44
                         LayoutMinWidth: =100
-                        OnSelect: |-
-                          =ForAll(
-                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Executive Leadership") As generatedMeeting,
-                            With(
-                              {generatedId:generatedMeeting.EventId},
-                              If(
-                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                Collect(colCalProofEvents,generatedMeeting)
-                              )
-                            )
-                          );
-                          Set(varPlannerShowExecutive,!varPlannerShowExecutive)
+                        OnSelect: =Set(varPlannerShowExecutive,!varPlannerShowExecutive)
                         Text: ="Executive"
                   - btnPlannerMonthOperations:
                       Control: ModernButton
                       Properties:
-                        AccessibleLabel: =If(varPlannerShowOperations,"Hide Operations","Show Operations")
+                        AccessibleLabel: ="Toggle operations meetings"
+                        AlignInContainer: =AlignInContainer.Center
                         Appearance: =If(varPlannerShowOperations,ButtonAppearance.Primary,ButtonAppearance.Outline)
                         BasePaletteColor: =RGBA(5,150,105,1)
                         FillPortions: =1
                         Height: =44
                         LayoutMinWidth: =100
-                        OnSelect: |-
-                          =ForAll(
-                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Organization & Operations") As generatedMeeting,
-                            With(
-                              {generatedId:generatedMeeting.EventId},
-                              If(
-                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                Collect(colCalProofEvents,generatedMeeting)
-                              )
-                            )
-                          );
-                          Set(varPlannerShowOperations,!varPlannerShowOperations)
+                        OnSelect: =Set(varPlannerShowOperations,!varPlannerShowOperations)
                         Text: ="Operations"
+                  - btnPlanMoShowManual:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Toggle one-time and special events"
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: =If(varPlannerShowManual,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                        BasePaletteColor: =RGBA(71,85,105,1)
+                        FillPortions: =0
+                        Height: =44
+                        LayoutMinWidth: =116
+                        OnSelect: =Set(varPlannerShowManual,!varPlannerShowManual)
+                        Text: ="Special"
+                        Width: =122
+                  - btnPlanMoShowAll:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Show every planning layer and special event"
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: =If(varPlannerShowBoard && varPlannerShowCommittees && varPlannerShowExecutive && varPlannerShowOperations && varPlannerShowManual,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                        BasePaletteColor: =RGBA(37,99,235,1)
+                        FillPortions: =0
+                        Height: =44
+                        LayoutMinWidth: =86
+                        OnSelect: =Set(varPlannerShowBoard,true);Set(varPlannerShowCommittees,true);Set(varPlannerShowExecutive,true);Set(varPlannerShowOperations,true);Set(varPlannerShowManual,true)
+                        Text: =If(varPlannerShowBoard && varPlannerShowCommittees && varPlannerShowExecutive && varPlannerShowOperations && varPlannerShowManual,"✓ All","All")
+                        Width: =90
                   - btnPlannerMonthAdd:
                       Control: ModernButton
                       Properties:
                         AccessibleLabel: ="Add a meeting"
+                        AlignInContainer: =AlignInContainer.Center
                         BasePaletteColor: =RGBA(37,99,235,1)
+                        FillPortions: =0
                         Height: =44
                         LayoutMinWidth: =112
                         OnSelect: |-
                           =Set(varPlannerContextMode,"Add");
+                          Set(varPlannerAddKind,"One-time / special event");
+                          Set(varPlannerDraftRuleId,Blank());
                           Set(varPlannerDraftName,"");
                           Set(varPlannerDraftLayer,"Board");
                           Set(varPlannerDraftCategory,"Meeting");
@@ -226,8 +253,10 @@ Screens:
                       Control: ModernButton
                       Properties:
                         AccessibleLabel: ="Block a day"
+                        AlignInContainer: =AlignInContainer.Center
                         Appearance: =ButtonAppearance.Outline
                         BasePaletteColor: =RGBA(180,83,9,1)
+                        FillPortions: =0
                         Height: =44
                         LayoutMinWidth: =100
                         OnSelect: =Set(varPlannerContextMode,"Block");Set(varPlannerDraftDate,varPlannerFocusedDate);Set(varPlannerOverrideReason,"");Set(varPlannerDraftDirty,true);Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
@@ -237,9 +266,12 @@ Screens:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
                   DropShadow: =DropShadow.None
                   LayoutAlignItems: =LayoutAlignItems.Stretch
-                  LayoutDirection: =LayoutDirection.Horizontal
+                  FillPortions: =0
+                  Height: =If(App.Width<1180,1480,820)
+                  LayoutDirection: =If(App.Width<1180,LayoutDirection.Vertical,LayoutDirection.Horizontal)
                   LayoutGap: =12
                   LayoutMinHeight: =0
                   LayoutMinWidth: =0
@@ -248,10 +280,12 @@ Screens:
                       Control: GroupContainer
                       Variant: AutoLayout
                       Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
                         BorderColor: =RGBA(203,213,225,1)
                         BorderThickness: =1
                         DropShadow: =DropShadow.None
                         Fill: =RGBA(255,255,255,1)
+                        FillPortions: =1
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Vertical
                         LayoutGap: =8
@@ -270,6 +304,7 @@ Screens:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
                               DropShadow: =DropShadow.None
                               FillPortions: =0
                               Height: =48
@@ -284,8 +319,10 @@ Screens:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Previous month"
+                                    AlignInContainer: =AlignInContainer.Center
                                     Appearance: =ButtonAppearance.Subtle
                                     BasePaletteColor: =RGBA(37,99,235,1)
+                                    FillPortions: =0
                                     Height: =40
                                     OnSelect: =Set(varPlannerFocusedDate,DateAdd(varPlannerFocusedDate,-1,TimeUnit.Months));Set(varPlannerYear,Year(varPlannerFocusedDate))
                                     Text: ="‹"
@@ -295,12 +332,17 @@ Screens:
                                   Properties:
                                     AccessibleLabel: =Self.Text
                                     Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Center
                                     Color: =RGBA(15,23,42,1)
                                     FillPortions: =1
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
                                     Height: =40
                                     LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
                                     Size: =20
                                     Text: =Text(varPlannerFocusedDate,"mmmm yyyy")
                                     Wrap: =false
@@ -308,8 +350,10 @@ Screens:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Next month"
+                                    AlignInContainer: =AlignInContainer.Center
                                     Appearance: =ButtonAppearance.Subtle
                                     BasePaletteColor: =RGBA(37,99,235,1)
+                                    FillPortions: =0
                                     Height: =40
                                     OnSelect: =Set(varPlannerFocusedDate,DateAdd(varPlannerFocusedDate,1,TimeUnit.Months));Set(varPlannerYear,Year(varPlannerFocusedDate))
                                     Text: ="›"
@@ -319,7 +363,9 @@ Screens:
                             Variant: Vertical
                             Properties:
                               AccessibleLabel: ="Month calendar for " & Text(varPlannerFocusedDate,"mmmm yyyy")
+                              AlignInContainer: =AlignInContainer.Stretch
                               DelayItemLoading: =false
+                              FillPortions: =1
                               Items: |-
                                 =With(
                                   {monthStart:Date(Year(varPlannerFocusedDate),Month(varPlannerFocusedDate),1)},
@@ -339,14 +385,29 @@ Screens:
                                   Control: GroupContainer
                                   Variant: AutoLayout
                                   Properties:
-                                    BorderColor: =If(DateValue(ThisItem.CellDate)=DateValue(varPlannerFocusedDate),RGBA(37,99,235,1),RGBA(203,213,225,1))
-                                    BorderThickness: =If(DateValue(ThisItem.CellDate)=DateValue(varPlannerFocusedDate),2,1)
+                                    BorderColor: |-
+                                      =If(
+                                        !ThisItem.IsCurrentMonth,RGBA(203,213,225,1),
+                                        CountIf(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive)>0,RGBA(185,28,28,1),
+                                        CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && AutoAdjusted && DecisionStatus="NeedsReview" && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)))))>0,RGBA(217,119,6,1),
+                                        DateValue(ThisItem.CellDate)=DateValue(varPlannerFocusedDate),RGBA(37,99,235,1),
+                                        RGBA(203,213,225,1)
+                                      )
+                                    BorderThickness: =If(CountIf(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive)>0 || CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && AutoAdjusted && DecisionStatus="NeedsReview" && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)))))>0 || DateValue(ThisItem.CellDate)=DateValue(varPlannerFocusedDate),2,1)
                                     DropShadow: =DropShadow.None
-                                    Fill: =If(!ThisItem.IsCurrentMonth,RGBA(248,250,252,1),CountIf(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive)>0,RGBA(254,242,242,1),RGBA(255,255,255,1))
+                                    Fill: |-
+                                      =If(
+                                        !ThisItem.IsCurrentMonth,RGBA(248,250,252,1),
+                                        CountIf(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive)>0,RGBA(254,242,242,1),
+                                        CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && AutoAdjusted && DecisionStatus="NeedsReview" && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)))))>0,RGBA(255,251,235,1),
+                                        RGBA(255,255,255,1)
+                                      )
                                     Height: =Parent.TemplateHeight
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
                                     LayoutDirection: =LayoutDirection.Vertical
                                     LayoutGap: =2
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
                                     PaddingBottom: =4
                                     PaddingLeft: =4
                                     PaddingRight: =4
@@ -357,20 +418,41 @@ Screens:
                                         Control: ModernText
                                         Properties:
                                           AccessibleLabel: =Text(ThisItem.CellDate,"dddd, mmmm d, yyyy")
+                                          AlignInContainer: =AlignInContainer.Stretch
                                           Color: =If(ThisItem.IsCurrentMonth,RGBA(15,23,42,1),RGBA(148,163,184,1))
                                           Font: =Font.'Segoe UI'
                                           FontWeight: =FontWeight.Semibold
+                                          FillPortions: =0
                                           Height: =18
                                           LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
                                           Size: =10
                                           Text: =Text(Day(ThisItem.CellDate))
+                                          Visible: =false
                                           Wrap: =false
+                                    - btnPlanMoSelectDate:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: ="Select " & Text(ThisItem.CellDate,"dddd, mmmm d, yyyy")
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =ButtonAppearance.Subtle
+                                          BasePaletteColor: =If(ThisItem.IsCurrentMonth,RGBA(37,99,235,1),RGBA(148,163,184,1))
+                                          FillPortions: =0
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerSelectedEventId,Blank());Set(varPlannerSelectedClosureId,Blank());Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Date")
+                                          Text: =Text(Day(ThisItem.CellDate))
                                     - btnPlannerMonthCellClosure:
                                         Control: ModernButton
                                         Properties:
                                           AccessibleLabel: =LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive,ClosureName)
+                                          AlignInContainer: =AlignInContainer.Stretch
                                           Appearance: =ButtonAppearance.Subtle
                                           BasePaletteColor: =RGBA(185,28,28,1)
+                                          FillPortions: =0
                                           Height: =22
                                           LayoutMinWidth: =0
                                           OnSelect: |-
@@ -381,13 +463,16 @@ Screens:
                                             Navigate(CalendarPlanner,ScreenTransition.None)
                                           Text: =LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive,ClosureLabel)
                                           Visible: =ThisItem.IsCurrentMonth && CountIf(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive)>0
+                                          Width: =Parent.Width
                                     - galPlannerMonthCellEvents:
                                         Control: Gallery
                                         Variant: Vertical
                                         Properties:
                                           AccessibleLabel: ="Meetings on " & Text(ThisItem.CellDate,"mmmm d")
+                                          AlignInContainer: =AlignInContainer.Stretch
                                           DelayItemLoading: =false
-                                          Items: =SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations))),"StartTime",SortOrder.Ascending)
+                                          FillPortions: =1
+                                          Items: =SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations))))),"StartTime",SortOrder.Ascending)
                                           LayoutMinHeight: =0
                                           LayoutMinWidth: =0
                                           LoadingSpinner: =LoadingSpinner.None
@@ -399,16 +484,18 @@ Screens:
                                           - btnPlannerMonthCellEvent:
                                               Control: ModernButton
                                               Properties:
-                                                AccessibleLabel: =ThisItem.EventName & " at " & Text(ThisItem.StartTime,"h:mm AM/PM")
-                                                Appearance: =If(ThisItem.DecisionStatus="NeedsReview",ButtonAppearance.Outline,ButtonAppearance.Primary)
-                                                BasePaletteColor: =If(ThisItem.DecisionStatus="NeedsReview",RGBA(217,119,6,1),ThisItem.PlanningLayer="Board",RGBA(30,64,175,1),ThisItem.PlanningLayer="Board Committees",RGBA(14,116,144,1),ThisItem.PlanningLayer="Executive Leadership",RGBA(124,58,237,1),RGBA(5,150,105,1))
+                                                AccessibleLabel: =ThisItem.EventName & ", " & Text(ThisItem.EventDate,"dddd, mmmm d, yyyy") & " at " & Text(ThisItem.StartTime,"h:mm AM/PM") & ", " & If(ThisItem.SourceType="Manual","one-time or special event",ThisItem.PlanningLayer) & If(ThisItem.AutoAdjusted,", moved from " & Text(ThisItem.OriginalGeneratedDate,"mmmm d") & " because " & ThisItem.AdjustmentReason & ", " & If(ThisItem.DecisionStatus="NeedsReview","approval required","adjustment approved"),"")
+                                                Appearance: =ButtonAppearance.Primary
+                                                BasePaletteColor: =If(ThisItem.SourceType="Manual",RGBA(71,85,105,1),ThisItem.PlanningLayer="Board",RGBA(30,64,175,1),ThisItem.PlanningLayer="Board Committees",RGBA(14,116,144,1),ThisItem.PlanningLayer="Executive Leadership",RGBA(124,58,237,1),RGBA(5,150,105,1))
                                                 Height: =20
-                                                OnSelect: =Set(varPlannerSelectedEventId,ThisItem.EventId);Set(varPlannerFocusedDate,ThisItem.EventDate);Set(varPlannerContextMode,"Summary")
-                                                Text: =Text(ThisItem.StartTime,"h:mm") & " " & ThisItem.ChipText
+                                                OnSelect: =Set(varPlannerSelectedEventId,ThisItem.EventId);Set(varPlannerFocusedDate,ThisItem.EventDate);Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Summary")
+                                                Text: =If(ThisItem.AutoAdjusted && ThisItem.DecisionStatus="NeedsReview","! ","") & Text(ThisItem.StartTime,"h:mm") & " " & ThisItem.ChipText & If(ThisItem.AutoAdjusted && ThisItem.DecisionStatus<>"NeedsReview"," ·","")
+                                                Width: =Parent.TemplateWidth
                   - conPlannerMonthContext:
                       Control: GroupContainer
                       Variant: AutoLayout
                       Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
                         BorderColor: =RGBA(203,213,225,1)
                         BorderThickness: =1
                         DropShadow: =DropShadow.Semilight
@@ -428,42 +515,158 @@ Screens:
                         RadiusBottomRight: =10
                         RadiusTopLeft: =10
                         RadiusTopRight: =10
+                        Height: =If(App.Width<1180,620,Parent.Height)
                         Width: =390
                       Children:
                         - txtPlannerMonthContextLabel:
                             Control: ModernText
                             Properties:
                               AccessibleLabel: ="Context panel"
+                              AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
+                              FillPortions: =0
                               Height: =20
                               LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
                               Size: =11
                               Text: ="CONTEXT PANEL"
                               Wrap: =false
+                        - conPlanMoDateContext:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =376
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =varPlannerContextMode="Date"
+                            Children:
+                              - txtPlanMoDateTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15,23,42,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    FillPortions: =0
+                                    Height: =42
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: =Text(varPlannerFocusedDate,"dddd, mmmm d, yyyy")
+                                    Wrap: =false
+                              - txtPlanMoDateState:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =If(CountIf(colCalProofClosures,ClosureDate=varPlannerFocusedDate && IsActive)>0,RGBA(185,28,28,1),RGBA(71,85,105,1))
+                                    Fill: =If(CountIf(colCalProofClosures,ClosureDate=varPlannerFocusedDate && IsActive)>0,RGBA(254,242,242,1),RGBA(248,250,252,1))
+                                    FillPortions: =0
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =58
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: =If(CountIf(colCalProofClosures,ClosureDate=varPlannerFocusedDate && IsActive)>0,"Closed or blocked · " & LookUp(colCalProofClosures,ClosureDate=varPlannerFocusedDate && IsActive,ClosureName),"Available business date")
+                              - txtPlanMoDateEvents:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(71,85,105,1)
+                                    Font: =Font.'Segoe UI'
+                                    FillPortions: =0
+                                    Height: =156
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: |-
+                                      =With(
+                                        {visibleEvents:Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerFocusedDate && !IsDeleted && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)))))},
+                                        If(CountRows(visibleEvents)=0,"No visible meetings on this date.",Text(CountRows(visibleEvents)) & " meeting" & If(CountRows(visibleEvents)=1,"","s") & Char(10) & Concat(SortByColumns(visibleEvents,"StartTime",SortOrder.Ascending),EventName & " · " & Text(StartTime,"h:mm AM/PM") & Char(10)))
+                                      )
+                                    VerticalAlign: =VerticalAlign.Top
+                              - btnPlanMoDateAdd:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Add a meeting on " & Text(varPlannerFocusedDate,"mmmm d, yyyy")
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BasePaletteColor: =RGBA(37,99,235,1)
+                                    FillPortions: =0
+                                    Height: =44
+                                    OnSelect: =Set(varPlannerContextMode,"Add");Set(varPlannerAddKind,"One-time / special event");Set(varPlannerDraftRuleId,Blank());Set(varPlannerDraftName,"");Set(varPlannerDraftLayer,varPlannerActiveLayer);Set(varPlannerDraftCategory,"Special event");Set(varPlannerDraftDate,varPlannerFocusedDate);Set(varPlannerDraftStart,Time(9,0,0));Set(varPlannerDraftDuration,60);Set(varPlannerWarningAcknowledged,false);Set(varPlannerDraftDirty,true);Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
+                                    Text: ="Add meeting"
+                                    Width: =Parent.Width
+                              - btnPlanMoDateBlock:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Block " & Text(varPlannerFocusedDate,"mmmm d, yyyy")
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(180,83,9,1)
+                                    FillPortions: =0
+                                    Height: =44
+                                    OnSelect: =Set(varPlannerContextMode,"Block");Set(varPlannerDraftDate,varPlannerFocusedDate);Set(varPlannerOverrideReason,"");Set(varPlannerDraftDirty,true);Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
+                                    Text: ="Block day"
+                                    Width: =Parent.Width
                         - txtPlannerMonthMeetingName:
                             Control: ModernText
                             Properties:
                               AccessibleLabel: =Self.Text
+                              AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(15,23,42,1)
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Bold
-                              Height: =66
+                              FillPortions: =0
+                              Height: =78
                               LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
                               Size: =24
                               Text: =If(IsBlank(varPlannerSelectedEventId),"Select a meeting",LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventName))
+                              Visible: =varPlannerContextMode="Summary" || varPlannerContextMode="Empty" || IsBlank(varPlannerContextMode)
                         - txtPlannerMonthMeetingInfo:
                             Control: ModernText
                             Properties:
                               AccessibleLabel: =Self.Text
+                              AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
                               Font: =Font.'Segoe UI'
-                              Height: =82
+                              FillPortions: =0
+                              Height: =110
                               LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
                               Size: =13
                               Text: =If(IsBlank(varPlannerSelectedEventId),"Choose any meeting in the month to see details and actions.",Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"dddd, mmmm d, yyyy") & Char(10) & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime),"h:mm AM/PM") & "–" & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EndTime),"h:mm AM/PM") & Char(10) & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SchedulingSource))
                               VerticalAlign: =VerticalAlign.Top
+                              Visible: =varPlannerContextMode="Summary" || varPlannerContextMode="Empty" || IsBlank(varPlannerContextMode)
                         - txtPlannerMonthApprovalStatus:
                             Control: ModernText
                             Properties:
@@ -474,55 +677,88 @@ Screens:
                               BorderThickness: =1
                               Color: =RGBA(146,64,14,1)
                               Fill: =RGBA(255,251,235,1)
+                              FillPortions: =0
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =34
                               LayoutMinWidth: =0
+                              PaddingBottom: =0
                               PaddingLeft: =12
                               PaddingRight: =12
+                              PaddingTop: =0
                               Size: =12
                               Text: ="Needs approval"
-                              Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview"
+                              Visible: =varPlannerContextMode="Summary" && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview"
                               Width: =156
                               Wrap: =false
+                        - txtPlanMoAdjustmentReason:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: =Self.Text
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(146,64,14,1)
+                              Fill: =RGBA(255,251,235,1)
+                              FillPortions: =0
+                              Font: =Font.'Segoe UI'
+                              Height: =92
+                              LayoutMinWidth: =0
+                              PaddingBottom: =8
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =8
+                              Size: =12
+                              Text: ="Originally " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,OriginalGeneratedDate),"ddd, mmm d") & " → proposed " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"ddd, mmm d") & ". " & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AdjustmentReason) & If(!IsBlank(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AdjustmentSourceName))," · " & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AdjustmentSourceName),"")
+                              VerticalAlign: =VerticalAlign.Top
+                              Visible: =varPlannerContextMode="Summary" && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AutoAdjusted)
                         - conPlannerMonthSummaryActions:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
                               DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && !IsBlank(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId)),If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview",200,148),If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview",148,96))
                               LayoutAlignItems: =LayoutAlignItems.Stretch
                               LayoutDirection: =LayoutDirection.Vertical
                               LayoutGap: =8
                               LayoutMinHeight: =0
                               LayoutMinWidth: =0
-                              Visible: =varPlannerContextMode<>"Move" && !IsBlank(varPlannerSelectedEventId)
+                              Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerSelectedEventId)
                             Children:
                               - btnPlannerMonthApprove:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Approve the proposed date for the selected meeting"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     BasePaletteColor: =RGBA(22,163,74,1)
-                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
+                                    FillPortions: =0
+                                    DisplayMode: =If(LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =With(
                                         {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
                                         Patch(colCalProofEvents,selectedEvent,{DecisionStatus:"Approved",WarningAcknowledged:true});
-                                        Set(varPlannerReceipt,selectedEvent.EventName & " approved for " & Text(selectedEvent.EventDate,"mmm d") & " at " & Text(selectedEvent.StartTime,"h:mm AM/PM") & ".");
+                                        Set(varPlannerReceipt,selectedEvent.EventName & " date adjustment approved for " & Text(selectedEvent.EventDate,"mmm d") & " at " & Text(selectedEvent.StartTime,"h:mm AM/PM") & ".");
+                                        ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Approve adjustment",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:selectedEvent.EventDate,StartTime:selectedEvent.StartTime,DurationMinutes:selectedEvent.DurationMinutes,DecisionStatus:"Approved",Summary:varPlannerReceipt,OccurredAt:Now()});
                                         Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Approve proposed date",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                       )
                                     Text: ="Approve " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"mmm d")
                                     Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview"
+                                    Width: =Parent.Width
                               - btnPlannerMonthMove:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Move selected meeting"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     BasePaletteColor: =RGBA(37,99,235,1)
-                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
+                                    FillPortions: =0
+                                    DisplayMode: =If(LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =Set(varPlannerContextMode,"Move");
                                       Set(varPlannerDraftName,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventName));
+                                      Set(varPlannerDraftLayer,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer));
+                                      Set(varPlannerDraftCategory,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,Category));
                                       Set(varPlannerDraftDate,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate));
                                       Set(varPlannerDraftStart,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime));
                                       Set(varPlannerDraftDuration,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes));
@@ -532,21 +768,41 @@ Screens:
                                       Reset(drpPlannerMonthMoveTime);
                                       Reset(numPlannerMonthMoveDuration)
                                     Text: ="Move meeting"
+                                    Width: =Parent.Width
                               - btnPlannerMonthDelete:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Delete selected meeting"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(185,28,28,1)
-                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
+                                    FillPortions: =0
+                                    DisplayMode: =If(LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: =Set(varPlannerContextMode,"Delete");Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
                                     Text: ="Delete meeting"
+                                    Width: =Parent.Width
+                              - btnPlanMoEditSourceRule:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Edit the source rule for the selected meeting"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(30,64,175,1)
+                                    FillPortions: =0
+                                    Height: =44
+                                    OnSelect: =Set(varPlannerActiveLayer,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer));Set(varBrvSelectedRuleId,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId));Navigate(BoardRulesReview,ScreenTransition.None)
+                                    Text: ="Edit source rule"
+                                    Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && !IsBlank(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId))
+                                    Width: =Parent.Width
                         - conPlannerMonthMoveEditor:
                             Control: GroupContainer
                             Variant: AutoLayout
                             Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
                               DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =438
                               LayoutAlignItems: =LayoutAlignItems.Stretch
                               LayoutDirection: =LayoutDirection.Vertical
                               LayoutGap: =8
@@ -558,11 +814,17 @@ Screens:
                                   Control: ModernText
                                   Properties:
                                     AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
                                     Font: =Font.'Segoe UI'
                                     FontWeight: =FontWeight.Bold
+                                    FillPortions: =0
                                     Height: =38
                                     LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
                                     Size: =20
                                     Text: ="Move " & varPlannerDraftName
                                     Wrap: =false
@@ -570,8 +832,10 @@ Screens:
                                   Control: ModernDatePicker
                                   Properties:
                                     AccessibleLabel: ="New meeting date"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     DefaultDate: =varPlannerDraftDate
                                     EndDate: =Date(varPlannerYear,12,31)
+                                    FillPortions: =0
                                     Height: =44
                                     OnChange: =Set(varPlannerDraftDate,Self.SelectedDate);Set(varPlannerWarningAcknowledged,false);Set(varPlannerDraftDirty,true)
                                     StartDate: =Date(varPlannerYear,1,1)
@@ -579,7 +843,9 @@ Screens:
                                   Control: ModernDropdown
                                   Properties:
                                     AccessibleLabel: ="New start time"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     Default: ={Value:Text(varPlannerDraftStart,"h:mm AM/PM")}
+                                    FillPortions: =0
                                     Height: =44
                                     ItemDisplayText: =ThisItem.Value
                                     Items: =ForAll(Sequence(29),{Value:Text(DateAdd(Time(7,0,0),(Value-1)*30,TimeUnit.Minutes),"h:mm AM/PM")})
@@ -588,7 +854,9 @@ Screens:
                                   Control: ModernNumberInput
                                   Properties:
                                     AccessibleLabel: ="Duration in minutes"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     Default: =varPlannerDraftDuration
+                                    FillPortions: =0
                                     Height: =44
                                     Max: =720
                                     Min: =15
@@ -598,40 +866,63 @@ Screens:
                                   Control: ModernText
                                   Properties:
                                     AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     Color: =If(IsPlannerHardStop(varPlannerDraftDate),RGBA(185,28,28,1),RGBA(146,64,14,1))
                                     Fill: =If(IsPlannerHardStop(varPlannerDraftDate),RGBA(254,242,242,1),RGBA(255,251,235,1))
+                                    FillPortions: =0
                                     Font: =Font.'Segoe UI'
                                     Height: =70
                                     LayoutMinWidth: =0
+                                    PaddingBottom: =0
                                     PaddingLeft: =10
+                                    PaddingRight: =10
+                                    PaddingTop: =0
                                     Size: =12
                                     Text: |-
-                                      =If(IsPlannerHardStop(varPlannerDraftDate),"Hard stop: choose a weekday that is not closed or blocked.","Warning: overlaps and cadence changes require acknowledgment before confirmation.")
+                                      =If(IsPlannerHardStop(varPlannerDraftDate),If(Weekday(varPlannerDraftDate,StartOfWeek.Monday)>5,"Hard stop: meetings cannot be scheduled on weekends.","Hard stop: " & LookUp(colCalProofClosures,ClosureDate=varPlannerDraftDate && IsActive,ClosureName) & ". Choose another date."),If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0,"Warning: this overlaps another planned meeting.","This move differs from the generated cadence. Acknowledge before confirming."))
                               - btnPlannerMonthAcknowledge:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Acknowledge move warning"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     Appearance: =If(varPlannerWarningAcknowledged,ButtonAppearance.Primary,ButtonAppearance.Outline)
                                     BasePaletteColor: =RGBA(217,119,6,1)
+                                    FillPortions: =0
                                     Height: =40
                                     OnSelect: =Set(varPlannerWarningAcknowledged,!varPlannerWarningAcknowledged)
                                     Text: =If(varPlannerWarningAcknowledged,"✓ Warning acknowledged","Acknowledge warning")
-                                    Visible: =!IsPlannerHardStop(varPlannerDraftDate) && (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate)>0 || varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate))
+                                    Visible: =!IsPlannerHardStop(varPlannerDraftDate) && (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && (varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) || varPlannerDraftStart<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime))))
+                                    Width: =Parent.Width
                               - btnPlannerMonthSaveMove:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Confirm move"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     BasePaletteColor: =RGBA(37,99,235,1)
-                                    DisplayMode: =If((varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board") || IsPlannerHardStop(varPlannerDraftDate) || (varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)) || ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate)>0 || varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate)) && !varPlannerWarningAcknowledged),DisplayMode.Disabled,DisplayMode.Edit)
+                                    FillPortions: =0
+                                    DisplayMode: |-
+                                      =If(
+                                        LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed" ||
+                                        IsPlannerHardStop(varPlannerDraftDate) ||
+                                        (varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)) ||
+                                        ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && (varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) || varPlannerDraftStart<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime)))) && !varPlannerWarningAcknowledged),
+                                        DisplayMode.Disabled,
+                                        DisplayMode.Edit
+                                      )
                                     Height: =44
                                     OnSelect: |-
                                       =With(
                                         {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
                                         With(
-                                          {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
+                                          {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,originalGeneratedDate:selectedEvent.OriginalGeneratedDate,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
                                           ClearCollect(colPlannerUndo,{Action:"Move",SubjectId:eventId,EventName:eventName,PreviousDate:previousDate,PreviousStart:previousStart,PreviousEnd:previousEnd,PreviousStatus:previousStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
-                                          Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:If(varPlannerWarningAcknowledged,"Warning acknowledged","Ready"),WarningAcknowledged:varPlannerWarningAcknowledged});
-                                          Set(varPlannerReceipt,eventName & " moved from " & Text(previousDate,"mmm d") & " at " & Text(previousStart,"h:mm AM/PM") & " to " & Text(varPlannerDraftDate,"mmm d") & " at " & Text(varPlannerDraftStart,"h:mm AM/PM") & ".");
+                                          Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:"Approved",WarningAcknowledged:true});
+                                          With(
+                                            {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
+                                            UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true})
+                                          );
+                                          Set(varPlannerReceipt,eventName & " moved from " & Text(previousDate,"mmm d") & " at " & Text(previousStart,"h:mm AM/PM") & " to " & Text(varPlannerDraftDate,"mmm d") & " at " & Text(varPlannerDraftStart,"h:mm AM/PM") & ". Original generated date remains " & Text(originalGeneratedDate,"mmm d") & ".");
+                                          ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Move",SubjectId:eventId,EventName:eventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,DurationMinutes:varPlannerDraftDuration,DecisionStatus:"Approved",Summary:varPlannerReceipt,OccurredAt:Now()});
                                           Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Move",SubjectId:eventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                         )
                                       );
@@ -639,28 +930,45 @@ Screens:
                                       Set(varPlannerDraftDirty,false);
                                       Set(varPlannerContextMode,"Summary")
                                     Text: ="Confirm move"
+                                    Width: =Parent.Width
                               - btnPlannerMonthCancelMove:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Cancel move"
+                                    AlignInContainer: =AlignInContainer.Stretch
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(71,85,105,1)
+                                    FillPortions: =0
                                     Height: =42
                                     OnSelect: =Set(varPlannerDraftDirty,false);Set(varPlannerContextMode,"Summary")
                                     Text: ="Cancel"
+                                    Width: =Parent.Width
                         - txtPlannerMonthReceipt:
                             Control: ModernText
                             Properties:
                               AccessibleLabel: =Self.Text
+                              AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(21,128,61,1)
                               Fill: =RGBA(240,253,244,1)
+                              FillPortions: =0
                               Font: =Font.'Segoe UI'
-                              Height: =90
+                              Height: =190
                               LayoutMinWidth: =0
                               PaddingBottom: =8
                               PaddingLeft: =10
                               PaddingRight: =10
                               PaddingTop: =8
                               Size: =12
-                              Text: ="✓ " & varPlannerReceipt
-                              Visible: =!IsBlank(varPlannerReceipt)
+                              Text: |-
+                                =With(
+                                  {receipt:First(colPlannerMutationReceipt)},
+                                  "✓ " & receipt.ReceiptType & Char(10) &
+                                  "Meeting: " & receipt.EventName & Char(10) &
+                                  "Event ID: " & receipt.SubjectId & Char(10) &
+                                  "Change: " & receipt.Summary & Char(10) &
+                                  "Original generated: " & Text(LookUp(colCalProofEvents,EventId=receipt.SubjectId,OriginalGeneratedDate),"mmm d, yyyy") & Char(10) &
+                                  "Current placement: " & Text(receipt.EventDate,"mmm d, yyyy") & " · " & Text(receipt.StartTime,"h:mm AM/PM") & " · " & Text(receipt.DurationMinutes) & " min" & Char(10) &
+                                  "Decision: " & receipt.DecisionStatus & " · Manual override: " & If(LookUp(colCalProofEvents,EventId=receipt.SubjectId,IsManualOverride),"Yes","No") & " · Warning acknowledged: " & If(LookUp(colCalProofEvents,EventId=receipt.SubjectId,WarningAcknowledged),"Yes","No")
+                                )
+                              VerticalAlign: =VerticalAlign.Top
+                              Visible: =CountRows(colPlannerMutationReceipt)>0

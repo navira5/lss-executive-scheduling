@@ -477,9 +477,12 @@ App:
       Set(varPlannerShowCommittees,true);
       Set(varPlannerShowExecutive,true);
       Set(varPlannerShowOperations,true);
+      Set(varPlannerShowManual,true);
       Set(varPlannerDraftName,"");
       Set(varPlannerDraftLayer,"Board");
       Set(varPlannerDraftCategory,"Meeting");
+      Set(varPlannerDraftRuleId,"");
+      Set(varPlannerAddKind,"One-time / special event");
       Set(varPlannerDraftDate,Date(2027,1,4));
       Set(varPlannerDraftStart,Time(9,0,0));
       Set(varPlannerDraftDuration,60);
@@ -488,11 +491,14 @@ App:
       Set(varPlannerOverrideReason,"");
       Set(varPlannerReceipt,"");
       Set(varPlannerActiveLayer,"Board");
+      Set(varPlannerActiveStep,"Board");
       Set(varPlannerLayerReceipt,"");
       Set(varPlannerLayerPreviewReady,false);
       Set(varPlannerShowLayerPreview,false);
       Set(varPlannerResetConfirm,false);
       Set(varPlannerShowFinalReview,false);
+      Set(varPlannerAcceptAllAdjustments,false);
+      Set(varPlannerShowAdmin,false);
       ClearCollect(
         colPlannerLayerState,
         {StepNumber:1,PlanningLayer:"Board",ShortName:"Board",Status:"Draft",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false},
@@ -507,6 +513,16 @@ App:
         {BatchId:"",PlanningLayer:"",GeneratedCount:0,RuleCount:0,ManualOverrideCount:0,GeneratedAt:Now(),Status:""}
       );
       Clear(colPlannerLayerBuildReceipt);
+      ClearCollect(
+        colPlannerLayerConfirmationReceipt,
+        {ConfirmationId:"",PlanningLayer:"",MeetingCount:0,StandardApprovedCount:0,AdjustmentApprovedCount:0,ConfirmedAt:Now(),Status:""}
+      );
+      Clear(colPlannerLayerConfirmationReceipt);
+      ClearCollect(
+        colPlannerMutationReceipt,
+        {ReceiptType:"",SubjectId:"",EventName:"",SourceType:"",SourceRuleId:"",PlanningLayer:"",Category:"",EventDate:Date(2027,1,1),StartTime:Time(0,0,0),DurationMinutes:0,DecisionStatus:"",Summary:"",OccurredAt:Now()}
+      );
+      Clear(colPlannerMutationReceipt);
       ClearCollect(colPlannerBoardPreview,FirstN(colCalProofEvents,0));
       ClearCollect(colPlannerBoardPreviewBlocked,FirstN(colCalProofEvents,0));
       ClearCollect(colPlannerExclusions,{ExclusionId:"",EventId:"",PlanYear:2027,Reason:"",CreatedAt:Now()});
