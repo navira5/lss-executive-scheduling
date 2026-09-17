@@ -5,11 +5,11 @@ Screens:
       LoadingSpinnerColor: =RGBA(15,43,91,1)
       OnVisible: |-
         =If(
-            IsBlank(LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleId),
-            Set(varBrvSelectedRuleId,First(SortByColumns(colBoardRuleProof,"SortOrder",SortOrder.Ascending)).RuleId)
+            IsBlank(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleId),
+            Set(varBrvSelectedRuleId,First(SortByColumns(colMeetingRulebook,"SortOrder",SortOrder.Ascending)).RuleId)
         );
         With(
-            {monthsText:LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).MonthsText},
+            {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
             ClearCollect(
                 colBrvMonthSelection,
                 {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
@@ -86,7 +86,7 @@ Screens:
                         - txtBrvEyebrow:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Board layer"
+                              AccessibleLabel: ="Connected meeting rulebook"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
                               Font: =Font.'Segoe UI'
@@ -98,12 +98,12 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =11
-                              Text: ="BOARD LAYER"
+                              Text: ="MEETING RULEBOOK"
                               Wrap: =false
                         - txtBrvTitle:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Review Board rules"
+                              AccessibleLabel: ="Review meeting rules"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(15,23,42,1)
                               Font: =Font.'Segoe UI'
@@ -115,12 +115,12 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =28
-                              Text: ="Review Board rules"
+                              Text: ="Review meeting rules"
                               Wrap: =false
                         - txtBrvSubtitle:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Local Board planning proof. No Outlook or SharePoint changes."
+                              AccessibleLabel: ="All connected LSS meeting types. No Outlook changes."
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(71,85,105,1)
                               Font: =Font.'Segoe UI'
@@ -131,7 +131,7 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =13
-                              Text: ="Local Board planning · no Outlook or SharePoint changes"
+                              Text: ="All connected LSS meeting types · no Outlook changes"
                               VerticalAlign: =VerticalAlign.Top
                   - btnBrvBack:
                       Control: ModernButton
@@ -186,7 +186,7 @@ Screens:
                   - txtBrvScope:
                       Control: ModernText
                       Properties:
-                        AccessibleLabel: ="Edit recurrence-driving fields. Saving marks an existing Board draft for regeneration."
+                        AccessibleLabel: ="Review every connected meeting type. Board edits mark an existing Board draft for regeneration."
                         AlignInContainer: =AlignInContainer.Stretch
                         Color: =RGBA(30,64,175,1)
                         Font: =Font.'Segoe UI'
@@ -198,7 +198,7 @@ Screens:
                         PaddingRight: =0
                         PaddingTop: =0
                         Size: =14
-                        Text: ="Edit the recurrence-driving fields. If a Board draft already exists, saving marks it for regeneration and preserves manual moves."
+                        Text: ="Review every meeting type by layer. Board rule edits mark an existing Board draft for regeneration and preserve manual moves."
             - conBrvWorkspace:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -221,7 +221,7 @@ Screens:
                                     12 + 40 + 12 + If(App.Width<760,100,44) +
                                     If(varBrvReceiptVisible,12+440,0) + 12 + 36
                             },
-                            If(App.Width<760,608+16+editorHeight,Max(608,editorHeight))
+                            If(App.Width<760,700+16+editorHeight,Max(700,editorHeight))
                         )
                     )
                   LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
@@ -239,7 +239,7 @@ Screens:
                         DropShadow: =DropShadow.None
                         Fill: =RGBA(255,255,255,1)
                         FillPortions: =0
-                        Height: =608
+                        Height: =700
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Vertical
                         LayoutGap: =8
@@ -259,7 +259,7 @@ Screens:
                         - txtBrvListTitle:
                             Control: ModernText
                             Properties:
-                              AccessibleLabel: ="Board meeting groups"
+                              AccessibleLabel: ="Meeting types"
                               AlignInContainer: =AlignInContainer.Stretch
                               Color: =RGBA(15,23,42,1)
                               Font: =Font.'Segoe UI'
@@ -271,38 +271,22 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =20
-                              Text: ="Board meeting groups"
+                              Text: ="Meeting types (" & Text(CountRows(colMeetingRulebook)) & ")"
                               Wrap: =false
-                        - txtBrvListHelp:
-                            Control: ModernText
-                            Properties:
-                              AccessibleLabel: ="Select a meeting group to review its local rule."
-                              AlignInContainer: =AlignInContainer.Stretch
-                              Color: =RGBA(71,85,105,1)
-                              Font: =Font.'Segoe UI'
-                              Height: =38
-                              LayoutMinWidth: =0
-                              PaddingBottom: =0
-                              PaddingLeft: =0
-                              PaddingRight: =0
-                              PaddingTop: =0
-                              Size: =13
-                              Text: ="Select a meeting group to review its local rule."
-                              VerticalAlign: =VerticalAlign.Top
                         - galBrvRules:
                             Control: Gallery
                             Variant: Vertical
                             Properties:
-                              AccessibleLabel: ="Board rules. Select a rule to edit."
+                              AccessibleLabel: ="Meeting rules. Select a rule to edit."
                               BorderColor: =RGBA(203,213,225,1)
                               DelayItemLoading: =false
                               FillPortions: =0
-                              Height: =With({rowCount:CountRows(SortByColumns(colBoardRuleProof,"SortOrder",SortOrder.Ascending))},rowCount*Self.TemplateHeight+((rowCount+1)*Self.TemplatePadding))
-                              Items: =SortByColumns(colBoardRuleProof,"SortOrder",SortOrder.Ascending)
+                              Height: =530
+                              Items: =SortByColumns(colMeetingRulebook,"PlanningLayer",SortOrder.Ascending,"SortOrder",SortOrder.Ascending)
                               LayoutMinHeight: =0
                               LayoutMinWidth: =0
                               LoadingSpinner: =LoadingSpinner.None
-                              ShowScrollbar: =false
+                              ShowScrollbar: =true
                               TabIndex: =0
                               TemplatePadding: =4
                               TemplateSize: =156
@@ -362,22 +346,26 @@ Screens:
                                           PaddingTop: =0
                                           Size: =11
                                           Text: |-
-                                            =ThisItem.Cadence & " · " &
-                                            Switch(
-                                                ThisItem.Cadence,
-                                                "One time",ThisItem.AnchorMonth & " " & Text(ThisItem.AnchorDay) & ", 2027",
-                                                "Twice a week",ThisItem.PreferredDay & " and " & ThisItem.SecondPreferredDay,
-                                                "Weekly",ThisItem.PreferredDay,
-                                                "Every two weeks","first occurrence " & ThisItem.AnchorMonth & " " & Text(ThisItem.AnchorDay) & ", 2027",
-                                                "Twice a month",ThisItem.WeekOfMonth & " and " & ThisItem.SecondWeekOfMonth & " " & ThisItem.PreferredDay,
-                                                "Monthly",ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
-                                                "Every two months","starting " & ThisItem.StartMonth & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
-                                                "Quarterly","starting " & ThisItem.StartMonth & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
-                                                "Specific months",ThisItem.MonthsText & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
-                                                "Annually","starting " & ThisItem.StartMonth & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
-                                                "As needed — no dates generated automatically","no automatic dates",
-                                                "Schedule not set"
-                                            ) & " · " & ThisItem.StartTimeText & " · " & Text(ThisItem.DurationMinutes) & " min"
+                                            =ThisItem.PlanningLayer & " · " & ThisItem.Cadence & " · " &
+                                            If(
+                                                !IsBlank(ThisItem.RuleSummary),
+                                                ThisItem.RuleSummary,
+                                                Switch(
+                                                    ThisItem.Cadence,
+                                                    "One time",ThisItem.AnchorMonth & " " & Text(ThisItem.AnchorDay) & ", 2027",
+                                                    "Twice a week",ThisItem.PreferredDay & " and " & ThisItem.SecondPreferredDay,
+                                                    "Weekly",ThisItem.PreferredDay,
+                                                    "Every two weeks","first occurrence " & ThisItem.AnchorMonth & " " & Text(ThisItem.AnchorDay) & ", 2027",
+                                                    "Twice a month",ThisItem.WeekOfMonth & " and " & ThisItem.SecondWeekOfMonth & " " & ThisItem.PreferredDay,
+                                                    "Monthly",ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
+                                                    "Every two months","starting " & ThisItem.StartMonth & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
+                                                    "Quarterly","starting " & ThisItem.StartMonth & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
+                                                    "Specific months",ThisItem.MonthsText & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
+                                                    "Annually","starting " & ThisItem.StartMonth & " · " & ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay,
+                                                    "As needed — no dates generated automatically","no automatic dates",
+                                                    "Schedule not set"
+                                                ) & " · " & ThisItem.StartTimeText & " · " & Text(ThisItem.DurationMinutes) & " min"
+                                            )
                                           VerticalAlign: =VerticalAlign.Top
                                     - conBrvRuleActions:
                                         Control: GroupContainer
@@ -439,7 +427,7 @@ Screens:
                                                   Reset(drpBrvFlexibility);
                                                   Reset(drpBrvStatus);
                                                   With(
-                                                      {monthsText:LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).MonthsText},
+                                                      {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
                                                       ClearCollect(
                                                           colBrvMonthSelection,
                                                           {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
@@ -538,7 +526,7 @@ Screens:
                               - txtBrvEditorTitle:
                                   Control: ModernText
                                   Properties:
-                                    AccessibleLabel: ="Selected meeting " & LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).MeetingName
+                                    AccessibleLabel: ="Selected meeting " & LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MeetingName
                                     AlignInContainer: =AlignInContainer.Stretch
                                     Color: =RGBA(15,23,42,1)
                                     FillPortions: =If(App.Width<760,0,1)
@@ -551,23 +539,23 @@ Screens:
                                     PaddingRight: =0
                                     PaddingTop: =0
                                     Size: =24
-                                    Text: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).MeetingName
+                                    Text: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MeetingName
                                     Wrap: =App.Width<760
                               - bdgBrvEditorStatus:
                                   Control: Badge
                                   Properties:
-                                    AccessibleLabel: ="Selected rule status " & LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus
+                                    AccessibleLabel: ="Selected rule status " & LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus
                                     AlignInContainer: =If(App.Width<760,AlignInContainer.Start,AlignInContainer.Center)
                                     Appearance: ='BadgeCanvas.Appearance'.Tint
-                                    Content: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus
+                                    Content: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus
                                     DisplayMode: =DisplayMode.View
                                     Font: =Font.'Segoe UI'
-                                    FontColor: =If(LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus="Confirmed",RGBA(6,78,59,1),RGBA(146,64,14,1))
+                                    FontColor: =If(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus="Confirmed",RGBA(6,78,59,1),RGBA(146,64,14,1))
                                     FontSize: =12
                                     FontWeight: =FontWeight.Semibold
                                     Height: =28
                                     Shape: ='BadgeCanvas.Shape'.Rounded
-                                    ThemeColor: =If(LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus="Confirmed",'BadgeCanvas.ThemeColor'.Success,'BadgeCanvas.ThemeColor'.Warning)
+                                    ThemeColor: =If(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus="Confirmed",'BadgeCanvas.ThemeColor'.Success,'BadgeCanvas.ThemeColor'.Warning)
                                     Width: =140
                         - txtBrvCurrentSummary:
                             Control: ModernText
@@ -585,7 +573,7 @@ Screens:
                               Size: =13
                               Text: |-
                                 =With(
-                                    {rule:LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId)},
+                                    {rule:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId)},
                                     rule.Cadence & " · " &
                                     Switch(
                                         rule.Cadence,
@@ -641,7 +629,7 @@ Screens:
                                     Appearance: =Appearance.Outline
                                     BasePaletteColor: =RGBA(37,99,235,1)
                                     Color: =RGBA(15,23,42,1)
-                                    Default: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).MeetingName
+                                    Default: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MeetingName
                                     Font: =Font.'Segoe UI'
                                     Height: =44
                                     LayoutMinWidth: =0
@@ -698,7 +686,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp(colBrvCadenceOptions,Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).Cadence)
+                                          Default: =LookUp(colBrvCadenceOptions,Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Cadence)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -762,7 +750,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).StartMonth)
+                                          Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).StartMonth)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -850,7 +838,7 @@ Screens:
                                                 Appearance: =Appearance.Outline
                                                 BasePaletteColor: =RGBA(37,99,235,1)
                                                 Color: =RGBA(15,23,42,1)
-                                                Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).AnchorMonth)
+                                                Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).AnchorMonth)
                                                 Font: =Font.'Segoe UI'
                                                 Height: =44
                                                 ItemDisplayText: =ThisItem.Value
@@ -896,7 +884,7 @@ Screens:
                                                 Appearance: =Appearance.Outline
                                                 BasePaletteColor: =RGBA(37,99,235,1)
                                                 Color: =RGBA(15,23,42,1)
-                                                Default: =LookUp(Sequence(Switch(drpBrvCadAnchorMonth.Selected.Value,"February",28,"April",30,"June",30,"September",30,"November",30,31)),Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).AnchorDay)
+                                                Default: =LookUp(Sequence(Switch(drpBrvCadAnchorMonth.Selected.Value,"February",28,"April",30,"June",30,"September",30,"November",30,31)),Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).AnchorDay)
                                                 Font: =Font.'Segoe UI'
                                                 Height: =44
                                                 ItemDisplayText: =Text(ThisItem.Value)
@@ -1332,7 +1320,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).WeekOfMonth)
+                                          Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).WeekOfMonth)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -1379,7 +1367,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).PreferredDay)
+                                          Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).PreferredDay)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -1439,7 +1427,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).SecondPreferredDay)
+                                          Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).SecondPreferredDay)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -1486,7 +1474,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).SecondWeekOfMonth)
+                                          Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).SecondWeekOfMonth)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -1544,7 +1532,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).StartTimeText
+                                          Default: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).StartTimeText
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           LayoutMinWidth: =0
@@ -1590,7 +1578,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).DurationMinutes
+                                          Default: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).DurationMinutes
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           LayoutMinWidth: =0
@@ -1648,7 +1636,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp([{Value:"In person"},{Value:"Virtual"},{Value:"Hybrid"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).Format)
+                                          Default: =LookUp([{Value:"In person"},{Value:"Virtual"},{Value:"Hybrid"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Format)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -1694,7 +1682,7 @@ Screens:
                                           Appearance: =Appearance.Outline
                                           BasePaletteColor: =RGBA(37,99,235,1)
                                           Color: =RGBA(15,23,42,1)
-                                          Default: =LookUp([{Value:"Fixed"},{Value:"Flexible"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).Flexibility)
+                                          Default: =LookUp([{Value:"Fixed"},{Value:"Flexible"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Flexibility)
                                           Font: =Font.'Segoe UI'
                                           Height: =44
                                           ItemDisplayText: =ThisItem.Value
@@ -1740,7 +1728,7 @@ Screens:
                                     Appearance: =Appearance.Outline
                                     BasePaletteColor: =RGBA(37,99,235,1)
                                     Color: =RGBA(15,23,42,1)
-                                    Default: =LookUp([{Value:"Confirmed"},{Value:"Needs validation"}],Value=LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleStatus)
+                                    Default: =LookUp([{Value:"Confirmed"},{Value:"Needs validation"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus)
                                     Font: =Font.'Segoe UI'
                                     Height: =44
                                     ItemDisplayText: =ThisItem.Value
@@ -1781,7 +1769,7 @@ Screens:
                                 =With(
                                     {cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},
                                     varBrvSaveAttempted && !(
-                                        !IsBlank(LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).RuleId) &&
+                                        !IsBlank(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleId) &&
                                         !IsBlank(Trim(inpBrvMeetingName.Text)) &&
                                         !IsBlank(drpBrvCadence.Selected.Value) &&
                                         !IsBlank(Trim(inpBrvTime.Text)) &&
@@ -1841,7 +1829,7 @@ Screens:
                                       Reset(drpBrvFlexibility);
                                       Reset(drpBrvStatus);
                                       With(
-                                          {monthsText:LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId).MonthsText},
+                                          {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
                                           ClearCollect(
                                               colBrvMonthSelection,
                                               {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
@@ -1874,7 +1862,7 @@ Screens:
                               - btnBrvSave:
                                   Control: ModernButton
                                   Properties:
-                                    AccessibleLabel: ="Save local Board rule edits"
+                                    AccessibleLabel: ="Save meeting rule edits"
                                     Align: =Align.Center
                                     AlignInContainer: =AlignInContainer.Stretch
                                     BasePaletteColor: =RGBA(37,99,235,1)
@@ -1888,7 +1876,7 @@ Screens:
                                       =With(
                                           {
                                               cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value),
-                                              currentRule:LookUp(colBoardRuleProof,RuleId=varBrvSelectedRuleId)
+                                              currentRule:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId)
                                           },
                                           If(
                                               !IsBlank(currentRule.RuleId) &&
@@ -1909,7 +1897,7 @@ Screens:
                                               With(
                                                   {
                                                       savedLocal:Patch(
-                                                          colBoardRuleProof,
+                                                          colMeetingRulebook,
                                                           currentRule,
                                                           {
                                                               MeetingName:Trim(inpBrvMeetingName.Text),
@@ -1932,7 +1920,7 @@ Screens:
                                                   },
                                                   With(
                                                       {
-                                                          sourceRule:LookUp(colBoardSourceRules,ID=savedLocal.SourceRecordId || Title=currentRule.MeetingName || ("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(Notes,""))
+                                                          sourceRule:LookUp(colMeetingSourceRules,ID=savedLocal.SourceRecordId || Title=currentRule.MeetingName || (savedLocal.PlanningLayer="Board" && ("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(Notes,"")))
                                                       },
                                                       If(
                                                           !IsBlank(sourceRule.ID),
@@ -1951,26 +1939,32 @@ Screens:
                                                                           DurationMinutes:savedLocal.DurationMinutes,
                                                                           Modality:{Value:savedLocal.Format},
                                                                           Flexibility:{Value:savedLocal.Flexibility},
-                                                                          Frequency:"PA_RULE|"&savedLocal.MonthsText&"|"&Text(savedLocal.AnchorDay)&"|"&savedLocal.SecondPreferredDay&"|"&savedLocal.SecondWeekOfMonth,
+                                                                          Frequency:If(savedLocal.PlanningLayer="Board","PA_RULE|"&savedLocal.MonthsText&"|"&Text(savedLocal.AnchorDay)&"|"&savedLocal.SecondPreferredDay&"|"&savedLocal.SecondWeekOfMonth,sourceRule.Frequency),
                                                                           RuleStatus:{Value:savedLocal.RuleStatus},
                                                                           Completed:savedLocal.RuleStatus="Confirmed",
-                                                                          Notes:If(("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(sourceRule.Notes,""),sourceRule.Notes,Trim(Coalesce(sourceRule.Notes,"") & Char(10) & "PowerAppsBoardRule=" & savedLocal.RuleId))
+                                                                          Notes:If(savedLocal.PlanningLayer<>"Board",sourceRule.Notes,If(("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(sourceRule.Notes,""),sourceRule.Notes,Trim(Coalesce(sourceRule.Notes,"") & Char(10) & "PowerAppsBoardRule=" & savedLocal.RuleId)))
                                                                       }
                                                                   )
                                                               },
-                                                              Patch(colBoardRuleProof,savedLocal,{SourceRecordId:savedSource.ID});
-                                                              Set(varBrvReceipt,LookUp(colBoardRuleProof,RuleId=savedLocal.RuleId));
+                                                              Patch(colMeetingRulebook,savedLocal,{SourceRecordId:savedSource.ID});
+                                                              If(savedLocal.PlanningLayer="Board",Patch(colBoardRuleProof,LookUp(colBoardRuleProof,RuleId=savedLocal.RuleId),savedLocal,{SourceRecordId:savedSource.ID}));
+                                                              Set(varBrvReceipt,LookUp(colMeetingRulebook,RuleId=savedLocal.RuleId));
                                                               Refresh('LSS Meeting Types');
-                                                              ClearCollect(colBoardSourceRules,Filter('LSS Meeting Types',Category.Value="Board"))
+                                                              ClearCollect(colMeetingSourceRules,'LSS Meeting Types');
+                                                              ClearCollect(colBoardSourceRules,Filter(colMeetingSourceRules,Category.Value="Board"))
                                                           ),
                                                           Set(varBrvReceipt,savedLocal)
                                                       )
                                                   )
                                               );
-                                              Set(varCalProofDraftNeedsRegeneration,CountRows(colCalProofGenerationReceipt)>0);
-                                              Set(varCalProofBoardConfirmed,false);
-                                              Clear(colCalProofBoardConfirmationReceipt);
-                                              Set(varCalProofActionMessage,If(CountRows(colCalProofGenerationReceipt)>0,"Board rule saved. Regenerate the draft to apply this change.","Board rule saved."));
+                                              If(
+                                                  currentRule.PlanningLayer="Board",
+                                                  Set(varCalProofDraftNeedsRegeneration,CountRows(colCalProofGenerationReceipt)>0);
+                                                  Set(varCalProofBoardConfirmed,false);
+                                                  Clear(colCalProofBoardConfirmationReceipt);
+                                                  Set(varCalProofActionMessage,If(CountRows(colCalProofGenerationReceipt)>0,"Board rule saved. Regenerate the draft to apply this change.","Board rule saved.")),
+                                                  Set(varCalProofActionMessage,currentRule.PlanningLayer & " rule saved.")
+                                              );
                                               Set(varBrvReceiptVisible,true);
                                               Set(varBrvSaveAttempted,false),
                                               Set(varBrvSaveAttempted,true);
@@ -1986,7 +1980,7 @@ Screens:
                                     RadiusTopLeft: =8
                                     RadiusTopRight: =8
                                     Size: =14
-                                    Text: ="Save local rule"
+                                    Text: ="Save rule"
                                     Width: =If(App.Width<760,Parent.Width,Min(180,(Parent.Width-8)/2))
                         - conBrvReceipt:
                             Control: GroupContainer

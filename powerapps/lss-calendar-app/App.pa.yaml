@@ -45,7 +45,8 @@ App:
         );
     OnStart: |-
       =Refresh('LSS Meeting Types');
-      ClearCollect(colBoardSourceRules,Filter('LSS Meeting Types',Category.Value="Board"));
+      ClearCollect(colMeetingSourceRules,'LSS Meeting Types');
+      ClearCollect(colBoardSourceRules,Filter(colMeetingSourceRules,Category.Value="Board"));
       ClearCollect(
         colCalProofMonths,
         {MonthNumber:1,MonthName:"January",MonthStart:Date(2027,1,1)},
@@ -223,9 +224,9 @@ App:
       Clear(colCalProofMoveSnapshot);
       ClearCollect(
         colBoardRuleProof,
-        {SortOrder:1,RuleId:"BOARD-FULL",SourceRecordId:0,MeetingName:"Full Board",Cadence:"Quarterly",MonthsText:"January, April, July, October",StartMonth:"January",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"January",AnchorDay:12,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:120,Format:"In person",Flexibility:"Fixed",RuleStatus:"Confirmed"},
-        {SortOrder:2,RuleId:"BOARD-CHECKIN",SourceRecordId:0,MeetingName:"Board Critical Issue Check-in",Cadence:"Specific months",MonthsText:"February, March, June, August, September, December",StartMonth:"February",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:9,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:30,Format:"Virtual",Flexibility:"Fixed",RuleStatus:"Confirmed"},
-        {SortOrder:3,RuleId:"BOARD-RETREAT",SourceRecordId:0,MeetingName:"Board Retreat",Cadence:"Specific months",MonthsText:"May, November",StartMonth:"May",WeekOfMonth:"Last",PreferredDay:"Thursday",AnchorMonth:"May",AnchorDay:27,SecondPreferredDay:"Friday",SecondWeekOfMonth:"Fourth",StartTimeText:"8:00 AM",DurationMinutes:300,Format:"In person",Flexibility:"Fixed",RuleStatus:"Needs validation"}
+        {SortOrder:1,RuleId:"BOARD-FULL",SourceRecordId:0,MeetingName:"Full Board",Cadence:"Quarterly",MonthsText:"January, April, July, October",StartMonth:"January",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"January",AnchorDay:12,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:120,Format:"In person",Flexibility:"Fixed",RuleStatus:"Confirmed",PlanningLayer:"Board",RuleSummary:""},
+        {SortOrder:2,RuleId:"BOARD-CHECKIN",SourceRecordId:0,MeetingName:"Board Critical Issue Check-in",Cadence:"Specific months",MonthsText:"February, March, June, August, September, December",StartMonth:"February",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:9,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:30,Format:"Virtual",Flexibility:"Fixed",RuleStatus:"Confirmed",PlanningLayer:"Board",RuleSummary:""},
+        {SortOrder:3,RuleId:"BOARD-RETREAT",SourceRecordId:0,MeetingName:"Board Retreat",Cadence:"Specific months",MonthsText:"May, November",StartMonth:"May",WeekOfMonth:"Last",PreferredDay:"Thursday",AnchorMonth:"May",AnchorDay:27,SecondPreferredDay:"Friday",SecondWeekOfMonth:"Fourth",StartTimeText:"8:00 AM",DurationMinutes:300,Format:"In person",Flexibility:"Fixed",RuleStatus:"Needs validation",PlanningLayer:"Board",RuleSummary:""}
       );
       ForAll(
         colBoardRuleProof As localRule,
@@ -255,6 +256,83 @@ App:
                 Format:Coalesce(sourceRule.Modality.Value,localRule.Format),
                 Flexibility:Coalesce(sourceRule.Flexibility.Value,localRule.Flexibility),
                 RuleStatus:Coalesce(sourceRule.RuleStatus.Value,localRule.RuleStatus)
+              }
+            )
+          )
+        )
+      );
+      ClearCollect(colMeetingRulebook,colBoardRuleProof);
+      ForAll(
+        colMeetingSourceRules As sourceRule,
+        With(
+          {
+            normalizedRuleId:Switch(
+              sourceRule.Title,
+              "Full Board Meeting","BOARD-FULL",
+              "Full Board","BOARD-FULL",
+              "Board Critical Issue Check-in","BOARD-CHECKIN",
+              "Board Retreat","BOARD-RETREAT",
+              "Board Orientation Window","BOARD-ORIENTATION",
+              "Executive Committee","COM-EXECUTIVE",
+              "Administration & Finance Committee","COM-FINANCE",
+              "Health Center & Programs Committee","COM-HEALTH-PROGRAMS",
+              "Talent & Risk Management Committee","COM-TALENT-RISK",
+              "Nominations Committee","COM-NOMINATIONS",
+              "Program Committee","COM-PROGRAM",
+              "Executive Team Meeting","EXEC-TEAM",
+              "Executive Team Quarterly Retreat","EXEC-RETREAT",
+              "Leadership Team Meeting","LEADERSHIP-TEAM",
+              "Leadership Team Retreat","LEADERSHIP-RETREAT",
+              "All Staff Meeting","ALL-STAFF",
+              "Quarterly Program Briefing — date TBD","PROGRAM-BRIEFING",
+              "Supervisory Team Meeting","SUPERVISORY",
+              "Operations Meeting","OPERATIONS",
+              "BVR Meeting Slots — mapping needed","BVR-SLOTS",
+              "Internal Risk Committee","INTERNAL-RISK",
+              "MEETING-TYPE-"&Text(sourceRule.ID)
+            ),
+            planningLayer:Switch(
+              sourceRule.Category.Value,
+              "Board","Board",
+              "Committee","Board Committees",
+              "Executive","Executive Leadership",
+              "Organization","Organization & Operations",
+              Coalesce(sourceRule.Category.Value,"Organization & Operations")
+            )
+          },
+          If(
+            IsBlank(LookUp(colMeetingRulebook,RuleId=normalizedRuleId).RuleId),
+            Collect(
+              colMeetingRulebook,
+              {
+                SortOrder:100+sourceRule.ID,
+                RuleId:normalizedRuleId,
+                SourceRecordId:sourceRule.ID,
+                MeetingName:Coalesce(sourceRule.Title,"Untitled meeting type"),
+                Cadence:Switch(
+                  sourceRule.Cadence.Value,
+                  "Every other month","Every two months",
+                  "Semi-Annual","As needed — no dates generated automatically",
+                  "3x/Year","As needed — no dates generated automatically",
+                  "Annual","Annually",
+                  "As Needed","As needed — no dates generated automatically",
+                  Coalesce(sourceRule.Cadence.Value,"As needed — no dates generated automatically")
+                ),
+                MonthsText:"",
+                StartMonth:Coalesce(sourceRule.'Start Month'.Value,"January"),
+                WeekOfMonth:Switch(sourceRule.WeekOfMonth.Value,"1st","First","2nd","Second","3rd","Third","4th","Fourth",Coalesce(sourceRule.WeekOfMonth.Value,"First")),
+                PreferredDay:Coalesce(sourceRule.DayOfWeek.Value,"Monday"),
+                AnchorMonth:Coalesce(sourceRule.'Start Month'.Value,"January"),
+                AnchorDay:1,
+                SecondPreferredDay:"Thursday",
+                SecondWeekOfMonth:"Fourth",
+                StartTimeText:Coalesce(sourceRule.PreferredTime,"9:00 AM"),
+                DurationMinutes:Coalesce(sourceRule.DurationMinutes,60),
+                Format:Switch(sourceRule.Modality.Value,"In-person","In person",Coalesce(sourceRule.Modality.Value,"Hybrid")),
+                Flexibility:If("Fixed" in Coalesce(sourceRule.Flexibility.Value,""),"Fixed","Flexible"),
+                RuleStatus:Switch(sourceRule.RuleStatus.Value,"Open Question","Needs validation","2026 baseline","Needs validation",Coalesce(sourceRule.RuleStatus.Value,If(sourceRule.Completed,"Confirmed","Needs validation"))),
+                PlanningLayer:planningLayer,
+                RuleSummary:Coalesce(sourceRule.Frequency,"")
               }
             )
           )
