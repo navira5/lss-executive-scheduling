@@ -133,7 +133,18 @@ Screens:
                         FillPortions: =1
                         Height: =44
                         LayoutMinWidth: =105
-                        OnSelect: =Set(varPlannerShowCommittees,!varPlannerShowCommittees)
+                        OnSelect: |-
+                          =ForAll(
+                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board Committees") As generatedMeeting,
+                            With(
+                              {generatedId:generatedMeeting.EventId},
+                              If(
+                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                Collect(colCalProofEvents,generatedMeeting)
+                              )
+                            )
+                          );
+                          Set(varPlannerShowCommittees,!varPlannerShowCommittees)
                         Text: ="Committees"
                   - btnPlannerMonthExecutive:
                       Control: ModernButton
@@ -144,7 +155,18 @@ Screens:
                         FillPortions: =1
                         Height: =44
                         LayoutMinWidth: =100
-                        OnSelect: =Set(varPlannerShowExecutive,!varPlannerShowExecutive)
+                        OnSelect: |-
+                          =ForAll(
+                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Executive Leadership") As generatedMeeting,
+                            With(
+                              {generatedId:generatedMeeting.EventId},
+                              If(
+                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                Collect(colCalProofEvents,generatedMeeting)
+                              )
+                            )
+                          );
+                          Set(varPlannerShowExecutive,!varPlannerShowExecutive)
                         Text: ="Executive"
                   - btnPlannerMonthOperations:
                       Control: ModernButton
@@ -155,7 +177,18 @@ Screens:
                         FillPortions: =1
                         Height: =44
                         LayoutMinWidth: =100
-                        OnSelect: =Set(varPlannerShowOperations,!varPlannerShowOperations)
+                        OnSelect: |-
+                          =ForAll(
+                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Organization & Operations") As generatedMeeting,
+                            With(
+                              {generatedId:generatedMeeting.EventId},
+                              If(
+                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                Collect(colCalProofEvents,generatedMeeting)
+                              )
+                            )
+                          );
+                          Set(varPlannerShowOperations,!varPlannerShowOperations)
                         Text: ="Operations"
                   - btnPlannerMonthAdd:
                       Control: ModernButton

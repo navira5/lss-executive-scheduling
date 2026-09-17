@@ -199,7 +199,18 @@ Screens:
                               BasePaletteColor: =RGBA(14,116,144,1)
                               FillPortions: =1
                               LayoutMinWidth: =118
-                              OnSelect: =Set(varPlannerShowCommittees,!varPlannerShowCommittees)
+                              OnSelect: |-
+                                =ForAll(
+                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board Committees") As generatedMeeting,
+                                  With(
+                                    {generatedId:generatedMeeting.EventId},
+                                    If(
+                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                      Collect(colCalProofEvents,generatedMeeting)
+                                    )
+                                  )
+                                );
+                                Set(varPlannerShowCommittees,!varPlannerShowCommittees)
                               Text: ="Committees"
                         - btnPlannerFilterExecutive:
                             Control: ModernButton
@@ -209,7 +220,18 @@ Screens:
                               BasePaletteColor: =RGBA(124,58,237,1)
                               FillPortions: =1
                               LayoutMinWidth: =110
-                              OnSelect: =Set(varPlannerShowExecutive,!varPlannerShowExecutive)
+                              OnSelect: |-
+                                =ForAll(
+                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Executive Leadership") As generatedMeeting,
+                                  With(
+                                    {generatedId:generatedMeeting.EventId},
+                                    If(
+                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                      Collect(colCalProofEvents,generatedMeeting)
+                                    )
+                                  )
+                                );
+                                Set(varPlannerShowExecutive,!varPlannerShowExecutive)
                               Text: ="Executive"
                         - btnPlannerFilterOperations:
                             Control: ModernButton
@@ -219,7 +241,18 @@ Screens:
                               BasePaletteColor: =RGBA(5,150,105,1)
                               FillPortions: =1
                               LayoutMinWidth: =110
-                              OnSelect: =Set(varPlannerShowOperations,!varPlannerShowOperations)
+                              OnSelect: |-
+                                =ForAll(
+                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Organization & Operations") As generatedMeeting,
+                                  With(
+                                    {generatedId:generatedMeeting.EventId},
+                                    If(
+                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                      Collect(colCalProofEvents,generatedMeeting)
+                                    )
+                                  )
+                                );
+                                Set(varPlannerShowOperations,!varPlannerShowOperations)
                               Text: ="Operations"
                   - conPlannerActions:
                       Control: GroupContainer
