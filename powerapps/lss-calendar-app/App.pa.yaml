@@ -24,6 +24,25 @@ App:
             If(CountRows(validDates)=0,Blank(),First(validDates).CandidateBusinessDate)
           )
         );
+
+      IsPlannerHardStop(dateToCheck: Date): Boolean =
+        Weekday(dateToCheck,StartOfWeek.Monday)>5 ||
+        CountIf(colCalProofClosures,ClosureDate=dateToCheck && IsActive)>0;
+
+      GetNextPlannerBusinessDate(candidateDate: Date,planYear: Number): Date =
+        With(
+          {
+            validDates:Filter(
+              AddColumns(
+                Sequence(31),
+                CandidateBusinessDate,
+                DateAdd(candidateDate,Value,TimeUnit.Days)
+              ),
+              Year(CandidateBusinessDate)=planYear && !IsPlannerHardStop(CandidateBusinessDate)
+            )
+          },
+          If(CountRows(validDates)=0,Blank(),First(validDates).CandidateBusinessDate)
+        );
     OnStart: |-
       =ClearCollect(
         colCalProofMonths,
@@ -55,7 +74,19 @@ App:
         {EventId:"RET-2027-11",EventName:"Board Retreat",EventType:"Board Retreat",EventDate:Date(2027,11,18),GeneratedDate:Date(2027,11,18),OriginalGeneratedDate:Date(2027,11,18),CurrentDate:Date(2027,11,18),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(8,0,0),EndTime:Time(13,0,0),ChipText:"RETREAT",SchedulingSource:"Local sample · approved prototype date",SourceRuleId:"BOARD-RETREAT",IsManualOverride:false},
         {EventId:"BCI-2027-12",EventName:"Board Critical Issue Check-in",EventType:"Critical Issue Check-in",EventDate:Date(2027,12,14),GeneratedDate:Date(2027,12,14),OriginalGeneratedDate:Date(2027,12,14),CurrentDate:Date(2027,12,14),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(8,30,0),EndTime:Time(9,0,0),ChipText:"CHECK",SchedulingSource:"Local sample · selected months · second Tuesday",SourceRuleId:"BOARD-CHECKIN",IsManualOverride:false}
       );
-      Clear(colCalProofEvents);
+      Collect(
+        colCalProofEvents,
+        {EventId:"__SCHEMA__",EventName:"",EventType:"",EventDate:Date(2027,1,1),GeneratedDate:Date(2027,1,1),OriginalGeneratedDate:Date(2027,1,1),CurrentDate:Date(2027,1,1),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(0,0,0),EndTime:Time(0,0,0),ChipText:"",SchedulingSource:"",SourceRuleId:"",IsManualOverride:false,PlanYear:2027,PlanningLayer:"Board",SourceType:"Generated",Category:"Meeting",DurationMinutes:60,IsDeleted:false,WarningAcknowledged:false}
+      );
+      RemoveIf(colCalProofEvents,EventId="__SCHEMA__");
+      UpdateIf(colCalProofEvents,true,{PlanYear:2027,PlanningLayer:"Board",SourceType:"Generated",Category:"Board",DurationMinutes:DateDiff(StartTime,EndTime,TimeUnit.Minutes),IsDeleted:false,WarningAcknowledged:false});
+      Collect(
+        colCalProofEvents,
+        {EventId:"EXEC-2027-0209",EventName:"Executive Leadership",EventType:"Executive Leadership",EventDate:Date(2027,2,9),GeneratedDate:Date(2027,2,9),OriginalGeneratedDate:Date(2027,2,9),CurrentDate:Date(2027,2,9),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(10,0,0),EndTime:Time(11,0,0),ChipText:"EXEC",SchedulingSource:"Local sample · executive layer",SourceRuleId:"EXEC-WEEKLY",IsManualOverride:false,PlanYear:2027,PlanningLayer:"Executive Leadership",SourceType:"Generated",Category:"Leadership",DurationMinutes:60,IsDeleted:false,WarningAcknowledged:false},
+        {EventId:"COM-2027-0209",EventName:"Finance Committee",EventType:"Committee",EventDate:Date(2027,2,9),GeneratedDate:Date(2027,2,9),OriginalGeneratedDate:Date(2027,2,9),CurrentDate:Date(2027,2,9),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(13,0,0),EndTime:Time(14,0,0),ChipText:"FIN",SchedulingSource:"Local sample · committee layer",SourceRuleId:"COM-FIN",IsManualOverride:false,PlanYear:2027,PlanningLayer:"Board Committees",SourceType:"Generated",Category:"Committee",DurationMinutes:60,IsDeleted:false,WarningAcknowledged:false},
+        {EventId:"OPS-2027-0209",EventName:"Operations Planning",EventType:"Operations",EventDate:Date(2027,2,9),GeneratedDate:Date(2027,2,9),OriginalGeneratedDate:Date(2027,2,9),CurrentDate:Date(2027,2,9),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(15,0,0),EndTime:Time(16,0,0),ChipText:"OPS",SchedulingSource:"Local sample · operations layer",SourceRuleId:"OPS-MONTHLY",IsManualOverride:false,PlanYear:2027,PlanningLayer:"Organization & Operations",SourceType:"Generated",Category:"Operations",DurationMinutes:60,IsDeleted:false,WarningAcknowledged:false},
+        {EventId:"FB-2026-01",EventName:"Full Board",EventType:"Full Board",EventDate:Date(2026,1,13),GeneratedDate:Date(2026,1,13),OriginalGeneratedDate:Date(2026,1,13),CurrentDate:Date(2026,1,13),AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:"Ready",StartTime:Time(17,0,0),EndTime:Time(19,0,0),ChipText:"BOARD",SchedulingSource:"Local sample · 2026",SourceRuleId:"BOARD-FULL",IsManualOverride:false,PlanYear:2026,PlanningLayer:"Board",SourceType:"Generated",Category:"Board",DurationMinutes:120,IsDeleted:false,WarningAcknowledged:false}
+      );
       ClearCollect(colCalProofGeneratedEvents,FirstN(colCalProofEvents,0));
       ClearCollect(colCalProofBlockedEvents,FirstN(colCalProofEvents,0));
       ClearCollect(colCalProofPreservedOverrides,FirstN(colCalProofEvents,0));
@@ -70,6 +101,10 @@ App:
         {ClosureId:"CLOSE-2027-1125",ClosureName:"Thanksgiving Day",ClosureLabel:"Thanks.",ClosureDate:Date(2027,11,25)},
         {ClosureId:"CLOSE-2027-1224",ClosureName:"Christmas Day observed",ClosureLabel:"Xmas obs.",ClosureDate:Date(2027,12,24)}
       );
+      Collect(colCalProofClosures,{ClosureId:"__SCHEMA__",ClosureName:"",ClosureLabel:"",ClosureDate:Date(2027,1,1),PlanYear:2027,ClosureType:"Verified holiday",IsActive:true,Source:"Verified",OverrideReason:"",ChangedAt:Now()});
+      RemoveIf(colCalProofClosures,ClosureId="__SCHEMA__");
+      UpdateIf(colCalProofClosures,true,{PlanYear:Year(ClosureDate),ClosureType:"Verified holiday",IsActive:true,Source:"Verified",OverrideReason:"",ChangedAt:Now()});
+      Collect(colCalProofClosures,{ClosureId:"BLOCK-2026-SAMPLE",ClosureName:"Staff planning day",ClosureLabel:"Blocked",ClosureDate:Date(2026,2,16),PlanYear:2026,ClosureType:"User block",IsActive:true,Source:"User",OverrideReason:"Annual staff planning",ChangedAt:Now()});
       ClearCollect(
         colCalProofHardStops,
         {HardStopId:"",HardStopName:"",HardStopDate:Date(2027,1,1)}
@@ -154,6 +189,32 @@ App:
       Set(varBrvReceipt,First(colBoardRuleProof));
       Set(varBrvReceipt,Blank());
       Set(varBrvReceiptVisible,false);
-      Set(varBrvSaveAttempted,false)
-    StartScreen: =AnnualCalendarProof
+      Set(varBrvSaveAttempted,false);
+      Set(varPlannerYear,2027);
+      Set(varPlannerView,"Year");
+      Set(varPlannerFocusedDate,Date(2027,1,1));
+      Set(varPlannerSelectedEventId,"");
+      Set(varPlannerSelectedClosureId,"");
+      Set(varPlannerContextMode,"Empty");
+      Set(varPlannerShowBoard,true);
+      Set(varPlannerShowCommittees,true);
+      Set(varPlannerShowExecutive,true);
+      Set(varPlannerShowOperations,true);
+      Set(varPlannerDraftName,"");
+      Set(varPlannerDraftLayer,"Board");
+      Set(varPlannerDraftCategory,"Meeting");
+      Set(varPlannerDraftDate,Date(2027,1,4));
+      Set(varPlannerDraftStart,Time(9,0,0));
+      Set(varPlannerDraftDuration,60);
+      Set(varPlannerDraftDirty,false);
+      Set(varPlannerWarningAcknowledged,false);
+      Set(varPlannerOverrideReason,"");
+      Set(varPlannerReceipt,"");
+      ClearCollect(colPlannerExclusions,{ExclusionId:"",EventId:"",PlanYear:2027,Reason:"",CreatedAt:Now()});
+      Clear(colPlannerExclusions);
+      ClearCollect(colPlannerHistory,{ChangeId:"",Action:"",SubjectId:"",Summary:"",ChangedAt:Now()});
+      Clear(colPlannerHistory);
+      ClearCollect(colPlannerUndo,{Action:"",SubjectId:"",EventName:"",PreviousDate:Date(2027,1,1),PreviousStart:Time(0,0,0),PreviousEnd:Time(0,0,0),PreviousStatus:"",PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:First(colCalProofClosures)});
+      Clear(colPlannerUndo)
+    StartScreen: =CalendarPlanner
     Theme: =PowerAppsTheme

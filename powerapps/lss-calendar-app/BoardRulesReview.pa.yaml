@@ -147,7 +147,7 @@ Screens:
                         Height: =44
                         Layout: =ButtonLayout.TextOnly
                         LayoutMinWidth: =180
-                        OnSelect: =Navigate(AnnualCalendarProof,ScreenTransition.None)
+                        OnSelect: =Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
                         PaddingBottom: =0
                         PaddingLeft: =12
                         PaddingRight: =12
@@ -205,7 +205,25 @@ Screens:
                 Properties:
                   DropShadow: =DropShadow.None
                   FillPortions: =0
-                  Height: =If(App.Width<760,608+16+conBrvEditorPane.Height,conBrvEditorPane.Height)
+                  Height: |-
+                    =With(
+                        {cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},
+                        With(
+                            {
+                                editorHeight:
+                                    32 + 18 + 12 + If(App.Width<760,106,52) + 12 + If(App.Width<760,72,52) + 12 + 76 + 12 +
+                                    If(App.Width<760,112+If(cadence.UsesStartMonth,84,0),112) +
+                                    If(cadence.UsesAnchorDate,12+If(App.Width<760,188,104),0) +
+                                    If(cadence.UsesSpecificMonths,12+312,0) +
+                                    If(cadence.UsesWeek || cadence.UsesDay,12+If(App.Width<760 && cadence.UsesWeek && cadence.UsesDay,160,76),0) +
+                                    If(cadence.UsesSecondDay || cadence.UsesSecondWeek,12+76,0) +
+                                    12 + If(App.Width<760,160,76) + 12 + If(App.Width<760,160,76) + 12 + 76 +
+                                    12 + 40 + 12 + If(App.Width<760,100,44) +
+                                    If(varBrvReceiptVisible,12+440,0) + 12 + 36
+                            },
+                            If(App.Width<760,608+16+editorHeight,Max(608,editorHeight))
+                        )
+                    )
                   LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
                   LayoutGap: =16
                   LayoutMinHeight: =0

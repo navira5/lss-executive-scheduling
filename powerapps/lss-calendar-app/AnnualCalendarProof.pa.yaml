@@ -270,7 +270,6 @@ Screens:
                               AlignInContainer: =AlignInContainer.Stretch
                               BasePaletteColor: =RGBA(37,99,235,1)
                               Color: =RGBA(255,255,255,1)
-                              DisplayMode: =DisplayMode.Edit
                               FillPortions: =If(App.Width<760,0,1)
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
