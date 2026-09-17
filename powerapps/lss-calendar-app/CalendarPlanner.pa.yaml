@@ -153,9 +153,9 @@ Screens:
                   DropShadow: =DropShadow.None
                   Fill: =RGBA(255,255,255,1)
                   FillPortions: =0
-                  Height: =If(App.Width<1100,160,72)
+                  Height: =If(App.Width<1400,180,124)
                   LayoutAlignItems: =LayoutAlignItems.Stretch
-                  LayoutDirection: =If(App.Width<1100,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutDirection: =If(App.Width<1400,LayoutDirection.Vertical,LayoutDirection.Horizontal)
                   LayoutGap: =10
                   LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
                   LayoutMinHeight: =0
@@ -184,100 +184,57 @@ Screens:
                         - btnPlannerFilterBoard:
                             Control: ModernButton
                             Properties:
-                              AccessibleLabel: =If(varPlannerShowBoard,"Hide Board meetings","Show Board meetings")
-                              Appearance: =If(varPlannerShowBoard,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                              AccessibleLabel: ="Plan and view the Board layer"
+                              Appearance: =If(varPlannerActiveLayer="Board",ButtonAppearance.Primary,ButtonAppearance.Outline)
                               BasePaletteColor: =RGBA(30,64,175,1)
                               FillPortions: =1
                               LayoutMinWidth: =90
-                              OnSelect: |-
-                                =ForAll(
-                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board") As generatedMeeting,
-                                  With(
-                                    {generatedId:generatedMeeting.EventId},
-                                    If(
-                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                      Collect(colCalProofEvents,generatedMeeting)
-                                    )
-                                  )
-                                );
-                                Set(varPlannerShowBoard,!varPlannerShowBoard)
-                              Text: ="Board"
+                              OnSelect: =Set(varPlannerActiveLayer,"Board");Set(varPlannerShowBoard,true);Set(varPlannerShowCommittees,false);Set(varPlannerShowExecutive,false);Set(varPlannerShowOperations,false);Set(varPlannerShowFinalReview,false);Set(varPlannerLayerReceipt,"")
+                              Text: ="1  Board · " & LookUp(colPlannerLayerState,PlanningLayer="Board",Status)
                         - btnPlannerFilterCommittees:
                             Control: ModernButton
                             Properties:
-                              AccessibleLabel: =If(varPlannerShowCommittees,"Hide Board Committees","Show Board Committees")
-                              Appearance: =If(varPlannerShowCommittees,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                              AccessibleLabel: ="Plan and view the Board Committees layer"
+                              Appearance: =If(varPlannerActiveLayer="Board Committees",ButtonAppearance.Primary,ButtonAppearance.Outline)
                               BasePaletteColor: =RGBA(14,116,144,1)
                               FillPortions: =1
                               LayoutMinWidth: =118
-                              OnSelect: |-
-                                =ForAll(
-                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board Committees") As generatedMeeting,
-                                  With(
-                                    {generatedId:generatedMeeting.EventId},
-                                    If(
-                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                      Collect(colCalProofEvents,generatedMeeting)
-                                    )
-                                  )
-                                );
-                                Set(varPlannerShowCommittees,!varPlannerShowCommittees)
-                              Text: ="Committees"
+                              OnSelect: =Set(varPlannerActiveLayer,"Board Committees");Set(varPlannerShowBoard,false);Set(varPlannerShowCommittees,true);Set(varPlannerShowExecutive,false);Set(varPlannerShowOperations,false);Set(varPlannerShowFinalReview,false);Set(varPlannerLayerReceipt,"")
+                              Text: ="2  Committees · " & LookUp(colPlannerLayerState,PlanningLayer="Board Committees",Status)
                         - btnPlannerFilterExecutive:
                             Control: ModernButton
                             Properties:
-                              AccessibleLabel: =If(varPlannerShowExecutive,"Hide Executive Leadership","Show Executive Leadership")
-                              Appearance: =If(varPlannerShowExecutive,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                              AccessibleLabel: ="Plan and view the Executive Leadership layer"
+                              Appearance: =If(varPlannerActiveLayer="Executive Leadership",ButtonAppearance.Primary,ButtonAppearance.Outline)
                               BasePaletteColor: =RGBA(124,58,237,1)
                               FillPortions: =1
                               LayoutMinWidth: =110
-                              OnSelect: |-
-                                =ForAll(
-                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Executive Leadership") As generatedMeeting,
-                                  With(
-                                    {generatedId:generatedMeeting.EventId},
-                                    If(
-                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                      Collect(colCalProofEvents,generatedMeeting)
-                                    )
-                                  )
-                                );
-                                Set(varPlannerShowExecutive,!varPlannerShowExecutive)
-                              Text: ="Executive"
+                              OnSelect: =Set(varPlannerActiveLayer,"Executive Leadership");Set(varPlannerShowBoard,false);Set(varPlannerShowCommittees,false);Set(varPlannerShowExecutive,true);Set(varPlannerShowOperations,false);Set(varPlannerShowFinalReview,false);Set(varPlannerLayerReceipt,"")
+                              Text: ="3  Executive · " & LookUp(colPlannerLayerState,PlanningLayer="Executive Leadership",Status)
                         - btnPlannerFilterOperations:
                             Control: ModernButton
                             Properties:
-                              AccessibleLabel: =If(varPlannerShowOperations,"Hide Organization and Operations","Show Organization and Operations")
-                              Appearance: =If(varPlannerShowOperations,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                              AccessibleLabel: ="Plan and view the Organization and Operations layer"
+                              Appearance: =If(varPlannerActiveLayer="Organization & Operations",ButtonAppearance.Primary,ButtonAppearance.Outline)
                               BasePaletteColor: =RGBA(5,150,105,1)
                               FillPortions: =1
                               LayoutMinWidth: =110
-                              OnSelect: |-
-                                =ForAll(
-                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Organization & Operations") As generatedMeeting,
-                                  With(
-                                    {generatedId:generatedMeeting.EventId},
-                                    If(
-                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
-                                      Collect(colCalProofEvents,generatedMeeting)
-                                    )
-                                  )
-                                );
-                                Set(varPlannerShowOperations,!varPlannerShowOperations)
-                              Text: ="Operations"
+                              OnSelect: =Set(varPlannerActiveLayer,"Organization & Operations");Set(varPlannerShowBoard,false);Set(varPlannerShowCommittees,false);Set(varPlannerShowExecutive,false);Set(varPlannerShowOperations,true);Set(varPlannerShowFinalReview,false);Set(varPlannerLayerReceipt,"")
+                              Text: ="4  Operations · " & LookUp(colPlannerLayerState,PlanningLayer="Organization & Operations",Status)
                   - conPlannerActions:
                       Control: GroupContainer
                       Variant: AutoLayout
                       Properties:
                         DropShadow: =DropShadow.None
                         FillPortions: =0
-                        Height: =48
+                        Height: =100
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Horizontal
                         LayoutGap: =8
+                        LayoutWrap: =true
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
-                        Width: =If(App.Width<1100,Parent.Width,390)
+                        Width: =If(App.Width<1400,Parent.Width,650)
                       Children:
                         - btnPlannerAddMeeting:
                             Control: ModernButton
@@ -289,7 +246,7 @@ Screens:
                               OnSelect: |-
                                 =Set(varPlannerContextMode,"Add");
                                 Set(varPlannerDraftName,"");
-                                Set(varPlannerDraftLayer,"Board");
+                                Set(varPlannerDraftLayer,varPlannerActiveLayer);
                                 Set(varPlannerDraftCategory,"Meeting");
                                 Set(varPlannerDraftDate,If(Year(varPlannerFocusedDate)=varPlannerYear,varPlannerFocusedDate,Date(varPlannerYear,1,4)));
                                 Set(varPlannerDraftStart,Time(9,0,0));
@@ -322,23 +279,68 @@ Screens:
                         - btnPlannerBoardRules:
                             Control: ModernButton
                             Properties:
-                              AccessibleLabel: ="Open Board rules"
+                              AccessibleLabel: ="Open rules for " & varPlannerActiveLayer
                               Appearance: =ButtonAppearance.Subtle
                               BasePaletteColor: =RGBA(30,64,175,1)
                               FillPortions: =1
                               LayoutMinWidth: =110
-                              OnSelect: =Navigate(BoardRulesReview,ScreenTransition.None)
-                              Text: ="Board rules"
+                              OnSelect: =Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None)
+                              Text: ="Layer rules"
+                        - btnPlannerFinalReview:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Open final planning review"
+                              Appearance: =If(varPlannerShowFinalReview,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                              BasePaletteColor: =RGBA(15,43,91,1)
+                              FillPortions: =1
+                              LayoutMinWidth: =120
+                              OnSelect: =Set(varPlannerShowFinalReview,true);Set(varPlannerShowBoard,true);Set(varPlannerShowCommittees,true);Set(varPlannerShowExecutive,true);Set(varPlannerShowOperations,true);Set(varPlannerLayerReceipt,"")
+                              Text: ="Final review"
+                        - btnPlannerStartClean:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: =If(varPlannerResetConfirm,"Confirm start of a clean local plan","Start a clean local plan")
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(185,28,28,1)
+                              FillPortions: =1
+                              LayoutMinWidth: =120
+                              OnSelect: |-
+                                =If(
+                                  !varPlannerResetConfirm,
+                                  Set(varPlannerResetConfirm,true);
+                                  Set(varPlannerLayerReceipt,"Start clean removes every local "&Text(varPlannerYear)&" meeting and decision, but keeps the rulebook and holidays. Select Start clean again to confirm."),
+                                  RemoveIf(colCalProofEvents,PlanYear=varPlannerYear);
+                                  RemoveIf(colPlannerExclusions,PlanYear=varPlannerYear);
+                                  RemoveIf(colPlannerHistory,true);
+                                  Clear(colPlannerUndo);
+                                  Clear(colCalProofGenerationReceipt);
+                                  Clear(colCalProofBoardConfirmationReceipt);
+                                  Clear(colPlannerLayerBuildReceipt);
+                                  UpdateIf(colPlannerLayerState,true,{Status:"Not started",NeedsRegeneration:false});
+                                  Set(varCalProofBoardConfirmed,false);
+                                  Set(varCalProofDraftNeedsRegeneration,false);
+                                  Set(varPlannerActiveLayer,"Board");
+                                  Set(varPlannerShowBoard,true);
+                                  Set(varPlannerShowCommittees,false);
+                                  Set(varPlannerShowExecutive,false);
+                                  Set(varPlannerShowOperations,false);
+                                  Set(varPlannerSelectedEventId,"");
+                                  Set(varPlannerContextMode,"Empty");
+                                  Set(varPlannerShowFinalReview,false);
+                                  Set(varPlannerResetConfirm,false);
+                                  Set(varPlannerLayerReceipt,"Clean "&Text(varPlannerYear)&" plan started. Rules and holidays are still available; begin with Board.")
+                                )
+                              Text: =If(varPlannerResetConfirm,"Confirm start clean","Start clean")
             - conPlannerBoardWorkflow:
                 Control: GroupContainer
                 Variant: AutoLayout
                 Properties:
-                  BorderColor: =If(varCalProofBoardConfirmed,RGBA(134,239,172,1),If(varCalProofDraftNeedsRegeneration,RGBA(245,158,11,1),RGBA(191,219,254,1)))
+                  BorderColor: =Switch(LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status),"Confirmed",RGBA(134,239,172,1),"Needs regeneration",RGBA(245,158,11,1),"Needs revalidation",RGBA(245,158,11,1),RGBA(191,219,254,1))
                   BorderThickness: =1
                   DropShadow: =DropShadow.None
-                  Fill: =If(varCalProofBoardConfirmed,RGBA(240,253,244,1),If(varCalProofDraftNeedsRegeneration,RGBA(255,251,235,1),RGBA(239,246,255,1)))
+                  Fill: =Switch(LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status),"Confirmed",RGBA(240,253,244,1),"Needs regeneration",RGBA(255,251,235,1),"Needs revalidation",RGBA(255,251,235,1),RGBA(239,246,255,1))
                   FillPortions: =0
-                  Height: =If(varPlannerShowBoardRegenPreview,If(App.Width<1100,420,252),If(App.Width<1100,230,126))
+                  Height: =If(varPlannerShowLayerPreview,If(App.Width<1100,420,252),If(App.Width<1100,230,126))
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =LayoutDirection.Vertical
                   LayoutGap: =10
@@ -388,7 +390,7 @@ Screens:
                                     Height: =28
                                     LayoutMinWidth: =0
                                     Size: =17
-                                    Text: =If(varCalProofBoardConfirmed,"✓ Board confirmed",If(varCalProofDraftNeedsRegeneration,"Board rules changed — regeneration required","Board planning"))
+                                    Text: =With({layerStatus:LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status)},If(layerStatus="Confirmed","✓ "&varPlannerActiveLayer&" confirmed",If(layerStatus="Needs regeneration" || layerStatus="Needs revalidation",varPlannerActiveLayer&" — regeneration required",varPlannerActiveLayer&" planning")))
                                     Wrap: =false
                               - txtPlannerBoardWorkflowStatus:
                                   Control: ModernText
@@ -402,22 +404,25 @@ Screens:
                                     Text: |-
                                       =With(
                                         {
-                                          unresolvedRules:CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed"),
-                                          boardDates:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && SourceType="Generated"),
-                                          reviewDates:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")
+                                          activeState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer),
+                                          unresolvedRules:CountIf(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer && RuleStatus<>"Confirmed"),
+                                          layerDates:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && SourceType="Generated"),
+                                          reviewDates:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && DecisionStatus="NeedsReview")
                                         },
                                         If(
-                                          varCalProofBoardConfirmed,
-                                          Text(boardDates) & " Board dates are locked locally. No Outlook changes were made.",
+                                          activeState.StepNumber>1 && LookUp(colPlannerLayerState,StepNumber=activeState.StepNumber-1,Status)<>"Confirmed",
+                                          "Complete "&LookUp(colPlannerLayerState,StepNumber=activeState.StepNumber-1,PlanningLayer)&" first. Earlier confirmed layers stay protected.",
+                                          activeState.Status="Confirmed",
+                                          Text(layerDates) & " dates are locked locally. Reopen this layer before changing its generated meetings.",
                                           unresolvedRules>0,
-                                          Text(unresolvedRules) & " Board rule" & If(unresolvedRules=1," needs","s need") & " confirmation before the draft can be built.",
-                                          varCalProofDraftNeedsRegeneration,
+                                          Text(unresolvedRules) & " rule" & If(unresolvedRules=1," needs","s need") & " confirmation before this layer can be built.",
+                                          activeState.NeedsRegeneration || activeState.Status="Needs regeneration" || activeState.Status="Needs revalidation",
                                           "Preview and apply the changed rules. Manual meetings, approved moves, and exclusions will be preserved.",
-                                          CountRows(colCalProofGenerationReceipt)=0,
-                                          "All Board rules are ready. Preview the generated dates before applying the draft.",
+                                          CountIf(colPlannerLayerBuildReceipt,PlanningLayer=varPlannerActiveLayer)=0,
+                                          "All rules are ready. Preview the generated dates before applying this layer.",
                                           reviewDates>0,
-                                          Text(reviewDates) & " proposed date change" & If(reviewDates=1," needs","s need") & " approval before Board can be confirmed.",
-                                          Text(boardDates) & " Board dates are ready for confirmation."
+                                          Text(reviewDates) & " proposed date change" & If(reviewDates=1," needs","s need") & " approval before this layer can be confirmed.",
+                                          Text(layerDates) & " dates are ready for confirmation."
                                         )
                                       )
                                     VerticalAlign: =VerticalAlign.Top
@@ -438,44 +443,53 @@ Screens:
                               - btnPlannerPreviewBoardDraft:
                                   Control: ModernButton
                                   Properties:
-                                    AccessibleLabel: =If(CountRows(colCalProofGenerationReceipt)=0,"Preview Board draft","Preview Board regeneration")
+                                    AccessibleLabel: ="Preview or regenerate " & varPlannerActiveLayer
                                     BasePaletteColor: =RGBA(37,99,235,1)
-                                    DisplayMode: =If(varCalProofBoardConfirmed || CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =With({activeState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer)},If(activeState.Status="Confirmed" || CountIf(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer && RuleStatus<>"Confirmed")>0 || (activeState.StepNumber>1 && LookUp(colPlannerLayerState,StepNumber=activeState.StepNumber-1,Status)<>"Confirmed"),DisplayMode.Disabled,DisplayMode.Edit))
                                     FillPortions: =1
                                     Height: =44
                                     LayoutMinWidth: =150
                                     OnSelect: |-
-                                      =If(
-                                        CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")=0,
-                                        Clear(colPlannerBoardPreview);
-                                        Clear(colPlannerBoardPreviewBlocked);
+                                      =With(
+                                        {activeState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer)},
+                                        If(
+                                          CountIf(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer && RuleStatus<>"Confirmed")=0 &&
+                                          (activeState.StepNumber=1 || LookUp(colPlannerLayerState,StepNumber=activeState.StepNumber-1,Status)="Confirmed"),
+                                        Clear(colPlannerLayerPreview);
+                                        Clear(colPlannerLayerPreviewBlocked);
+                                        If(
+                                          varPlannerYear=2027 && varPlannerActiveLayer<>"Board" && activeState.Status="Not started" && CountIf(colPlannerLayerBuildReceipt,PlanningLayer=varPlannerActiveLayer)=0,
+                                          ForAll(
+                                            Filter(colPlannerLayerRuleEvents,PlanYear=2027 && PlanningLayer=varPlannerActiveLayer) As baselineEvent,
+                                            Collect(colPlannerLayerPreview,baselineEvent)
+                                          ),
                                         ForAll(
-                                          SortByColumns(Filter(colBoardRuleProof,RuleStatus="Confirmed"),"SortOrder",SortOrder.Ascending) As boardRule,
+                                          SortByColumns(Filter(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer && RuleStatus="Confirmed"),"SortOrder",SortOrder.Ascending) As layerRule,
                                           With(
                                             {
-                                              startMonthNumber:Switch(boardRule.StartMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
-                                              anchorMonthNumber:Switch(boardRule.AnchorMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
-                                              preferredDayNumber:Switch(boardRule.PreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1),
-                                              secondDayNumber:Switch(boardRule.SecondPreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1),
+                                              startMonthNumber:Switch(layerRule.StartMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
+                                              anchorMonthNumber:Switch(layerRule.AnchorMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
+                                              preferredDayNumber:Switch(layerRule.PreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1),
+                                              secondDayNumber:Switch(layerRule.SecondPreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1),
                                               daysInYear:DateDiff(Date(varPlannerYear,1,1),Date(varPlannerYear+1,1,1),TimeUnit.Days)
                                             },
                                             With(
-                                              {anchorDate:Date(varPlannerYear,anchorMonthNumber,boardRule.AnchorDay)},
+                                              {anchorDate:Date(varPlannerYear,anchorMonthNumber,layerRule.AnchorDay)},
                                               ForAll(
                                                 Filter(
                                                   AddColumns(Sequence(daysInYear),CandidateDate,DateAdd(Date(varPlannerYear,1,1),Value-1,TimeUnit.Days)),
                                                   Switch(
-                                                    boardRule.Cadence,
+                                                    layerRule.Cadence,
                                                     "One time",CandidateDate=anchorDate,
                                                     "Twice a week",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber || Weekday(CandidateDate,StartOfWeek.Monday)=secondDayNumber,
                                                     "Weekly",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber,
                                                     "Every two weeks",CandidateDate>=anchorDate && Mod(DateDiff(anchorDate,CandidateDate,TimeUnit.Days),14)=0,
-                                                    "Twice a month",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && (Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false) || Switch(boardRule.SecondWeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false)),
-                                                    "Monthly",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
-                                                    "Every two months",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,2)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
-                                                    "Quarterly",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,3)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
-                                                    "Specific months",Text(CandidateDate,"mmmm") in boardRule.MonthsText && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
-                                                    "Annually",Month(CandidateDate)=startMonthNumber && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                    "Twice a month",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && (Switch(layerRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false) || Switch(layerRule.SecondWeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false)),
+                                                    "Monthly",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(layerRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                    "Every two months",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,2)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(layerRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                    "Quarterly",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,3)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(layerRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                    "Specific months",Text(CandidateDate,"mmmm") in layerRule.MonthsText && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(layerRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                                                    "Annually",Month(CandidateDate)=startMonthNumber && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(layerRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
                                                     false
                                                   )
                                                 ) As generatedDay,
@@ -483,71 +497,86 @@ Screens:
                                                   {
                                                     originalDate:generatedDay.CandidateDate,
                                                     proposedDate:If(IsPlannerHardStop(generatedDay.CandidateDate),GetNextPlannerBusinessDate(generatedDay.CandidateDate,varPlannerYear),generatedDay.CandidateDate),
-                                                    closureName:LookUp(colCalProofClosures,ClosureDate=generatedDay.CandidateDate && IsActive,ClosureName)
+                                                    closureName:LookUp(colCalProofClosures,ClosureDate=generatedDay.CandidateDate && IsActive,ClosureName),
+                                                    proposedStart:TimeValue(layerRule.StartTimeText),
+                                                    proposedEnd:DateAdd(TimeValue(layerRule.StartTimeText),layerRule.DurationMinutes,TimeUnit.Minutes)
                                                   },
                                                   If(
                                                     IsBlank(proposedDate),
-                                                    Collect(colPlannerBoardPreviewBlocked,{EventId:boardRule.RuleId&"-"&Text(originalDate,"yyyymmdd"),EventName:boardRule.MeetingName,EventType:boardRule.MeetingName,EventDate:originalDate,GeneratedDate:originalDate,OriginalGeneratedDate:originalDate,CurrentDate:Blank(),AutoAdjusted:true,AdjustmentReason:"No valid business date found",AdjustmentSourceName:Coalesce(closureName,"Protected date"),DecisionStatus:"Blocked",StartTime:TimeValue(boardRule.StartTimeText),EndTime:DateAdd(TimeValue(boardRule.StartTimeText),boardRule.DurationMinutes,TimeUnit.Minutes),ChipText:Switch(boardRule.RuleId,"BOARD-FULL","BOARD","BOARD-CHECKIN","CHECK","BOARD-RETREAT","RETREAT","BOARD"),SchedulingSource:"Generated from "&boardRule.MeetingName&" rule",SourceRuleId:boardRule.RuleId,IsManualOverride:false,PlanYear:varPlannerYear,PlanningLayer:"Board",SourceType:"Generated",Category:"Board",DurationMinutes:boardRule.DurationMinutes,IsDeleted:false,WarningAcknowledged:false}),
-                                                    Collect(colPlannerBoardPreview,{EventId:boardRule.RuleId&"-"&Text(originalDate,"yyyymmdd"),EventName:boardRule.MeetingName,EventType:boardRule.MeetingName,EventDate:proposedDate,GeneratedDate:originalDate,OriginalGeneratedDate:originalDate,CurrentDate:proposedDate,AutoAdjusted:proposedDate<>originalDate,AdjustmentReason:If(proposedDate<>originalDate,"Holiday/Closure",""),AdjustmentSourceName:If(proposedDate<>originalDate,Coalesce(closureName,If(Weekday(originalDate,StartOfWeek.Monday)>5,"Weekend","Protected date")),""),DecisionStatus:If(proposedDate<>originalDate,"NeedsReview","Ready"),StartTime:TimeValue(boardRule.StartTimeText),EndTime:DateAdd(TimeValue(boardRule.StartTimeText),boardRule.DurationMinutes,TimeUnit.Minutes),ChipText:Switch(boardRule.RuleId,"BOARD-FULL","BOARD","BOARD-CHECKIN","CHECK","BOARD-RETREAT","RETREAT","BOARD"),SchedulingSource:"Generated from "&boardRule.MeetingName&" rule · "&boardRule.Cadence,SourceRuleId:boardRule.RuleId,IsManualOverride:false,PlanYear:varPlannerYear,PlanningLayer:"Board",SourceType:"Generated",Category:"Board",DurationMinutes:boardRule.DurationMinutes,IsDeleted:false,WarningAcknowledged:false})
+                                                    Collect(colPlannerLayerPreviewBlocked,{EventId:layerRule.RuleId&"-"&Text(originalDate,"yyyymmdd"),EventName:layerRule.MeetingName,EventType:layerRule.MeetingName,EventDate:originalDate,GeneratedDate:originalDate,OriginalGeneratedDate:originalDate,CurrentDate:Blank(),AutoAdjusted:true,AdjustmentReason:"No valid business date found",AdjustmentSourceName:Coalesce(closureName,"Protected date"),DecisionStatus:"Blocked",StartTime:proposedStart,EndTime:proposedEnd,ChipText:Upper(Left(layerRule.MeetingName,6)),SchedulingSource:"Generated from "&layerRule.MeetingName&" rule",SourceRuleId:layerRule.RuleId,IsManualOverride:false,PlanYear:varPlannerYear,PlanningLayer:varPlannerActiveLayer,SourceType:"Generated",Category:varPlannerActiveLayer,DurationMinutes:layerRule.DurationMinutes,IsDeleted:false,WarningAcknowledged:false}),
+                                                    With(
+                                                      {overlapName:LookUp(colCalProofEvents As existingEvent,existingEvent.PlanYear=varPlannerYear && existingEvent.PlanningLayer<>varPlannerActiveLayer && existingEvent.EventDate=proposedDate && existingEvent.StartTime<proposedEnd && existingEvent.EndTime>proposedStart && LookUp(colPlannerLayerState,PlanningLayer=existingEvent.PlanningLayer,StepNumber)<activeState.StepNumber && LookUp(colPlannerLayerState,PlanningLayer=existingEvent.PlanningLayer,Status)="Confirmed",existingEvent.EventName)},
+                                                      Collect(colPlannerLayerPreview,{EventId:layerRule.RuleId&"-"&Text(originalDate,"yyyymmdd"),EventName:layerRule.MeetingName,EventType:layerRule.MeetingName,EventDate:proposedDate,GeneratedDate:originalDate,OriginalGeneratedDate:originalDate,CurrentDate:proposedDate,AutoAdjusted:proposedDate<>originalDate,AdjustmentReason:If(proposedDate<>originalDate,"Holiday/Closure",If(!IsBlank(overlapName),"Cross-layer overlap","")),AdjustmentSourceName:If(proposedDate<>originalDate,Coalesce(closureName,If(Weekday(originalDate,StartOfWeek.Monday)>5,"Weekend","Protected date")),overlapName),DecisionStatus:If(proposedDate<>originalDate || !IsBlank(overlapName),"NeedsReview","Ready"),StartTime:proposedStart,EndTime:proposedEnd,ChipText:Switch(layerRule.RuleId,"BOARD-FULL","BOARD","BOARD-CHECKIN","CHECK","BOARD-RETREAT","RETREAT","EXEC-TEAM","EXEC","LEADERSHIP-TEAM","LEAD","OPERATIONS","OPS",Upper(Left(layerRule.MeetingName,6))),SchedulingSource:"Generated from "&layerRule.MeetingName&" rule · "&layerRule.Cadence,SourceRuleId:layerRule.RuleId,IsManualOverride:false,PlanYear:varPlannerYear,PlanningLayer:varPlannerActiveLayer,SourceType:"Generated",Category:varPlannerActiveLayer,DurationMinutes:layerRule.DurationMinutes,IsDeleted:false,WarningAcknowledged:false})
+                                                    )
                                                   )
                                                 )
                                               )
                                             )
                                           )
-                                        );
+                                        ));
                                         ForAll(
-                                          Filter(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && SourceType="Generated" && IsManualOverride) As savedOverride,
+                                          Filter(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && SourceType="Generated" && IsManualOverride) As savedOverride,
                                           With(
-                                            {freshEvent:LookUp(colPlannerBoardPreview,EventId=savedOverride.EventId)},
+                                            {freshEvent:LookUp(colPlannerLayerPreview,EventId=savedOverride.EventId)},
                                             If(
                                               !IsBlank(freshEvent.EventId),
-                                              Patch(colPlannerBoardPreview,freshEvent,{EventDate:savedOverride.EventDate,CurrentDate:savedOverride.CurrentDate,StartTime:savedOverride.StartTime,EndTime:savedOverride.EndTime,DurationMinutes:savedOverride.DurationMinutes,DecisionStatus:"Approved",IsManualOverride:true,WarningAcknowledged:true}),
-                                              !IsBlank(LookUp(colBoardRuleProof,RuleId=savedOverride.SourceRuleId && RuleStatus="Confirmed")),
-                                              Collect(colPlannerBoardPreview,{EventId:savedOverride.EventId,EventName:savedOverride.EventName,EventType:savedOverride.EventType,EventDate:savedOverride.EventDate,GeneratedDate:savedOverride.GeneratedDate,OriginalGeneratedDate:savedOverride.OriginalGeneratedDate,CurrentDate:savedOverride.CurrentDate,AutoAdjusted:savedOverride.AutoAdjusted,AdjustmentReason:"Rule changed after manual move",AdjustmentSourceName:"Manual override retained",DecisionStatus:"NeedsReview",StartTime:savedOverride.StartTime,EndTime:savedOverride.EndTime,ChipText:savedOverride.ChipText,SchedulingSource:savedOverride.SchedulingSource&" · Manual move preserved",SourceRuleId:savedOverride.SourceRuleId,IsManualOverride:true,PlanYear:varPlannerYear,PlanningLayer:"Board",SourceType:"Generated",Category:"Board",DurationMinutes:savedOverride.DurationMinutes,IsDeleted:false,WarningAcknowledged:false})
+                                              Patch(colPlannerLayerPreview,freshEvent,{EventDate:savedOverride.EventDate,CurrentDate:savedOverride.CurrentDate,StartTime:savedOverride.StartTime,EndTime:savedOverride.EndTime,DurationMinutes:savedOverride.DurationMinutes,DecisionStatus:"Approved",IsManualOverride:true,WarningAcknowledged:true}),
+                                              !IsBlank(LookUp(colMeetingRulebook,RuleId=savedOverride.SourceRuleId && RuleStatus="Confirmed")),
+                                              Collect(colPlannerLayerPreview,{EventId:savedOverride.EventId,EventName:savedOverride.EventName,EventType:savedOverride.EventType,EventDate:savedOverride.EventDate,GeneratedDate:savedOverride.GeneratedDate,OriginalGeneratedDate:savedOverride.OriginalGeneratedDate,CurrentDate:savedOverride.CurrentDate,AutoAdjusted:savedOverride.AutoAdjusted,AdjustmentReason:"Rule changed after manual move",AdjustmentSourceName:"Manual override retained",DecisionStatus:"NeedsReview",StartTime:savedOverride.StartTime,EndTime:savedOverride.EndTime,ChipText:savedOverride.ChipText,SchedulingSource:savedOverride.SchedulingSource&" · Manual move preserved",SourceRuleId:savedOverride.SourceRuleId,IsManualOverride:true,PlanYear:varPlannerYear,PlanningLayer:varPlannerActiveLayer,SourceType:"Generated",Category:savedOverride.Category,DurationMinutes:savedOverride.DurationMinutes,IsDeleted:false,WarningAcknowledged:false})
                                             )
                                           )
                                         );
-                                        ForAll(Filter(colPlannerExclusions,PlanYear=varPlannerYear) As excluded,RemoveIf(colPlannerBoardPreview,EventId=excluded.EventId));
-                                        Set(varPlannerBoardPreviewReady,true);
-                                        Set(varPlannerShowBoardRegenPreview,true);
-                                        Set(varPlannerBoardReceipt,"")
+                                        ForAll(Filter(colPlannerExclusions,PlanYear=varPlannerYear) As excluded,RemoveIf(colPlannerLayerPreview,EventId=excluded.EventId));
+                                        Set(varPlannerLayerPreviewReady,true);
+                                        Set(varPlannerShowLayerPreview,true);
+                                        Set(varPlannerLayerReceipt,"")
+                                        )
                                       )
-                                    Text: =If(CountRows(colCalProofGenerationReceipt)=0,"Preview Board draft","Preview regeneration")
+                                    Text: =If(CountIf(colPlannerLayerBuildReceipt,PlanningLayer=varPlannerActiveLayer)=0,"Preview layer draft","Preview regeneration")
                               - btnPlannerConfirmBoard:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: =Self.Text
-                                    Appearance: =If(varCalProofBoardConfirmed,ButtonAppearance.Secondary,ButtonAppearance.Primary)
-                                    BasePaletteColor: =If(varCalProofBoardConfirmed,RGBA(21,128,61,1),RGBA(15,43,91,1))
-                                    DisplayMode: =If(varCalProofBoardConfirmed,DisplayMode.Disabled,DisplayMode.Edit)
+                                    Appearance: =If(LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status)="Confirmed",ButtonAppearance.Outline,ButtonAppearance.Primary)
+                                    BasePaletteColor: =If(LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status)="Confirmed",RGBA(180,83,9,1),RGBA(15,43,91,1))
+                                    DisplayMode: =DisplayMode.Edit
                                     FillPortions: =1
                                     Height: =44
                                     LayoutMinWidth: =150
                                     OnSelect: |-
-                                      =If(
-                                        CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,
+                                      =With(
+                                        {activeState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer)},
+                                        If(
+                                        activeState.Status="Confirmed",
+                                        UpdateIf(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,{Status:"Needs regeneration",NeedsRegeneration:true});
+                                        UpdateIf(colPlannerLayerState,StepNumber>activeState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true});
+                                        If(varPlannerActiveLayer="Board",Set(varCalProofBoardConfirmed,false);Set(varCalProofDraftNeedsRegeneration,true));
+                                        Set(varPlannerLayerReceipt,varPlannerActiveLayer&" reopened. Regenerate it before confirming again; later completed layers now need revalidation."),
+                                        activeState.StepNumber>1 && LookUp(colPlannerLayerState,StepNumber=activeState.StepNumber-1,Status)<>"Confirmed",
+                                        Set(varPlannerLayerReceipt,"Complete "&LookUp(colPlannerLayerState,StepNumber=activeState.StepNumber-1,PlanningLayer)&" before building "&varPlannerActiveLayer&"."),
+                                        CountIf(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer && RuleStatus<>"Confirmed")>0,
                                         Navigate(BoardRulesReview,ScreenTransition.None),
-                                        varCalProofDraftNeedsRegeneration || CountRows(colCalProofGenerationReceipt)=0,
+                                        activeState.NeedsRegeneration || activeState.Status="Needs regeneration" || activeState.Status="Needs revalidation" || CountIf(colPlannerLayerBuildReceipt,PlanningLayer=varPlannerActiveLayer)=0,
                                         Select(btnPlannerPreviewBoardDraft),
-                                        CountRows(colCalProofBlockedEvents)>0,
-                                        Set(varPlannerBoardReceipt,"Board cannot be confirmed because a generated date has no valid placement. Review its source rule."),
-                                        CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")>0,
+                                        CountRows(colPlannerLayerPreviewBlocked)>0,
+                                        Set(varPlannerLayerReceipt,varPlannerActiveLayer&" cannot be confirmed because a generated date has no valid placement. Review its source rule."),
+                                        CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && DecisionStatus="NeedsReview")>0,
                                         With(
-                                          {nextReview:First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview"),"OriginalGeneratedDate",SortOrder.Ascending))},
+                                          {nextReview:First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && DecisionStatus="NeedsReview"),"OriginalGeneratedDate",SortOrder.Ascending))},
                                           Set(varPlannerSelectedEventId,nextReview.EventId);
                                           Set(varPlannerFocusedDate,nextReview.EventDate);
                                           Set(varPlannerContextMode,"Summary");
-                                          Set(varPlannerShowBoard,true);
-                                          Set(varPlannerBoardReceipt,"Review and approve this proposed Board date before confirming.")
+                                          Set(varPlannerLayerReceipt,"Review and approve this proposed date before confirming "&varPlannerActiveLayer&".")
                                         ),
                                         With(
-                                          {confirmedAt:Now(),confirmationId:"BOARD-CONFIRM-"&Text(Now(),"yyyymmddhhmmss")},
-                                          ClearCollect(colCalProofBoardConfirmationReceipt,{ConfirmationId:confirmationId,BatchId:First(colCalProofGenerationReceipt).BatchId,ConfirmedAt:confirmedAt,EventCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board"),RuleCount:CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus="Confirmed"),ManualAdjustmentCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && IsManualOverride),AutoAdjustedCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && AutoAdjusted),Status:"Confirmed"});
-                                          Set(varCalProofBoardConfirmed,true);
-                                          Set(varPlannerBoardReceipt,"Board confirmed. "&Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board"))&" dates are locked locally; no Outlook changes were made.")
+                                          {confirmedAt:Now()},
+                                          UpdateIf(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,{Status:"Confirmed",ConfirmedAt:confirmedAt,NeedsRegeneration:false});
+                                          If(varPlannerActiveLayer="Board",Set(varCalProofBoardConfirmed,true);Set(varCalProofDraftNeedsRegeneration,false));
+                                          Set(varPlannerLayerReceipt,varPlannerActiveLayer&" confirmed. "&Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer))&" dates are protected locally; no Outlook changes were made.");
+                                          If(CountIf(colPlannerLayerState,Status<>"Confirmed")=0,Set(varPlannerShowFinalReview,true))
                                         )
-                                      )
-                                    Text: =If(varCalProofBoardConfirmed,"Board confirmed",CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,"Review Board rules",varCalProofDraftNeedsRegeneration || CountRows(colCalProofGenerationReceipt)=0,"Build Board draft",CountRows(colCalProofBlockedEvents)+CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")>0,"Resolve "&Text(CountRows(colCalProofBlockedEvents)+CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview"))&" issue"&If(CountRows(colCalProofBlockedEvents)+CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")=1,"","s"),"Confirm Board")
+                                      ))
+                                    Text: =With({activeState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer),issueCount:CountRows(colPlannerLayerPreviewBlocked)+CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && DecisionStatus="NeedsReview")},If(activeState.Status="Confirmed","Reopen layer",CountIf(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer && RuleStatus<>"Confirmed")>0,"Review rules",activeState.NeedsRegeneration || activeState.Status="Needs regeneration" || activeState.Status="Needs revalidation" || CountIf(colPlannerLayerBuildReceipt,PlanningLayer=varPlannerActiveLayer)=0,"Build layer draft",issueCount>0,"Resolve "&Text(issueCount)&" issue"&If(issueCount=1,"","s"),"Confirm layer"))
                   - conPlannerBoardRegenPreview:
                       Control: GroupContainer
                       Variant: AutoLayout
@@ -572,7 +601,7 @@ Screens:
                         RadiusBottomRight: =8
                         RadiusTopLeft: =8
                         RadiusTopRight: =8
-                        Visible: =varPlannerShowBoardRegenPreview && varPlannerBoardPreviewReady
+                        Visible: =varPlannerShowLayerPreview && varPlannerLayerPreviewReady
                       Children:
                         - txtPlannerBoardRegenImpact:
                             Control: ModernText
@@ -585,7 +614,7 @@ Screens:
                               LayoutMinWidth: =0
                               Size: =12
                               Text: |-
-                                ="Board draft preview: " & Text(CountRows(colPlannerBoardPreview)) & " generated date" & If(CountRows(colPlannerBoardPreview)=1,"","s") & ". " & Text(CountIf(colPlannerBoardPreview,DecisionStatus="NeedsReview")) & " need approval; " & Text(CountIf(colPlannerBoardPreview,IsManualOverride)) & " approved manual move" & If(CountIf(colPlannerBoardPreview,IsManualOverride)=1,"","s") & ", " & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && SourceType="Manual")) & " manual meeting" & If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && SourceType="Manual")=1,"","s") & ", and " & Text(CountIf(colPlannerExclusions,PlanYear=varPlannerYear)) & " exclusion" & If(CountIf(colPlannerExclusions,PlanYear=varPlannerYear)=1,"","s") & " will be preserved." & If(CountRows(colPlannerBoardPreviewBlocked)>0," "&Text(CountRows(colPlannerBoardPreviewBlocked))&" date"&If(CountRows(colPlannerBoardPreviewBlocked)=1," has","s have")&" no valid placement.","")
+                                =varPlannerActiveLayer & " preview: " & Text(CountRows(colPlannerLayerPreview)) & " generated date" & If(CountRows(colPlannerLayerPreview)=1,"","s") & ". " & Text(CountIf(colPlannerLayerPreview,DecisionStatus="NeedsReview")) & " need approval; " & Text(CountIf(colPlannerLayerPreview,IsManualOverride)) & " approved manual move" & If(CountIf(colPlannerLayerPreview,IsManualOverride)=1,"","s") & ", " & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && SourceType="Manual")) & " manual meeting" & If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && SourceType="Manual")=1,"","s") & ", and " & Text(CountIf(colPlannerExclusions,PlanYear=varPlannerYear)) & " exclusion" & If(CountIf(colPlannerExclusions,PlanYear=varPlannerYear)=1,"","s") & " will be preserved." & If(CountRows(colPlannerLayerPreviewBlocked)>0," "&Text(CountRows(colPlannerLayerPreviewBlocked))&" date"&If(CountRows(colPlannerLayerPreviewBlocked)=1," has","s have")&" no valid placement.","")
                               VerticalAlign: =VerticalAlign.Top
                         - conPlannerBoardRegenDecision:
                             Control: GroupContainer
@@ -604,63 +633,125 @@ Screens:
                               - btnPlannerApplyBoardDraft:
                                   Control: ModernButton
                                   Properties:
-                                    AccessibleLabel: ="Apply the previewed Board draft"
+                                    AccessibleLabel: ="Apply the previewed " & varPlannerActiveLayer & " draft"
                                     BasePaletteColor: =RGBA(37,99,235,1)
-                                    DisplayMode: =If(CountRows(colPlannerBoardPreviewBlocked)>0,DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =If(CountRows(colPlannerLayerPreviewBlocked)>0,DisplayMode.Disabled,DisplayMode.Edit)
                                     FillPortions: =1
                                     Height: =44
                                     LayoutMinWidth: =150
                                     OnSelect: |-
-                                      =If(
-                                        varPlannerBoardPreviewReady && CountRows(colPlannerBoardPreviewBlocked)=0,
-                                        RemoveIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && SourceType="Generated");
-                                        Collect(colCalProofEvents,colPlannerBoardPreview);
-                                        RemoveIf(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board");
-                                        Collect(colPlannerLayerRuleEvents,colPlannerBoardPreview);
+                                      =With(
+                                        {activeState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer)},
+                                        If(
+                                        varPlannerLayerPreviewReady && CountRows(colPlannerLayerPreviewBlocked)=0,
+                                        RemoveIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && SourceType="Generated");
+                                        Collect(colCalProofEvents,colPlannerLayerPreview);
+                                        RemoveIf(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer);
+                                        Collect(colPlannerLayerRuleEvents,colPlannerLayerPreview);
                                         Clear(colCalProofBlockedEvents);
-                                        Collect(colCalProofBlockedEvents,colPlannerBoardPreviewBlocked);
+                                        Collect(colCalProofBlockedEvents,colPlannerLayerPreviewBlocked);
                                         With(
                                           {batchTime:Now()},
-                                          ClearCollect(colCalProofGenerationReceipt,{BatchId:"BOARD-DRAFT-"&Text(batchTime,"yyyymmddhhmmss"),GeneratedCount:CountRows(colPlannerBoardPreview),RuleCount:CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus="Confirmed"),ManualOverrideCount:CountIf(colPlannerBoardPreview,IsManualOverride),GeneratedAt:batchTime,FirstDate:If(CountRows(colPlannerBoardPreview)>0,First(SortByColumns(colPlannerBoardPreview,"EventDate",SortOrder.Ascending)).EventDate,Date(varPlannerYear,1,1)),LastDate:If(CountRows(colPlannerBoardPreview)>0,First(SortByColumns(colPlannerBoardPreview,"EventDate",SortOrder.Descending)).EventDate,Date(varPlannerYear,1,1)),RuleIds:Concat(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Board" && RuleStatus="Confirmed"),"SortOrder",SortOrder.Ascending),RuleId,", ")})
+                                          RemoveIf(colPlannerLayerBuildReceipt,PlanningLayer=varPlannerActiveLayer);
+                                          Collect(colPlannerLayerBuildReceipt,{BatchId:"LAYER-DRAFT-"&Text(batchTime,"yyyymmddhhmmss"),PlanningLayer:varPlannerActiveLayer,GeneratedCount:CountRows(colPlannerLayerPreview),RuleCount:CountIf(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer && RuleStatus="Confirmed"),ManualOverrideCount:CountIf(colPlannerLayerPreview,IsManualOverride),GeneratedAt:batchTime,Status:"Draft"})
                                         );
-                                        Clear(colCalProofBoardConfirmationReceipt);
-                                        Set(varCalProofBoardConfirmed,false);
-                                        Set(varCalProofDraftNeedsRegeneration,false);
-                                        Set(varPlannerShowBoardRegenPreview,false);
-                                        Set(varPlannerBoardPreviewReady,false);
+                                        UpdateIf(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,{Status:"Draft",LastGeneratedAt:Now(),NeedsRegeneration:false});
+                                        UpdateIf(colPlannerLayerState,StepNumber>activeState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true});
+                                        If(varPlannerActiveLayer="Board",Clear(colCalProofBoardConfirmationReceipt);Set(varCalProofBoardConfirmed,false);Set(varCalProofDraftNeedsRegeneration,false));
+                                        Set(varPlannerShowLayerPreview,false);
+                                        Set(varPlannerLayerPreviewReady,false);
                                         With(
-                                          {nextReview:First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview"),"OriginalGeneratedDate",SortOrder.Ascending))},
+                                          {nextReview:First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer=varPlannerActiveLayer && DecisionStatus="NeedsReview"),"OriginalGeneratedDate",SortOrder.Ascending))},
                                           Set(varPlannerSelectedEventId,Coalesce(nextReview.EventId,""));
                                           Set(varPlannerFocusedDate,Coalesce(nextReview.EventDate,Date(varPlannerYear,1,1)));
                                           Set(varPlannerContextMode,If(IsBlank(nextReview.EventId),"Empty","Summary"))
                                         );
-                                        Set(varPlannerBoardReceipt,"Board draft applied: "&Text(CountRows(colPlannerBoardPreview))&" generated dates, "&Text(CountIf(colPlannerBoardPreview,DecisionStatus="NeedsReview"))&" awaiting approval. Manual meetings, approved moves, and exclusions were preserved.")
-                                      )
-                                    Text: =If(CountRows(colCalProofGenerationReceipt)=0,"Apply Board draft","Apply regeneration")
+                                        Set(varPlannerLayerReceipt,varPlannerActiveLayer&" draft applied: "&Text(CountRows(colPlannerLayerPreview))&" generated dates, "&Text(CountIf(colPlannerLayerPreview,DecisionStatus="NeedsReview"))&" awaiting approval. Manual meetings, approved moves, and exclusions were preserved.")
+                                      ))
+                                    Text: =If(CountIf(colPlannerLayerBuildReceipt,PlanningLayer=varPlannerActiveLayer)=0,"Apply layer draft","Apply regeneration")
                               - btnPlannerCancelBoardPreview:
                                   Control: ModernButton
                                   Properties:
-                                    AccessibleLabel: ="Cancel Board draft preview"
+                                    AccessibleLabel: ="Cancel layer draft preview"
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(71,85,105,1)
                                     FillPortions: =1
                                     Height: =44
                                     LayoutMinWidth: =110
-                                    OnSelect: =Set(varPlannerShowBoardRegenPreview,false);Set(varPlannerBoardPreviewReady,false);Clear(colPlannerBoardPreview);Clear(colPlannerBoardPreviewBlocked)
+                                    OnSelect: =Set(varPlannerShowLayerPreview,false);Set(varPlannerLayerPreviewReady,false);Clear(colPlannerLayerPreview);Clear(colPlannerLayerPreviewBlocked)
                                     Text: ="Cancel"
                   - txtPlannerBoardReceipt:
                       Control: ModernText
                       Properties:
                         AccessibleLabel: =Self.Text
-                        Color: =If(varCalProofBoardConfirmed,RGBA(21,128,61,1),RGBA(30,64,175,1))
-                        Fill: =If(varCalProofBoardConfirmed,RGBA(240,253,244,1),RGBA(239,246,255,1))
+                        Color: =If(LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status)="Confirmed",RGBA(21,128,61,1),RGBA(30,64,175,1))
+                        Fill: =If(LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status)="Confirmed",RGBA(240,253,244,1),RGBA(239,246,255,1))
                         Font: =Font.'Segoe UI'
                         Height: =If(Self.Visible,38,0)
                         LayoutMinWidth: =0
                         PaddingLeft: =8
                         Size: =12
-                        Text: =varPlannerBoardReceipt
-                        Visible: =!IsBlank(varPlannerBoardReceipt)
+                        Text: =varPlannerLayerReceipt
+                        Visible: =!IsBlank(varPlannerLayerReceipt)
+            - conPlannerFinalReview:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =If(CountIf(colPlannerLayerState,Status<>"Confirmed")=0,RGBA(134,239,172,1),RGBA(191,219,254,1))
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =If(CountIf(colPlannerLayerState,Status<>"Confirmed")=0,RGBA(240,253,244,1),RGBA(239,246,255,1))
+                  FillPortions: =0
+                  Height: =If(Self.Visible,138,0)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =6
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =14
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                  Visible: =varPlannerShowFinalReview
+                Children:
+                  - txtPlannerFinalReviewTitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: =Self.Text
+                        Color: =RGBA(15,23,42,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        LayoutMinWidth: =0
+                        Size: =18
+                        Text: =If(CountIf(colPlannerLayerState,Status<>"Confirmed")=0,"Planning layers complete","Final planning review")
+                  - txtPlannerFinalReviewSummary:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: =Self.Text
+                        Color: =RGBA(51,65,85,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =42
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: |-
+                          =Concat(SortByColumns(colPlannerLayerState,"StepNumber",SortOrder.Ascending),ShortName & ": " & Status,"  •  ")
+                        VerticalAlign: =VerticalAlign.Top
+                  - txtPlannerFinalReviewSafety:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: =Self.Text
+                        Color: =If(CountIf(colPlannerLayerState,Status<>"Confirmed")=0,RGBA(21,128,61,1),RGBA(30,64,175,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =24
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: =If(CountIf(colPlannerLayerState,Status<>"Confirmed")=0,"Ready for the next milestone. No Outlook changes were made.",Text(CountIf(colPlannerLayerState,Status<>"Confirmed")) & " layer" & If(CountIf(colPlannerLayerState,Status<>"Confirmed")=1,"","s") & " still need confirmation or revalidation. No Outlook changes were made.")
             - conPlannerWorkspace:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -1112,7 +1203,7 @@ Screens:
                                   Properties:
                                     AccessibleLabel: ="Approve the proposed date for the selected meeting"
                                     BasePaletteColor: =RGBA(22,163,74,1)
-                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =If(LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =With(
@@ -1128,7 +1219,7 @@ Screens:
                                   Properties:
                                     AccessibleLabel: ="Move selected meeting"
                                     BasePaletteColor: =RGBA(37,99,235,1)
-                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =If(LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =Set(varPlannerContextMode,"Move");
@@ -1150,10 +1241,23 @@ Screens:
                                     AccessibleLabel: ="Delete selected meeting"
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(185,28,28,1)
-                                    DisplayMode: =If(varCalProofBoardConfirmed && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer)="Board",DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =If(LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed",DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: =Set(varPlannerContextMode,"Delete")
                                     Text: ="Delete meeting"
+                              - btnPlannerEditSourceRule:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Edit the source rule for the selected meeting"
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(15,43,91,1)
+                                    Height: =44
+                                    OnSelect: |-
+                                      =Set(varPlannerActiveLayer,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer));
+                                      Set(varBrvSelectedRuleId,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId));
+                                      Navigate(BoardRulesReview,ScreenTransition.None)
+                                    Text: ="Edit source rule"
+                                    Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && !IsBlank(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId))
                         - conPlannerEditor:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -1279,7 +1383,7 @@ Screens:
                                     BasePaletteColor: =RGBA(37,99,235,1)
                                     DisplayMode: |-
                                       =If(
-                                        IsBlank(varPlannerDraftName) || IsPlannerHardStop(varPlannerDraftDate) || (varPlannerDraftLayer="Board" && varCalProofBoardConfirmed) ||
+                                        IsBlank(varPlannerDraftName) || IsPlannerHardStop(varPlannerDraftDate) || LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer,Status)="Confirmed" ||
                                         ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (varPlannerContextMode="Move" && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate))) && !varPlannerWarningAcknowledged) ||
                                         (varPlannerContextMode="Move" && varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)),
                                         DisplayMode.Disabled,
@@ -1293,6 +1397,11 @@ Screens:
                                           {newId:"MAN-" & Text(Now(),"yyyymmddhhmmss")},
                                           ClearCollect(colPlannerUndo,{Action:"Add",SubjectId:newId,EventName:varPlannerDraftName,PreviousDate:varPlannerDraftDate,PreviousStart:varPlannerDraftStart,PreviousEnd:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),PreviousStatus:"",PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:First(colCalProofClosures)});
                                           Collect(colCalProofEvents,{EventId:newId,EventName:varPlannerDraftName,EventType:varPlannerDraftCategory,EventDate:varPlannerDraftDate,GeneratedDate:varPlannerDraftDate,OriginalGeneratedDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:If(varPlannerWarningAcknowledged,"Warning acknowledged","Ready"),StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),ChipText:Upper(Left(varPlannerDraftName,7)),SchedulingSource:"Manual meeting",SourceRuleId:"",IsManualOverride:true,PlanYear:varPlannerYear,PlanningLayer:varPlannerDraftLayer,SourceType:"Manual",Category:varPlannerDraftCategory,DurationMinutes:varPlannerDraftDuration,IsDeleted:false,WarningAcknowledged:varPlannerWarningAcknowledged});
+                                          With(
+                                            {changedState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer)},
+                                            UpdateIf(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer,{Status:"Draft"});
+                                            UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true})
+                                          );
                                           Set(varPlannerSelectedEventId,newId);
                                           Set(varPlannerReceipt,varPlannerDraftName & " added on " & Text(varPlannerDraftDate,"mmm d, yyyy") & " at " & Text(varPlannerDraftStart,"h:mm AM/PM") & ".");
                                           Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Add",SubjectId:newId,Summary:varPlannerReceipt,ChangedAt:Now()})
@@ -1303,6 +1412,10 @@ Screens:
                                             {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,originalGeneratedDate:selectedEvent.OriginalGeneratedDate,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
                                             ClearCollect(colPlannerUndo,{Action:"Move",SubjectId:eventId,EventName:eventName,PreviousDate:previousDate,PreviousStart:previousStart,PreviousEnd:previousEnd,PreviousStatus:previousStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
                                             Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:If(varPlannerWarningAcknowledged,"Warning acknowledged","Ready"),WarningAcknowledged:varPlannerWarningAcknowledged});
+                                            With(
+                                              {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
+                                              UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true})
+                                            );
                                             Set(varPlannerReceipt,eventName & " moved from " & Text(previousDate,"mmm d") & " at " & Text(previousStart,"h:mm AM/PM") & " to " & Text(varPlannerDraftDate,"mmm d") & " at " & Text(varPlannerDraftStart,"h:mm AM/PM") & ". Original generated date remains " & Text(originalGeneratedDate,"mmm d") & ".");
                                             Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Move",SubjectId:eventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                           )
@@ -1366,6 +1479,10 @@ Screens:
                                         ClearCollect(colPlannerUndo,{Action:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,PreviousDate:selectedEvent.EventDate,PreviousStart:selectedEvent.StartTime,PreviousEnd:selectedEvent.EndTime,PreviousStatus:selectedEvent.DecisionStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
                                         If(selectedEvent.SourceType="Generated",Collect(colPlannerExclusions,{ExclusionId:"EXC-" & selectedEvent.EventId,EventId:selectedEvent.EventId,PlanYear:selectedEvent.PlanYear,Reason:"Deleted by user",CreatedAt:Now()}));
                                         RemoveIf(colCalProofEvents,EventId=selectedEvent.EventId);
+                                        With(
+                                          {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
+                                          UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true})
+                                        );
                                         Set(varPlannerReceipt,selectedEvent.EventName & " deleted. Undo is available.");
                                         Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Delete",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                       );
@@ -1434,13 +1551,17 @@ Screens:
                                     LayoutMinWidth: =0
                                     PaddingLeft: =10
                                     Size: =12
-                                    Text: =If(varCalProofBoardConfirmed && CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate && PlanningLayer="Board")>0,"Board is confirmed. Reopen Board planning before blocking a date that contains a locked Board meeting.",Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate)) & " meeting" & If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate)=1,"","s") & " will be affected. Each will be proposed on the next valid business date and marked Needs approval.")
+                                    Text: |-
+                                      =With(
+                                        {lockedCount:CountRows(Filter(colCalProofEvents As blockEvent,blockEvent.PlanYear=varPlannerYear && blockEvent.EventDate=varPlannerDraftDate && LookUp(colPlannerLayerState,PlanningLayer=blockEvent.PlanningLayer,Status)="Confirmed"))},
+                                        If(lockedCount>0,"A confirmed planning layer has a meeting on this date. Reopen that layer before blocking the date.",Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate)) & " meeting" & If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate)=1,"","s") & " will be affected. Each will be proposed on the next valid business date and marked Needs approval.")
+                                      )
                               - btnPlannerSaveBlock:
                                   Control: ModernButton
                                   Properties:
                                     AccessibleLabel: ="Create blocked date"
                                     BasePaletteColor: =RGBA(180,83,9,1)
-                                    DisplayMode: =If(IsBlank(Trim(varPlannerOverrideReason)) || CountIf(colCalProofClosures,ClosureDate=varPlannerDraftDate && IsActive)>0 || (varCalProofBoardConfirmed && CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate && PlanningLayer="Board")>0),DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =If(IsBlank(Trim(varPlannerOverrideReason)) || CountIf(colCalProofClosures,ClosureDate=varPlannerDraftDate && IsActive)>0 || CountRows(Filter(colCalProofEvents As blockEvent,blockEvent.PlanYear=varPlannerYear && blockEvent.EventDate=varPlannerDraftDate && LookUp(colPlannerLayerState,PlanningLayer=blockEvent.PlanningLayer,Status)="Confirmed"))>0,DisplayMode.Disabled,DisplayMode.Edit)
                                     Height: =44
                                     OnSelect: |-
                                       =With(

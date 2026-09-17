@@ -338,6 +338,30 @@ App:
           )
         )
       );
+      ForAll(
+        Table(
+          {SortOrder:10,RuleId:"COM-EXECUTIVE",MeetingName:"Executive Committee",Cadence:"Every two months",MonthsText:"",StartMonth:"February",WeekOfMonth:"Fourth",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:90,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Board Committees",RuleSummary:"Every two months · fourth Tuesday"},
+          {SortOrder:11,RuleId:"COM-FINANCE",MeetingName:"Administration & Finance Committee",Cadence:"Every two months",MonthsText:"",StartMonth:"January",WeekOfMonth:"Fourth",PreferredDay:"Tuesday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:90,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Board Committees",RuleSummary:"Every two months · fourth Tuesday"},
+          {SortOrder:12,RuleId:"COM-HEALTH-PROGRAMS",MeetingName:"Health Center & Programs Committee",Cadence:"Quarterly",MonthsText:"",StartMonth:"March",WeekOfMonth:"Third",PreferredDay:"Tuesday",AnchorMonth:"March",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:90,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Board Committees",RuleSummary:"Quarterly · third Tuesday"},
+          {SortOrder:13,RuleId:"COM-TALENT-RISK",MeetingName:"Talent & Risk Management Committee",Cadence:"Quarterly",MonthsText:"",StartMonth:"February",WeekOfMonth:"First",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:90,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Board Committees",RuleSummary:"Quarterly · first Tuesday"},
+          {SortOrder:14,RuleId:"COM-NOMINATIONS",MeetingName:"Nominations Committee",Cadence:"As needed — no dates generated automatically",MonthsText:"",StartMonth:"January",WeekOfMonth:"First",PreferredDay:"Monday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:60,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Needs validation",PlanningLayer:"Board Committees",RuleSummary:"As needed · confirm before adding dates"},
+          {SortOrder:15,RuleId:"COM-PROGRAM",MeetingName:"Program Committee",Cadence:"As needed — no dates generated automatically",MonthsText:"",StartMonth:"January",WeekOfMonth:"First",PreferredDay:"Monday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:60,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Needs validation",PlanningLayer:"Board Committees",RuleSummary:"As needed · confirm before adding dates"},
+          {SortOrder:20,RuleId:"EXEC-TEAM",MeetingName:"Executive Team Meeting",Cadence:"Weekly",MonthsText:"",StartMonth:"January",WeekOfMonth:"First",PreferredDay:"Monday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"1:00 PM",DurationMinutes:120,Format:"In person",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Executive Leadership",RuleSummary:"2027 Excel authority · weekly"},
+          {SortOrder:21,RuleId:"EXEC-RETREAT",MeetingName:"Executive Team Quarterly Retreat",Cadence:"As needed — no dates generated automatically",MonthsText:"January, April, June, September",StartMonth:"January",WeekOfMonth:"Fourth",PreferredDay:"Friday",AnchorMonth:"January",AnchorDay:15,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:240,Format:"In person",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Executive Leadership",RuleSummary:"2027 Excel authority · exact dates preserved in first build"},
+          {SortOrder:22,RuleId:"LEADERSHIP-TEAM",MeetingName:"Leadership Team Meeting",Cadence:"Specific months",MonthsText:"January, March, April, May, June, July, August, October, November, December",StartMonth:"January",WeekOfMonth:"Second",PreferredDay:"Thursday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:60,Format:"Virtual",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Executive Leadership",RuleSummary:"2027 Excel authority · monthly second Thursday; retreats replace February and September"},
+          {SortOrder:23,RuleId:"LEADERSHIP-RETREAT",MeetingName:"Leadership Team Retreat",Cadence:"Specific months",MonthsText:"February, September",StartMonth:"February",WeekOfMonth:"First",PreferredDay:"Thursday",AnchorMonth:"February",AnchorDay:4,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:240,Format:"In person",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Executive Leadership",RuleSummary:"2027 Excel authority · exact dates preserved in first build"},
+          {SortOrder:30,RuleId:"OPERATIONS",MeetingName:"Operations Meeting",Cadence:"As needed — no dates generated automatically",MonthsText:"February, May, August, November",StartMonth:"February",WeekOfMonth:"Third",PreferredDay:"Wednesday",AnchorMonth:"February",AnchorDay:17,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Third",StartTimeText:"9:00 AM",DurationMinutes:45,Format:"In person",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Organization & Operations",RuleSummary:"2027 Excel authority · paired Wednesday and Thursday dates preserved in first build"},
+          {SortOrder:31,RuleId:"ALL-STAFF",MeetingName:"All Staff Meeting",Cadence:"Quarterly",MonthsText:"",StartMonth:"January",WeekOfMonth:"Third",PreferredDay:"Wednesday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:60,Format:"Virtual",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Organization & Operations",RuleSummary:"2027 Excel authority · quarterly third Wednesday"},
+          {SortOrder:32,RuleId:"SUPERVISORY",MeetingName:"Supervisory Team Meeting",Cadence:"Specific months",MonthsText:"February, May, September",StartMonth:"February",WeekOfMonth:"Last",PreferredDay:"Thursday",AnchorMonth:"February",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:210,Format:"In person",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Organization & Operations",RuleSummary:"2027 Excel authority · February, May, and September · last Thursday"},
+          {SortOrder:33,RuleId:"INTERNAL-RISK",MeetingName:"Internal Risk Committee",Cadence:"Quarterly",MonthsText:"",StartMonth:"January",WeekOfMonth:"Third",PreferredDay:"Thursday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:90,Format:"In person",Flexibility:"Flexible",RuleStatus:"Confirmed",PlanningLayer:"Organization & Operations",RuleSummary:"2027 Excel authority · quarterly third Thursday"},
+          {SortOrder:34,RuleId:"PROGRAM-BRIEFING",MeetingName:"Quarterly Program Briefing — date TBD",Cadence:"As needed — no dates generated automatically",MonthsText:"",StartMonth:"January",WeekOfMonth:"First",PreferredDay:"Monday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:60,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Needs validation",PlanningLayer:"Organization & Operations",RuleSummary:"Date to be determined"},
+          {SortOrder:35,RuleId:"BVR-SLOTS",MeetingName:"BVR Meeting Slots — mapping needed",Cadence:"As needed — no dates generated automatically",MonthsText:"",StartMonth:"January",WeekOfMonth:"First",PreferredDay:"Monday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:60,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Needs validation",PlanningLayer:"Organization & Operations",RuleSummary:"Mapping still needs validation"}
+        ) As fallbackRule,
+        If(
+          IsBlank(LookUp(colMeetingRulebook,RuleId=fallbackRule.RuleId).RuleId),
+          Collect(colMeetingRulebook,fallbackRule)
+        )
+      );
       Clear(colCalProofGeneratedEvents);
       ForAll(
         SortByColumns(colBoardRuleProof,"SortOrder",SortOrder.Ascending) As boardRule,
@@ -463,9 +487,26 @@ App:
       Set(varPlannerWarningAcknowledged,false);
       Set(varPlannerOverrideReason,"");
       Set(varPlannerReceipt,"");
-      Set(varPlannerShowBoardRegenPreview,false);
-      Set(varPlannerBoardPreviewReady,false);
-      Set(varPlannerBoardReceipt,"");
+      Set(varPlannerActiveLayer,"Board");
+      Set(varPlannerLayerReceipt,"");
+      Set(varPlannerLayerPreviewReady,false);
+      Set(varPlannerShowLayerPreview,false);
+      Set(varPlannerResetConfirm,false);
+      Set(varPlannerShowFinalReview,false);
+      ClearCollect(
+        colPlannerLayerState,
+        {StepNumber:1,PlanningLayer:"Board",ShortName:"Board",Status:"Draft",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false},
+        {StepNumber:2,PlanningLayer:"Board Committees",ShortName:"Committees",Status:"Not started",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false},
+        {StepNumber:3,PlanningLayer:"Executive Leadership",ShortName:"Executive",Status:"Not started",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false},
+        {StepNumber:4,PlanningLayer:"Organization & Operations",ShortName:"Operations",Status:"Not started",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false}
+      );
+      ClearCollect(colPlannerLayerPreview,FirstN(colCalProofEvents,0));
+      ClearCollect(colPlannerLayerPreviewBlocked,FirstN(colCalProofEvents,0));
+      ClearCollect(
+        colPlannerLayerBuildReceipt,
+        {BatchId:"",PlanningLayer:"",GeneratedCount:0,RuleCount:0,ManualOverrideCount:0,GeneratedAt:Now(),Status:""}
+      );
+      Clear(colPlannerLayerBuildReceipt);
       ClearCollect(colPlannerBoardPreview,FirstN(colCalProofEvents,0));
       ClearCollect(colPlannerBoardPreviewBlocked,FirstN(colCalProofEvents,0));
       ClearCollect(colPlannerExclusions,{ExclusionId:"",EventId:"",PlanYear:2027,Reason:"",CreatedAt:Now()});

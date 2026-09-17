@@ -5,8 +5,8 @@ Screens:
       LoadingSpinnerColor: =RGBA(15,43,91,1)
       OnVisible: |-
         =If(
-            IsBlank(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleId),
-            Set(varBrvSelectedRuleId,First(SortByColumns(colMeetingRulebook,"SortOrder",SortOrder.Ascending)).RuleId)
+            IsBlank(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId && PlanningLayer=varPlannerActiveLayer).RuleId),
+            Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer),"SortOrder",SortOrder.Ascending)).RuleId)
         );
         With(
             {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
@@ -186,7 +186,7 @@ Screens:
                   - txtBrvScope:
                       Control: ModernText
                       Properties:
-                        AccessibleLabel: ="Review every connected meeting type. Board edits mark an existing Board draft for regeneration."
+                        AccessibleLabel: ="Review rules for " & varPlannerActiveLayer
                         AlignInContainer: =AlignInContainer.Stretch
                         Color: =RGBA(30,64,175,1)
                         Font: =Font.'Segoe UI'
@@ -198,7 +198,7 @@ Screens:
                         PaddingRight: =0
                         PaddingTop: =0
                         Size: =14
-                        Text: ="Review every meeting type by layer. Board rule edits mark an existing Board draft for regeneration and preserve manual moves."
+                        Text: ="Edit " & varPlannerActiveLayer & " rules. Saving a change marks this layer for regeneration and later completed layers for revalidation; manual moves are preserved."
             - conBrvWorkspace:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -271,7 +271,7 @@ Screens:
                               PaddingRight: =0
                               PaddingTop: =0
                               Size: =20
-                              Text: ="Meeting types (" & Text(CountRows(colMeetingRulebook)) & ")"
+                              Text: =varPlannerActiveLayer & " rules (" & Text(CountIf(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer)) & ")"
                               Wrap: =false
                         - galBrvRules:
                             Control: Gallery
@@ -282,7 +282,7 @@ Screens:
                               DelayItemLoading: =false
                               FillPortions: =0
                               Height: =530
-                              Items: =SortByColumns(colMeetingRulebook,"PlanningLayer",SortOrder.Ascending,"SortOrder",SortOrder.Ascending)
+                              Items: =SortByColumns(Filter(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer),"SortOrder",SortOrder.Ascending)
                               LayoutMinHeight: =0
                               LayoutMinWidth: =0
                               LoadingSpinner: =LoadingSpinner.None
@@ -1974,6 +1974,28 @@ Screens:
                                                   Clear(colCalProofBoardConfirmationReceipt);
                                                   Set(varCalProofActionMessage,If(CountRows(colCalProofGenerationReceipt)>0,"Board rule saved. Regenerate the draft to apply this change.","Board rule saved.")),
                                                   Set(varCalProofActionMessage,currentRule.PlanningLayer & " rule saved.")
+                                              );
+                                              With(
+                                                  {savedState:LookUp(colPlannerLayerState,PlanningLayer=currentRule.PlanningLayer)},
+                                                  UpdateIf(
+                                                      colPlannerLayerState,
+                                                      PlanningLayer=currentRule.PlanningLayer,
+                                                      {
+                                                          Status:If(savedState.Status="Not started","Not started","Needs regeneration"),
+                                                          NeedsRegeneration:savedState.Status<>"Not started"
+                                                      }
+                                                  );
+                                                  UpdateIf(
+                                                      colPlannerLayerState,
+                                                      StepNumber>savedState.StepNumber && Status<>"Not started",
+                                                      {Status:"Needs revalidation",NeedsRegeneration:true}
+                                                  );
+                                                  Set(
+                                                      varPlannerLayerReceipt,
+                                                      currentRule.PlanningLayer & " rule saved. " &
+                                                      If(savedState.Status="Not started","Build the layer when ready.","Regenerate the layer to apply the change.") &
+                                                      If(CountIf(colPlannerLayerState,StepNumber>savedState.StepNumber && Status="Needs revalidation")>0," Later completed layers also need revalidation.","")
+                                                  )
                                               );
                                               Set(varBrvReceiptVisible,true);
                                               Set(varBrvSaveAttempted,false),
