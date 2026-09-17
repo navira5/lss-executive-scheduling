@@ -44,7 +44,9 @@ App:
           If(CountRows(validDates)=0,Blank(),First(validDates).CandidateBusinessDate)
         );
     OnStart: |-
-      =ClearCollect(
+      =Refresh('LSS Meeting Types');
+      ClearCollect(colBoardSourceRules,Filter('LSS Meeting Types',Category.Value="Board"));
+      ClearCollect(
         colCalProofMonths,
         {MonthNumber:1,MonthName:"January",MonthStart:Date(2027,1,1)},
         {MonthNumber:2,MonthName:"February",MonthStart:Date(2027,2,1)},
@@ -221,10 +223,103 @@ App:
       Clear(colCalProofMoveSnapshot);
       ClearCollect(
         colBoardRuleProof,
-        {SortOrder:1,RuleId:"BOARD-FULL",MeetingName:"Full Board",Cadence:"Quarterly",MonthsText:"January, April, July, October",StartMonth:"January",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"January",AnchorDay:12,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:120,Format:"In person",Flexibility:"Fixed",RuleStatus:"Confirmed"},
-        {SortOrder:2,RuleId:"BOARD-CHECKIN",MeetingName:"Board Critical Issue Check-in",Cadence:"Specific months",MonthsText:"February, March, June, August, September, December",StartMonth:"February",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:9,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:30,Format:"Virtual",Flexibility:"Fixed",RuleStatus:"Confirmed"},
-        {SortOrder:3,RuleId:"BOARD-RETREAT",MeetingName:"Board Retreat",Cadence:"Specific months",MonthsText:"May, November",StartMonth:"May",WeekOfMonth:"Last",PreferredDay:"Thursday",AnchorMonth:"May",AnchorDay:27,SecondPreferredDay:"Friday",SecondWeekOfMonth:"Fourth",StartTimeText:"8:00 AM",DurationMinutes:300,Format:"In person",Flexibility:"Fixed",RuleStatus:"Needs validation"}
+        {SortOrder:1,RuleId:"BOARD-FULL",SourceRecordId:0,MeetingName:"Full Board",Cadence:"Quarterly",MonthsText:"January, April, July, October",StartMonth:"January",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"January",AnchorDay:12,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:120,Format:"In person",Flexibility:"Fixed",RuleStatus:"Confirmed"},
+        {SortOrder:2,RuleId:"BOARD-CHECKIN",SourceRecordId:0,MeetingName:"Board Critical Issue Check-in",Cadence:"Specific months",MonthsText:"February, March, June, August, September, December",StartMonth:"February",WeekOfMonth:"Second",PreferredDay:"Tuesday",AnchorMonth:"February",AnchorDay:9,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"5:00 PM",DurationMinutes:30,Format:"Virtual",Flexibility:"Fixed",RuleStatus:"Confirmed"},
+        {SortOrder:3,RuleId:"BOARD-RETREAT",SourceRecordId:0,MeetingName:"Board Retreat",Cadence:"Specific months",MonthsText:"May, November",StartMonth:"May",WeekOfMonth:"Last",PreferredDay:"Thursday",AnchorMonth:"May",AnchorDay:27,SecondPreferredDay:"Friday",SecondWeekOfMonth:"Fourth",StartTimeText:"8:00 AM",DurationMinutes:300,Format:"In person",Flexibility:"Fixed",RuleStatus:"Needs validation"}
       );
+      ForAll(
+        colBoardRuleProof As localRule,
+        With(
+          {
+            sourceRule:LookUp(colBoardSourceRules,Title=localRule.MeetingName || ("PowerAppsBoardRule=" & localRule.RuleId) in Coalesce(Notes,""))
+          },
+          If(
+            !IsBlank(sourceRule.ID),
+            Patch(
+              colBoardRuleProof,
+              localRule,
+              {
+                SourceRecordId:sourceRule.ID,
+                MeetingName:Coalesce(sourceRule.Title,localRule.MeetingName),
+                Cadence:Coalesce(sourceRule.Cadence.Value,localRule.Cadence),
+                MonthsText:If(StartsWith(Coalesce(sourceRule.Frequency,""),"PA_RULE|"),Index(Split(sourceRule.Frequency,"|"),2).Value,localRule.MonthsText),
+                StartMonth:Coalesce(sourceRule.'Start Month'.Value,localRule.StartMonth),
+                WeekOfMonth:Coalesce(sourceRule.WeekOfMonth.Value,localRule.WeekOfMonth),
+                PreferredDay:Coalesce(sourceRule.DayOfWeek.Value,localRule.PreferredDay),
+                AnchorMonth:Coalesce(sourceRule.'Start Month'.Value,localRule.AnchorMonth),
+                AnchorDay:If(StartsWith(Coalesce(sourceRule.Frequency,""),"PA_RULE|"),Value(Index(Split(sourceRule.Frequency,"|"),3).Value),localRule.AnchorDay),
+                SecondPreferredDay:If(StartsWith(Coalesce(sourceRule.Frequency,""),"PA_RULE|"),Index(Split(sourceRule.Frequency,"|"),4).Value,localRule.SecondPreferredDay),
+                SecondWeekOfMonth:If(StartsWith(Coalesce(sourceRule.Frequency,""),"PA_RULE|"),Index(Split(sourceRule.Frequency,"|"),5).Value,localRule.SecondWeekOfMonth),
+                StartTimeText:Coalesce(sourceRule.PreferredTime,localRule.StartTimeText),
+                DurationMinutes:Coalesce(sourceRule.DurationMinutes,localRule.DurationMinutes),
+                Format:Coalesce(sourceRule.Modality.Value,localRule.Format),
+                Flexibility:Coalesce(sourceRule.Flexibility.Value,localRule.Flexibility),
+                RuleStatus:Coalesce(sourceRule.RuleStatus.Value,localRule.RuleStatus)
+              }
+            )
+          )
+        )
+      );
+      Clear(colCalProofGeneratedEvents);
+      ForAll(
+        SortByColumns(colBoardRuleProof,"SortOrder",SortOrder.Ascending) As boardRule,
+        With(
+          {
+            startMonthNumber:Switch(boardRule.StartMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
+            anchorMonthNumber:Switch(boardRule.AnchorMonth,"January",1,"February",2,"March",3,"April",4,"May",5,"June",6,"July",7,"August",8,"September",9,"October",10,"November",11,"December",12,1),
+            preferredDayNumber:Switch(boardRule.PreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1),
+            secondDayNumber:Switch(boardRule.SecondPreferredDay,"Monday",1,"Tuesday",2,"Wednesday",3,"Thursday",4,"Friday",5,"Saturday",6,"Sunday",7,1)
+          },
+          With(
+            {anchorDate:Date(2027,anchorMonthNumber,boardRule.AnchorDay)},
+            ForAll(
+              Filter(
+                AddColumns(Sequence(365),CandidateDate,DateAdd(Date(2027,1,1),Value-1,TimeUnit.Days)),
+                Switch(
+                  boardRule.Cadence,
+                  "One time",CandidateDate=anchorDate,
+                  "Twice a week",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber || Weekday(CandidateDate,StartOfWeek.Monday)=secondDayNumber,
+                  "Weekly",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber,
+                  "Every two weeks",CandidateDate>=anchorDate && Mod(DateDiff(anchorDate,CandidateDate,TimeUnit.Days),14)=0,
+                  "Twice a month",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && (Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false) || Switch(boardRule.SecondWeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false)),
+                  "Monthly",Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                  "Every two months",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,2)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                  "Quarterly",Month(CandidateDate)>=startMonthNumber && Mod(Month(CandidateDate)-startMonthNumber,3)=0 && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                  "Specific months",Text(CandidateDate,"mmmm") in boardRule.MonthsText && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                  "Annually",Month(CandidateDate)=startMonthNumber && Weekday(CandidateDate,StartOfWeek.Monday)=preferredDayNumber && Switch(boardRule.WeekOfMonth,"First",Day(CandidateDate)<=7,"Second",Day(CandidateDate)>=8&&Day(CandidateDate)<=14,"Third",Day(CandidateDate)>=15&&Day(CandidateDate)<=21,"Fourth",Day(CandidateDate)>=22&&Day(CandidateDate)<=28,"Last",Month(DateAdd(CandidateDate,7,TimeUnit.Days))<>Month(CandidateDate),false),
+                  false
+                )
+              ) As generatedDay,
+              With(
+                {
+                  originalDate:generatedDay.CandidateDate,
+                  proposedDate:GetNextCalProofBusinessDate(generatedDay.CandidateDate),
+                  closureName:LookUp(colCalProofClosures,ClosureDate=generatedDay.CandidateDate && IsActive,ClosureName)
+                },
+                If(
+                  !IsBlank(proposedDate),
+                  Collect(
+                    colCalProofGeneratedEvents,
+                    {
+                      EventId:boardRule.RuleId&"-"&Text(originalDate,"yyyymmdd"),EventName:boardRule.MeetingName,EventType:boardRule.MeetingName,
+                      EventDate:proposedDate,GeneratedDate:originalDate,OriginalGeneratedDate:originalDate,CurrentDate:proposedDate,
+                      AutoAdjusted:proposedDate<>originalDate,AdjustmentReason:If(proposedDate<>originalDate,"Holiday/Closure",""),AdjustmentSourceName:If(proposedDate<>originalDate,Coalesce(closureName,"Protected date"),""),
+                      DecisionStatus:If(proposedDate<>originalDate || boardRule.RuleStatus<>"Confirmed","NeedsReview","Ready"),
+                      StartTime:TimeValue(boardRule.StartTimeText),EndTime:DateAdd(TimeValue(boardRule.StartTimeText),boardRule.DurationMinutes,TimeUnit.Minutes),
+                      ChipText:Switch(boardRule.RuleId,"BOARD-FULL","BOARD","BOARD-CHECKIN","CHECK","BOARD-RETREAT","RETREAT","BOARD"),
+                      SchedulingSource:"Persisted Board rule · "&boardRule.Cadence&" · "&boardRule.WeekOfMonth&" "&boardRule.PreferredDay,
+                      SourceRuleId:boardRule.RuleId,IsManualOverride:false,PlanYear:2027,PlanningLayer:"Board",SourceType:"Generated",Category:"Board",DurationMinutes:boardRule.DurationMinutes,IsDeleted:false,WarningAcknowledged:false
+                    }
+                  )
+                )
+              )
+            )
+          )
+        )
+      );
+      RemoveIf(colCalProofEvents,PlanningLayer="Board" && PlanYear=2027);
+      Collect(colCalProofEvents,colCalProofGeneratedEvents);
+      ClearCollect(colPlannerLayerRuleEvents,Filter(colCalProofEvents,PlanYear=2027 && SourceType="Generated"));
       ClearCollect(
         colCalProofGenerationReceipt,
         {BatchId:"",GeneratedCount:0,RuleCount:0,ManualOverrideCount:0,GeneratedAt:Now(),FirstDate:Date(2027,1,1),LastDate:Date(2027,1,1),RuleIds:""}

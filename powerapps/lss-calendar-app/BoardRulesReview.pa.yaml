@@ -1906,28 +1906,65 @@ Screens:
                                               (!cadence.UsesDay || !IsBlank(drpBrvDay.Selected.Value)) &&
                                               (!cadence.UsesSecondDay || (!IsBlank(drpBrvCadSecondDay.Selected.Value) && drpBrvCadSecondDay.Selected.Value<>drpBrvDay.Selected.Value)) &&
                                               (!cadence.UsesSecondWeek || (!IsBlank(drpBrvCadSecondWeek.Selected.Value) && drpBrvCadSecondWeek.Selected.Value<>drpBrvWeek.Selected.Value)),
-                                              Set(
-                                                  varBrvReceipt,
-                                                  Patch(
-                                                      colBoardRuleProof,
-                                                      currentRule,
+                                              With(
+                                                  {
+                                                      savedLocal:Patch(
+                                                          colBoardRuleProof,
+                                                          currentRule,
+                                                          {
+                                                              MeetingName:Trim(inpBrvMeetingName.Text),
+                                                              Cadence:drpBrvCadence.Selected.Value,
+                                                              MonthsText:If(cadence.UsesSpecificMonths,Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "),currentRule.MonthsText),
+                                                              StartMonth:If(cadence.UsesStartMonth,drpBrvStartMonth.Selected.Value,currentRule.StartMonth),
+                                                              WeekOfMonth:If(cadence.UsesWeek,drpBrvWeek.Selected.Value,currentRule.WeekOfMonth),
+                                                              PreferredDay:If(cadence.UsesDay,drpBrvDay.Selected.Value,currentRule.PreferredDay),
+                                                              AnchorMonth:If(cadence.UsesAnchorDate,drpBrvCadAnchorMonth.Selected.Value,currentRule.AnchorMonth),
+                                                              AnchorDay:If(cadence.UsesAnchorDate,drpBrvCadAnchorDay.Selected.Value,currentRule.AnchorDay),
+                                                              SecondPreferredDay:If(cadence.UsesSecondDay,drpBrvCadSecondDay.Selected.Value,currentRule.SecondPreferredDay),
+                                                              SecondWeekOfMonth:If(cadence.UsesSecondWeek,drpBrvCadSecondWeek.Selected.Value,currentRule.SecondWeekOfMonth),
+                                                              StartTimeText:Trim(inpBrvTime.Text),
+                                                              DurationMinutes:numBrvDuration.Value,
+                                                              Format:drpBrvFormat.Selected.Value,
+                                                              Flexibility:drpBrvFlexibility.Selected.Value,
+                                                              RuleStatus:drpBrvStatus.Selected.Value
+                                                          }
+                                                      )
+                                                  },
+                                                  With(
                                                       {
-                                                          MeetingName:Trim(inpBrvMeetingName.Text),
-                                                          Cadence:drpBrvCadence.Selected.Value,
-                                                          MonthsText:If(cadence.UsesSpecificMonths,Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "),currentRule.MonthsText),
-                                                          StartMonth:If(cadence.UsesStartMonth,drpBrvStartMonth.Selected.Value,currentRule.StartMonth),
-                                                          WeekOfMonth:If(cadence.UsesWeek,drpBrvWeek.Selected.Value,currentRule.WeekOfMonth),
-                                                          PreferredDay:If(cadence.UsesDay,drpBrvDay.Selected.Value,currentRule.PreferredDay),
-                                                          AnchorMonth:If(cadence.UsesAnchorDate,drpBrvCadAnchorMonth.Selected.Value,currentRule.AnchorMonth),
-                                                          AnchorDay:If(cadence.UsesAnchorDate,drpBrvCadAnchorDay.Selected.Value,currentRule.AnchorDay),
-                                                          SecondPreferredDay:If(cadence.UsesSecondDay,drpBrvCadSecondDay.Selected.Value,currentRule.SecondPreferredDay),
-                                                          SecondWeekOfMonth:If(cadence.UsesSecondWeek,drpBrvCadSecondWeek.Selected.Value,currentRule.SecondWeekOfMonth),
-                                                          StartTimeText:Trim(inpBrvTime.Text),
-                                                          DurationMinutes:numBrvDuration.Value,
-                                                          Format:drpBrvFormat.Selected.Value,
-                                                          Flexibility:drpBrvFlexibility.Selected.Value,
-                                                          RuleStatus:drpBrvStatus.Selected.Value
-                                                      }
+                                                          sourceRule:LookUp(colBoardSourceRules,ID=savedLocal.SourceRecordId || Title=currentRule.MeetingName || ("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(Notes,""))
+                                                      },
+                                                      If(
+                                                          !IsBlank(sourceRule.ID),
+                                                          With(
+                                                              {
+                                                                  savedSource:Patch(
+                                                                      'LSS Meeting Types',
+                                                                      sourceRule,
+                                                                      {
+                                                                          Title:savedLocal.MeetingName,
+                                                                          Cadence:{Value:savedLocal.Cadence},
+                                                                          'Start Month':{Value:If(savedLocal.Cadence="One time",savedLocal.AnchorMonth,savedLocal.StartMonth)},
+                                                                          WeekOfMonth:{Value:savedLocal.WeekOfMonth},
+                                                                          DayOfWeek:{Value:savedLocal.PreferredDay},
+                                                                          PreferredTime:savedLocal.StartTimeText,
+                                                                          DurationMinutes:savedLocal.DurationMinutes,
+                                                                          Modality:{Value:savedLocal.Format},
+                                                                          Flexibility:{Value:savedLocal.Flexibility},
+                                                                          Frequency:"PA_RULE|"&savedLocal.MonthsText&"|"&Text(savedLocal.AnchorDay)&"|"&savedLocal.SecondPreferredDay&"|"&savedLocal.SecondWeekOfMonth,
+                                                                          RuleStatus:{Value:savedLocal.RuleStatus},
+                                                                          Completed:savedLocal.RuleStatus="Confirmed",
+                                                                          Notes:If(("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(sourceRule.Notes,""),sourceRule.Notes,Trim(Coalesce(sourceRule.Notes,"") & Char(10) & "PowerAppsBoardRule=" & savedLocal.RuleId))
+                                                                      }
+                                                                  )
+                                                              },
+                                                              Patch(colBoardRuleProof,savedLocal,{SourceRecordId:savedSource.ID});
+                                                              Set(varBrvReceipt,LookUp(colBoardRuleProof,RuleId=savedLocal.RuleId));
+                                                              Refresh('LSS Meeting Types');
+                                                              ClearCollect(colBoardSourceRules,Filter('LSS Meeting Types',Category.Value="Board"))
+                                                          ),
+                                                          Set(varBrvReceipt,savedLocal)
+                                                      )
                                                   )
                                               );
                                               Set(varCalProofDraftNeedsRegeneration,CountRows(colCalProofGenerationReceipt)>0);

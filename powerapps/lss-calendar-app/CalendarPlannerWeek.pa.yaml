@@ -118,7 +118,18 @@ Screens:
                         BasePaletteColor: =RGBA(30,64,175,1)
                         FillPortions: =1
                         Height: =44
-                        OnSelect: =Set(varPlannerShowBoard,!varPlannerShowBoard)
+                        OnSelect: |-
+                          =ForAll(
+                            Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board") As generatedMeeting,
+                            With(
+                              {generatedId:generatedMeeting.EventId},
+                              If(
+                                IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                Collect(colCalProofEvents,generatedMeeting)
+                              )
+                            )
+                          );
+                          Set(varPlannerShowBoard,!varPlannerShowBoard)
                         Text: ="Board"
                   - btnPlannerWeekCommittees:
                       Control: ModernButton
@@ -434,6 +445,27 @@ Screens:
                               Size: =13
                               Text: =If(IsBlank(varPlannerSelectedEventId),"Choose any meeting in the week to see details and actions.",Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"dddd, mmmm d, yyyy") & Char(10) & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime),"h:mm AM/PM") & "–" & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EndTime),"h:mm AM/PM") & Char(10) & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SchedulingSource))
                               VerticalAlign: =VerticalAlign.Top
+                        - txtPlannerWeekApprovalStatus:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: =Self.Text
+                              AlignInContainer: =AlignInContainer.Start
+                              BorderColor: =RGBA(245,158,11,1)
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              Color: =RGBA(146,64,14,1)
+                              Fill: =RGBA(255,251,235,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =34
+                              LayoutMinWidth: =0
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              Size: =12
+                              Text: ="Needs approval"
+                              Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview"
+                              Width: =156
+                              Wrap: =false
                         - conPlannerWeekSummaryActions:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -446,6 +478,21 @@ Screens:
                               LayoutMinWidth: =0
                               Visible: =varPlannerContextMode<>"Move" && !IsBlank(varPlannerSelectedEventId)
                             Children:
+                              - btnPlannerWeekApprove:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Approve the proposed date for the selected meeting"
+                                    BasePaletteColor: =RGBA(22,163,74,1)
+                                    Height: =44
+                                    OnSelect: |-
+                                      =With(
+                                        {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
+                                        Patch(colCalProofEvents,selectedEvent,{DecisionStatus:"Approved",WarningAcknowledged:true});
+                                        Set(varPlannerReceipt,selectedEvent.EventName & " approved for " & Text(selectedEvent.EventDate,"mmm d") & " at " & Text(selectedEvent.StartTime,"h:mm AM/PM") & ".");
+                                        Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Approve proposed date",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
+                                      )
+                                    Text: ="Approve " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"mmm d")
+                                    Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview"
                               - btnPlannerWeekMove:
                                   Control: ModernButton
                                   Properties:

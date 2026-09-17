@@ -189,7 +189,18 @@ Screens:
                               BasePaletteColor: =RGBA(30,64,175,1)
                               FillPortions: =1
                               LayoutMinWidth: =90
-                              OnSelect: =Set(varPlannerShowBoard,!varPlannerShowBoard)
+                              OnSelect: |-
+                                =ForAll(
+                                  Filter(colPlannerLayerRuleEvents,PlanYear=varPlannerYear && PlanningLayer="Board") As generatedMeeting,
+                                  With(
+                                    {generatedId:generatedMeeting.EventId},
+                                    If(
+                                      IsBlank(LookUp(colCalProofEvents,EventId=generatedId)) && IsBlank(LookUp(colPlannerExclusions,EventId=generatedId)),
+                                      Collect(colCalProofEvents,generatedMeeting)
+                                    )
+                                  )
+                                );
+                                Set(varPlannerShowBoard,!varPlannerShowBoard)
                               Text: ="Board"
                         - btnPlannerFilterCommittees:
                             Control: ModernButton
@@ -720,6 +731,7 @@ Screens:
                               - txtPlannerSummaryStatus:
                                   Control: ModernText
                                   Properties:
+                                    AlignInContainer: =AlignInContainer.Start
                                     AccessibleLabel: =Self.Text
                                     BorderColor: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview",RGBA(245,158,11,1),RGBA(187,247,208,1))
                                     BorderStyle: =BorderStyle.Solid
@@ -727,11 +739,14 @@ Screens:
                                     Color: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview",RGBA(146,64,14,1),RGBA(21,128,61,1))
                                     Fill: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview",RGBA(255,251,235,1),RGBA(240,253,244,1))
                                     Font: =Font.'Segoe UI'
-                                    Height: =40
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =34
                                     LayoutMinWidth: =0
-                                    PaddingLeft: =10
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
                                     Size: =12
-                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview","● Needs approval","● Ready")
+                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview","Needs approval","Ready")
+                                    Width: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview",156,82)
                                     Wrap: =false
                               - txtPlannerSummarySource:
                                   Control: ModernText
@@ -760,6 +775,21 @@ Screens:
                                     Size: =12
                                     Text: ="Originally generated for " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,OriginalGeneratedDate),"mmm d") & ". " & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AdjustmentReason)
                                     Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AutoAdjusted)
+                              - btnPlannerApprove:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Approve the proposed date for the selected meeting"
+                                    BasePaletteColor: =RGBA(22,163,74,1)
+                                    Height: =44
+                                    OnSelect: |-
+                                      =With(
+                                        {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
+                                        Patch(colCalProofEvents,selectedEvent,{DecisionStatus:"Approved",WarningAcknowledged:true});
+                                        Set(varPlannerReceipt,selectedEvent.EventName & " approved for " & Text(selectedEvent.EventDate,"mmm d") & " at " & Text(selectedEvent.StartTime,"h:mm AM/PM") & ".");
+                                        Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Approve proposed date",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
+                                      )
+                                    Text: ="Approve " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"mmm d")
+                                    Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview"
                               - btnPlannerMove:
                                   Control: ModernButton
                                   Properties:
@@ -789,18 +819,6 @@ Screens:
                                     Height: =44
                                     OnSelect: =Set(varPlannerContextMode,"Delete")
                                     Text: ="Delete meeting"
-                              - btnPlannerEditRule:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Edit source rule"
-                                    Appearance: =ButtonAppearance.Subtle
-                                    BasePaletteColor: =RGBA(30,64,175,1)
-                                    Height: =44
-                                    OnSelect: |-
-                                      =Set(varBrvSelectedRuleId,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId));
-                                      Navigate(BoardRulesReview,ScreenTransition.None)
-                                    Text: ="Edit source rule"
-                                    Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && !IsBlank(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId))
                         - conPlannerEditor:
                             Control: GroupContainer
                             Variant: AutoLayout
