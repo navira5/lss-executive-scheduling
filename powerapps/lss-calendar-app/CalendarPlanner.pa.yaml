@@ -1161,7 +1161,7 @@ Screens:
                         DropShadow: =DropShadow.None
                         Fill: =RGBA(255,255,255,1)
                         FillPortions: =0
-                        Height: =If(App.Width<1180,312,Parent.Height)
+                        Height: =0
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Vertical
                         LayoutGap: =6
@@ -1175,7 +1175,8 @@ Screens:
                         RadiusBottomRight: =10
                         RadiusTopLeft: =10
                         RadiusTopRight: =10
-                        Width: =If(App.Width<1180,Parent.Width,194)
+                        Visible: =false
+                        Width: =0
                       Children:
                         - txtPlannerLayersTitle:
                             Control: ModernText
@@ -1345,6 +1346,122 @@ Screens:
                         RadiusTopLeft: =10
                         RadiusTopRight: =10
                       Children:
+                        - conPlannerCalendarLayers:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(203,213,225,1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(248,250,252,1)
+                              FillPortions: =0
+                              Height: =74
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =10
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =10
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Width: =Parent.Width
+                            Children:
+                              - txtPlannerCalendarLayersTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    Color: =RGBA(15,43,91,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =32
+                                    LayoutMinWidth: =112
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: ="Calendar layers"
+                                    Wrap: =false
+                              - btnPlannerCalendarLayerBoard:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Toggle Board meetings on the calendar"
+                                    Appearance: =If(varPlannerShowBoard,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                    BasePaletteColor: =RGBA(30,64,175,1)
+                                    FillPortions: =1
+                                    Height: =36
+                                    LayoutMinWidth: =72
+                                    OnSelect: =Set(varPlannerShowBoard,!varPlannerShowBoard)
+                                    Text: ="Board"
+                              - btnPlannerCalendarLayerCommittees:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Toggle Committee meetings on the calendar"
+                                    Appearance: =If(varPlannerShowCommittees,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                    BasePaletteColor: =RGBA(14,116,144,1)
+                                    FillPortions: =1
+                                    Height: =36
+                                    LayoutMinWidth: =88
+                                    OnSelect: =Set(varPlannerShowCommittees,!varPlannerShowCommittees)
+                                    Text: ="Committees"
+                              - btnPlannerCalendarLayerExecutive:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Toggle Executive meetings on the calendar"
+                                    Appearance: =If(varPlannerShowExecutive,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                    BasePaletteColor: =RGBA(124,58,237,1)
+                                    FillPortions: =1
+                                    Height: =36
+                                    LayoutMinWidth: =80
+                                    OnSelect: =Set(varPlannerShowExecutive,!varPlannerShowExecutive)
+                                    Text: ="Executive"
+                              - btnPlannerCalendarLayerOperations:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Toggle Operations meetings on the calendar"
+                                    Appearance: =If(varPlannerShowOperations,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                    BasePaletteColor: =RGBA(5,150,105,1)
+                                    FillPortions: =1
+                                    Height: =36
+                                    LayoutMinWidth: =88
+                                    OnSelect: =Set(varPlannerShowOperations,!varPlannerShowOperations)
+                                    Text: ="Operations"
+                              - btnPlannerCalendarLayerManual:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Toggle manual and special meetings on the calendar"
+                                    Appearance: =If(varPlannerShowManual,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                    BasePaletteColor: =RGBA(71,85,105,1)
+                                    FillPortions: =1
+                                    Height: =36
+                                    LayoutMinWidth: =88
+                                    OnSelect: =Set(varPlannerShowManual,!varPlannerShowManual)
+                                    Text: ="Manual / special"
+                              - btnPlannerCalendarLayersAll:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Show all calendar layers"
+                                    Appearance: =ButtonAppearance.Subtle
+                                    BasePaletteColor: =RGBA(37,99,235,1)
+                                    Height: =36
+                                    LayoutMinWidth: =58
+                                    OnSelect: =Set(varPlannerShowBoard,true);Set(varPlannerShowCommittees,true);Set(varPlannerShowExecutive,true);Set(varPlannerShowOperations,true);Set(varPlannerShowManual,true)
+                                    Text: ="All"
+                              - btnPlannerCalendarLayersNone:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Hide all calendar layers"
+                                    Appearance: =ButtonAppearance.Subtle
+                                    BasePaletteColor: =RGBA(71,85,105,1)
+                                    Height: =36
+                                    LayoutMinWidth: =58
+                                    OnSelect: =Set(varPlannerShowBoard,false);Set(varPlannerShowCommittees,false);Set(varPlannerShowExecutive,false);Set(varPlannerShowOperations,false);Set(varPlannerShowManual,false)
+                                    Text: ="Hide all"
                         - conPlannerCalendarHeading:
                             Control: GroupContainer
                             Variant: AutoLayout
