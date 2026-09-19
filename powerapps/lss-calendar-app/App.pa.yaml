@@ -193,6 +193,11 @@ App:
           PlanningLayer<>"Board"
         )
       );
+      UpdateIf(
+        colCalProofEvents,
+        !AutoAdjusted && DecisionStatus="NeedsReview",
+        {DecisionStatus:"Ready"}
+      );
       Set(varCalProofSelectedEventId,"");
       Set(varCalProofSelectedEvent,First(colCalProofEvents));
       Set(varCalProofSelectedEvent,Blank());

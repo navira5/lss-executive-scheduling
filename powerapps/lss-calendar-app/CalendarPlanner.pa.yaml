@@ -607,9 +607,17 @@ Screens:
                                 If(
                                   CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,
                                   Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Board"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
-                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                  With(
+                                    {readyCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="Ready"),reviewCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")},
+                                    If(
+                                      readyCount>0 && reviewCount>0,
+                                      UpdateIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="Ready",{DecisionStatus:"Approved"});
+                                      Set(varPlannerLayerReceipt,Text(readyCount)&" clear Board date"&If(readyCount=1," was","s were")&" approved. "&Text(reviewCount)&" exception"&If(reviewCount=1," remains","s remain")&" for review."),
+                                      Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                    )
+                                  )
                                 )
-                              Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,"Review rules",If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")>0,"Review dates","Open"))
+                              Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,"Review rules",With({readyCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="Ready"),reviewCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")},If(readyCount>0 && reviewCount>0,"Approve "&Text(readyCount),If(reviewCount>0,"Review "&Text(reviewCount),"Open"))))
                   - conPlannerStatusCommittees:
                       Control: GroupContainer
                       Variant: AutoLayout
