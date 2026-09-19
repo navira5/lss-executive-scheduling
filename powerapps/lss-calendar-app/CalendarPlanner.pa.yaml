@@ -517,6 +517,258 @@ Screens:
                               LayoutMinWidth: =120
                               OnSelect: =Set(varPlannerContextMode,"StartClean");Set(varPlannerShowAdmin,false)
                               Text: ="Start clean"
+            - conPlannerPlanningStatus:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(191,219,254,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(239,246,255,1)
+                  FillPortions: =0
+                  Height: =If(varPlannerShowPlanningStatus,If(App.Width<900,382,306),0)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =12
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                  Visible: =varPlannerShowPlanningStatus
+                Children:
+                  - txtPlannerPlanningStatusTitle:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: =Self.Text
+                        Color: =RGBA(15,43,91,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =32
+                        LayoutMinWidth: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =18
+                        Text: ="Planning status"
+                  - conPlannerStatusBoard:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203,213,225,1)
+                        BorderStyle: =BorderStyle.None
+                        BorderThickness: =0
+                        DropShadow: =DropShadow.None
+                        FillPortions: =1
+                        Height: =58
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(App.Width<900,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtPlannerStatusBoardSummary:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: =Self.Text
+                              Color: =RGBA(15,23,42,1)
+                              FillPortions: =1
+                              Font: =Font.'Segoe UI'
+                              Height: =46
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: |-
+                                =With({ruleCount:CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed"),reviewCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")},"Board" & Char(10) & If(ruleCount>0,Text(ruleCount)&" rules need review",If(reviewCount>0,Text(reviewCount)&" dates need review","Ready to confirm")))
+                              VerticalAlign: =VerticalAlign.Top
+                        - btnPlannerStatusBoardAction:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Continue Board planning"
+                              Appearance: =If(CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,ButtonAppearance.Outline,ButtonAppearance.Primary)
+                              BasePaletteColor: =If(CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,RGBA(37,99,235,1),RGBA(21,128,61,1))
+                              Height: =38
+                              LayoutMinWidth: =124
+                              OnSelect: |-
+                                =Set(varPlannerActiveStep,"Board");
+                                Set(varPlannerActiveLayer,"Board");
+                                Set(varPlannerSelectedEventId,"");
+                                Set(varPlannerSelectedClosureId,"");
+                                If(
+                                  CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,
+                                  Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Board"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
+                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                )
+                              Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Board" && RuleStatus<>"Confirmed")>0,"Review rules",If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="NeedsReview")>0,"Review dates","Open"))
+                  - conPlannerStatusCommittees:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203,213,225,1)
+                        BorderStyle: =BorderStyle.Solid
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        FillPortions: =1
+                        Height: =58
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(App.Width<900,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtPlannerStatusCommitteesSummary:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: =Self.Text
+                              Color: =RGBA(15,23,42,1)
+                              FillPortions: =1
+                              Font: =Font.'Segoe UI'
+                              Height: =46
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: |-
+                                =With({ruleCount:CountIf(colMeetingRulebook,PlanningLayer="Board Committees" && RuleStatus<>"Confirmed"),layerStatus:LookUp(colPlannerLayerState,PlanningLayer="Board Committees",Status)},"Committees" & Char(10) & If(ruleCount>0,Text(ruleCount)&" rules need review",If(layerStatus="Not started","Ready to generate",If(layerStatus="Needs regeneration","Rules changed",layerStatus))))
+                              VerticalAlign: =VerticalAlign.Top
+                        - btnPlannerStatusCommitteesAction:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Continue Committee planning"
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(14,116,144,1)
+                              Height: =38
+                              LayoutMinWidth: =124
+                              OnSelect: |-
+                                =Set(varPlannerActiveStep,"Board Committees");
+                                Set(varPlannerActiveLayer,"Board Committees");
+                                Set(varPlannerSelectedEventId,"");
+                                Set(varPlannerSelectedClosureId,"");
+                                If(
+                                  CountIf(colMeetingRulebook,PlanningLayer="Board Committees" && RuleStatus<>"Confirmed")>0,
+                                  Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Board Committees"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
+                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                )
+                              Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Board Committees" && RuleStatus<>"Confirmed")>0,"Review rules",If(LookUp(colPlannerLayerState,PlanningLayer="Board Committees",Status)="Not started","Start","Open"))
+                  - conPlannerStatusExecutive:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203,213,225,1)
+                        BorderStyle: =BorderStyle.Solid
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        FillPortions: =1
+                        Height: =58
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(App.Width<900,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtPlannerStatusExecutiveSummary:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: =Self.Text
+                              Color: =RGBA(15,23,42,1)
+                              FillPortions: =1
+                              Font: =Font.'Segoe UI'
+                              Height: =46
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: |-
+                                =With({ruleCount:CountIf(colMeetingRulebook,PlanningLayer="Executive Leadership" && RuleStatus<>"Confirmed"),layerStatus:LookUp(colPlannerLayerState,PlanningLayer="Executive Leadership",Status)},"Executive" & Char(10) & If(ruleCount>0,Text(ruleCount)&" rules need review",If(layerStatus="Not started","Ready to generate",If(layerStatus="Needs regeneration","Rules changed",layerStatus))))
+                              VerticalAlign: =VerticalAlign.Top
+                        - btnPlannerStatusExecutiveAction:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Continue Executive planning"
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(124,58,237,1)
+                              Height: =38
+                              LayoutMinWidth: =124
+                              OnSelect: |-
+                                =Set(varPlannerActiveStep,"Executive Leadership");
+                                Set(varPlannerActiveLayer,"Executive Leadership");
+                                Set(varPlannerSelectedEventId,"");
+                                Set(varPlannerSelectedClosureId,"");
+                                If(
+                                  CountIf(colMeetingRulebook,PlanningLayer="Executive Leadership" && RuleStatus<>"Confirmed")>0,
+                                  Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Executive Leadership"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
+                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                )
+                              Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Executive Leadership" && RuleStatus<>"Confirmed")>0,"Review rules",If(LookUp(colPlannerLayerState,PlanningLayer="Executive Leadership",Status)="Not started","Start","Open"))
+                  - conPlannerStatusOperations:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(203,213,225,1)
+                        BorderStyle: =BorderStyle.Solid
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        FillPortions: =1
+                        Height: =58
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =If(App.Width<900,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                        LayoutGap: =8
+                        LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtPlannerStatusOperationsSummary:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: =Self.Text
+                              Color: =RGBA(15,23,42,1)
+                              FillPortions: =1
+                              Font: =Font.'Segoe UI'
+                              Height: =46
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: |-
+                                =With({ruleCount:CountIf(colMeetingRulebook,PlanningLayer="Organization & Operations" && RuleStatus<>"Confirmed"),layerStatus:LookUp(colPlannerLayerState,PlanningLayer="Organization & Operations",Status)},"Operations" & Char(10) & If(ruleCount>0,Text(ruleCount)&" rules need review",If(layerStatus="Not started","Ready to generate",If(layerStatus="Needs regeneration","Rules changed",layerStatus))))
+                              VerticalAlign: =VerticalAlign.Top
+                        - btnPlannerStatusOperationsAction:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Continue Operations planning"
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(5,150,105,1)
+                              Height: =38
+                              LayoutMinWidth: =124
+                              OnSelect: |-
+                                =Set(varPlannerActiveStep,"Organization & Operations");
+                                Set(varPlannerActiveLayer,"Organization & Operations");
+                                Set(varPlannerSelectedEventId,"");
+                                Set(varPlannerSelectedClosureId,"");
+                                If(
+                                  CountIf(colMeetingRulebook,PlanningLayer="Organization & Operations" && RuleStatus<>"Confirmed")>0,
+                                  Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Organization & Operations"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
+                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                )
+                              Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Organization & Operations" && RuleStatus<>"Confirmed")>0,"Review rules",If(LookUp(colPlannerLayerState,PlanningLayer="Organization & Operations",Status)="Not started","Start","Open"))
             - conPlannerBoardWorkflow:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -526,7 +778,7 @@ Screens:
                   DropShadow: =DropShadow.None
                   Fill: =Switch(LookUp(colPlannerLayerState,PlanningLayer=varPlannerActiveLayer,Status),"Confirmed",RGBA(240,253,244,1),"Needs regeneration",RGBA(255,251,235,1),"Needs revalidation",RGBA(255,251,235,1),RGBA(239,246,255,1))
                   FillPortions: =0
-                  Height: =If(varPlannerShowPlanningStatus && varPlannerActiveStep<>"Final Review",If(varPlannerShowLayerPreview,If(App.Width<1100,470,330),If(App.Width<1100,292,202)),0)
+                  Height: =0
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =LayoutDirection.Vertical
                   LayoutGap: =10
@@ -540,7 +792,7 @@ Screens:
                   RadiusBottomRight: =10
                   RadiusTopLeft: =10
                   RadiusTopRight: =10
-                  Visible: =varPlannerShowPlanningStatus && varPlannerActiveStep<>"Final Review"
+                  Visible: =false
                 Children:
                   - conPlannerWorkflowLayerPicker:
                       Control: GroupContainer
