@@ -1713,16 +1713,6 @@ Screens:
                                     LayoutMinWidth: =58
                                     OnSelect: =Set(varPlannerShowBoard,true);Set(varPlannerShowCommittees,true);Set(varPlannerShowExecutive,true);Set(varPlannerShowOperations,true);Set(varPlannerShowManual,true)
                                     Text: ="All"
-                              - btnPlannerCalendarLayersNone:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Hide all calendar layers"
-                                    Appearance: =ButtonAppearance.Subtle
-                                    BasePaletteColor: =RGBA(71,85,105,1)
-                                    Height: =36
-                                    LayoutMinWidth: =58
-                                    OnSelect: =Set(varPlannerShowBoard,false);Set(varPlannerShowCommittees,false);Set(varPlannerShowExecutive,false);Set(varPlannerShowOperations,false);Set(varPlannerShowManual,false)
-                                    Text: ="Hide all"
                         - conPlannerCalendarHeading:
                             Control: GroupContainer
                             Variant: AutoLayout
