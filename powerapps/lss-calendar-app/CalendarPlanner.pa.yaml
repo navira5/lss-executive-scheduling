@@ -3,6 +3,7 @@ Screens:
     Properties:
       Fill: =RGBA(244,247,251,1)
       LoadingSpinnerColor: =RGBA(37,99,235,1)
+      OnVisible: =Set(varPlannerShowPlanningStatus,false)
     Children:
       - conPlannerRoot:
           Control: GroupContainer
