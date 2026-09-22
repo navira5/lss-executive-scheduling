@@ -630,7 +630,6 @@ Screens:
                                     Size: =12
                                     Text: =If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && !IsDeleted && DecisionStatus="NeedsReview")=0,"No unresolved decisions.",Concat(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && !IsDeleted && DecisionStatus="NeedsReview"),"EventDate",SortOrder.Ascending),EventName & " · " & Text(EventDate,"mmm d") & " · " & PlanningLayer,Char(10)))
                                     VerticalAlign: =VerticalAlign.Top
-                                    Wrap: =true
                               - btnPlannerWeekAttentionOpenFirst:
                                   Control: ModernButton
                                   Properties:
@@ -1043,18 +1042,6 @@ Screens:
                                     OnSelect: =Set(varPlannerDraftDirty,false);Set(varPlannerContextMode,"Summary")
                                     Text: ="Cancel"
                                     Width: =Parent.Width
-                        - btnPlannerWeekDismissReceipt:
-                            Control: ModernButton
-                            Properties:
-                              AccessibleLabel: ="Dismiss receipt"
-                              AlignInContainer: =AlignInContainer.Stretch
-                              Appearance: =ButtonAppearance.Outline
-                              BasePaletteColor: =RGBA(102,112,133,1)
-                              Height: =36
-                              OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
-                              Text: ="Dismiss receipt"
-                              Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerReceipt)
-                              Width: =Parent.Width
                         - txtPlannerWeekReceipt:
                             Control: ModernText
                             Properties:

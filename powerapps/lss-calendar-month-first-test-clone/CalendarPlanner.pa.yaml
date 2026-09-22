@@ -302,7 +302,7 @@ Screens:
                               Height: =44
                               LayoutMinWidth: =90
                               OnSelect: |
-                                =Set(varPlannerView,"Month");Set(varPlannerFocusedDate,Date(varPlannerYear,Month(varPlannerFocusedDate),1));Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerContextMode,"Empty");Navigate(CalendarPlannerMonth,ScreenTransition.None)
+                                =Set(varPlannerView,"Month");Set(varPlannerFocusedDate,Date(varPlannerYear,Month(varPlannerFocusedDate),1));Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Empty");Navigate(CalendarPlannerMonth,ScreenTransition.None)
                               Text: ="Month"
                         - btnPlannerWeekView:
                             Control: ModernButton
@@ -313,7 +313,7 @@ Screens:
                               FillPortions: =1
                               Height: =44
                               LayoutMinWidth: =90
-                              OnSelect: =Set(varPlannerView,"Week");Navigate(CalendarPlannerWeek,ScreenTransition.None)
+                              OnSelect: =Set(varPlannerView,"Week");Set(varPlannerReceipt,"");Navigate(CalendarPlannerWeek,ScreenTransition.None)
                               Text: ="Week"
                         - btnPlannerOutlookReadOnly:
                             Control: ModernButton
@@ -1280,7 +1280,7 @@ Screens:
                                         Set(varPlannerFocusedDate,DateAdd(varPlannerFocusedDate,-7,TimeUnit.Days));Set(varPlannerYear,Year(varPlannerFocusedDate)),
                                         Set(varPlannerYear,Max(2026,varPlannerYear-1));Set(varPlannerFocusedDate,Date(varPlannerYear,1,1))
                                       );
-                                      Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerContextMode,"Empty");
+                                      Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Empty");
                                       If(varPlannerHydratedYear<>varPlannerYear,Select(btnPlannerHydrateYear))
                                     Text: ="‹"
                                     Width: =44
@@ -1318,7 +1318,7 @@ Screens:
                                         Set(varPlannerFocusedDate,DateAdd(varPlannerFocusedDate,7,TimeUnit.Days));Set(varPlannerYear,Year(varPlannerFocusedDate)),
                                         Set(varPlannerYear,Min(2036,varPlannerYear+1));Set(varPlannerFocusedDate,Date(varPlannerYear,1,1))
                                       );
-                                      Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerContextMode,"Empty");
+                                      Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Empty");
                                       If(varPlannerHydratedYear<>varPlannerYear,Select(btnPlannerHydrateYear))
                                     Text: ="›"
                                     Width: =44
@@ -1446,7 +1446,7 @@ Screens:
                                                       Height: =If(varPlannerView="Month",22,13)
                                                       LayoutMinHeight: =0
                                                       LayoutMinWidth: =0
-                                                      OnSelect: =If(varPlannerContextMode="Attention" && PlannerHasAttentionOnDate(ThisItem.CellDate),Set(varPlannerSelectedEventId,First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && DecisionStatus="NeedsReview"),"StartTime",SortOrder.Ascending)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerSelectedClosureId,"");Set(varPlannerContextMode,"Summary"),Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerContextMode,"Date"))
+                                                      OnSelect: =If(varPlannerContextMode="Attention" && PlannerHasAttentionOnDate(ThisItem.CellDate),Set(varPlannerSelectedEventId,First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && DecisionStatus="NeedsReview"),"StartTime",SortOrder.Ascending)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerSelectedClosureId,"");Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Summary"),Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerSelectedEventId,"");Set(varPlannerSelectedClosureId,"");Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Date"))
                                                       PaddingBottom: =0
                                                       PaddingTop: =0
                                                       Size: =If(varPlannerView="Month",14,9)
@@ -1508,7 +1508,7 @@ Screens:
                                                       BasePaletteColor: =RGBA(62,93,138,1)
                                                       Height: =22
                                                       LayoutMinWidth: =0
-                                                      OnSelect: =Set(varPlannerSelectedEventId,First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerContextMode,"Summary")
+                                                      OnSelect: =Set(varPlannerSelectedEventId,First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Summary")
                                                       PaddingBottom: =0
                                                       PaddingTop: =0
                                                       Size: =10
@@ -1524,7 +1524,7 @@ Screens:
                                                       BasePaletteColor: =RGBA(62,93,138,1)
                                                       Height: =22
                                                       LayoutMinWidth: =0
-                                                      OnSelect: =Set(varPlannerSelectedEventId,Last(FirstN(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending),2)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerContextMode,"Summary")
+                                                      OnSelect: =Set(varPlannerSelectedEventId,Last(FirstN(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending),2)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Summary")
                                                       PaddingBottom: =0
                                                       PaddingTop: =0
                                                       Size: =10
@@ -1652,7 +1652,6 @@ Screens:
                                     Size: =12
                                     Text: =If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && !IsDeleted && DecisionStatus="NeedsReview")=0,"No unresolved decisions.",Concat(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && !IsDeleted && DecisionStatus="NeedsReview"),"EventDate",SortOrder.Ascending),EventName & " · " & Text(EventDate,"mmm d") & " · " & PlanningLayer,Char(10)))
                                     VerticalAlign: =VerticalAlign.Top
-                                    Wrap: =true
                               - btnPlannerAttentionOpenFirst:
                                   Control: ModernButton
                                   Properties:
@@ -2632,16 +2631,6 @@ Screens:
                               RadiusTopRight: =8
                               Visible: =!IsBlank(varPlannerReceipt)
                             Children:
-                              - btnPlannerDismissReceipt:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Dismiss receipt"
-                                    Appearance: =ButtonAppearance.Outline
-                                    BasePaletteColor: =RGBA(102,112,133,1)
-                                    Height: =36
-                                    OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
-                                    Text: ="Dismiss receipt"
-                                    Width: =Parent.Width
                               - txtPlannerReceipt:
                                   Control: ModernText
                                   Properties:
