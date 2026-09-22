@@ -1058,4 +1058,16 @@ Screens:
                               PaddingTop: =8
                               Size: =12
                               Text: ="✓ " & If(CountRows(colPlannerMutationReceipt)>0 && First(colPlannerMutationReceipt).SubjectId=varPlannerSelectedEventId,First(colPlannerMutationReceipt).Summary,varPlannerReceipt)
-                              Visible: =varPlannerContextMode="Summary" && ((CountRows(colPlannerMutationReceipt)>0 && First(colPlannerMutationReceipt).SubjectId=varPlannerSelectedEventId) || !IsBlank(varPlannerReceipt))
+                              Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerReceipt)
+                        - btnPlannerWeekDismissReceipt:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Dismiss receipt"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(102,112,133,1)
+                              Height: =36
+                              OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
+                              Text: ="Dismiss"
+                              Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerReceipt)
+                              Width: =Parent.Width

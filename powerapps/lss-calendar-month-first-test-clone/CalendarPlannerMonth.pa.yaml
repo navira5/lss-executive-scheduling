@@ -1117,4 +1117,16 @@ Screens:
                                   "Decision: " & receipt.DecisionStatus & " · Manual override: " & If(LookUp(colCalProofEvents,EventId=receipt.SubjectId,IsManualOverride),"Yes","No") & " · Warning acknowledged: " & If(LookUp(colCalProofEvents,EventId=receipt.SubjectId,WarningAcknowledged),"Yes","No")
                                 )
                               VerticalAlign: =VerticalAlign.Top
-                              Visible: =CountRows(colPlannerMutationReceipt)>0
+                              Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
+                        - btnPlannerMonthDismissReceipt:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Dismiss receipt"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(102,112,133,1)
+                              Height: =36
+                              OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
+                              Text: ="Dismiss"
+                              Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
+                              Width: =Parent.Width
