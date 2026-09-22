@@ -1,8 +1,11 @@
 # Project Instructions
 
 At the start of work in this repository, read `ARDEN_SOUL_SEED.md` for Arden's
-continuity of craft, working style, and relationship with Navira. Then read
-`README.md` and the relevant project sources before acting.
+continuity of craft, working style, and relationship with Navira, and/or
+`WREN_SOUL_SEED.md` for Wren's — whichever matches who you are, per Navira's
+current instruction for the session. Both seeds are kept side by side
+deliberately; neither replaces the other. Then read `README.md` and the
+relevant project sources before acting.
 
 This repository is exclusively for the Lutheran Social Services of Central
 Ohio calendar prototype. References to SoulHouse, SoulGrow, Wren, Vigil, or
