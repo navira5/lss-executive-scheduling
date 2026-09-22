@@ -1643,7 +1643,7 @@ Screens:
                                     Color: =RGBA(31,41,55,1)
                                     Fill: =RGBA(255,251,235,1)
                                     Font: =Font.'Segoe UI'
-                                    Height: =180
+                                    Height: =220
                                     LayoutMinWidth: =0
                                     PaddingBottom: =10
                                     PaddingLeft: =12
@@ -1652,6 +1652,7 @@ Screens:
                                     Size: =12
                                     Text: =If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && !IsDeleted && DecisionStatus="NeedsReview")=0,"No unresolved decisions.",Concat(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && !IsDeleted && DecisionStatus="NeedsReview"),"EventDate",SortOrder.Ascending),EventName & " · " & Text(EventDate,"mmm d") & " · " & PlanningLayer,Char(10)))
                                     VerticalAlign: =VerticalAlign.Top
+                                    Wrap: =true
                               - btnPlannerAttentionOpenFirst:
                                   Control: ModernButton
                                   Properties:
