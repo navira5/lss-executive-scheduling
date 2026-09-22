@@ -892,72 +892,6 @@ Screens:
                                     Text: ="Edit source rule"
                                     Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && !IsBlank(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceRuleId))
                                     Width: =Parent.Width
-                        - conPlannerWeekDelete:
-                            Control: GroupContainer
-                            Variant: AutoLayout
-                            Properties:
-                              DropShadow: =DropShadow.None
-                              FillPortions: =0
-                              Height: =244
-                              LayoutAlignItems: =LayoutAlignItems.Stretch
-                              LayoutDirection: =LayoutDirection.Vertical
-                              LayoutGap: =10
-                              LayoutMinHeight: =0
-                              LayoutMinWidth: =0
-                              Visible: =varPlannerContextMode="Delete"
-                            Children:
-                              - txtPlannerWeekDeleteTitle:
-                                  Control: ModernText
-                                  Properties:
-                                    AccessibleLabel: =Self.Text
-                                    Color: =RGBA(31,41,55,1)
-                                    Font: =Font.'Segoe UI'
-                                    FontWeight: =FontWeight.Bold
-                                    Height: =48
-                                    LayoutMinWidth: =0
-                                    Size: =23
-                                    Text: ="Delete " & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventName) & "?"
-                              - txtPlannerWeekDeleteHelp:
-                                  Control: ModernText
-                                  Properties:
-                                    AccessibleLabel: =Self.Text
-                                    Color: =RGBA(102,112,133,1)
-                                    Height: =64
-                                    LayoutMinWidth: =0
-                                    Size: =13
-                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated","This generated occurrence will be excluded so regeneration does not recreate it.","This manual meeting will be removed. You can undo immediately afterward.")
-                              - btnPlannerWeekConfirmDelete:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Confirm delete meeting"
-                                    BasePaletteColor: =RGBA(180,35,24,1)
-                                    Height: =44
-                                    OnSelect: |-
-                                      =With(
-                                        {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
-                                        ClearCollect(colPlannerUndo,{Action:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,PreviousDate:selectedEvent.EventDate,PreviousStart:selectedEvent.StartTime,PreviousEnd:selectedEvent.EndTime,PreviousStatus:selectedEvent.DecisionStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
-                                        If(selectedEvent.SourceType="Generated",Collect(colPlannerExclusions,{ExclusionId:"EXC-" & selectedEvent.EventId,EventId:selectedEvent.EventId,RuleSlotId:Coalesce(selectedEvent.RuleSlotId,selectedEvent.EventId),SourceRuleId:selectedEvent.SourceRuleId,EventName:selectedEvent.EventName,OriginalGeneratedDate:selectedEvent.OriginalGeneratedDate,MappingDecision:"",PlanYear:selectedEvent.PlanYear,Reason:"Deleted by user",CreatedAt:Now()}));
-                                        RemoveIf(colCalProofEvents,EventId=selectedEvent.EventId);
-                                        With({changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true}));
-                                        Set(varPlannerReceipt,selectedEvent.EventName & " deleted. Undo is available.");
-                                        ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:selectedEvent.EventDate,StartTime:selectedEvent.StartTime,DurationMinutes:selectedEvent.DurationMinutes,DecisionStatus:"Deleted",Summary:varPlannerReceipt,OccurredAt:Now()});
-                                        Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Delete",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
-                                      );
-                                      Set(varPlannerSelectedEventId,"");
-                                      Set(varPlannerContextMode,"Empty");
-                                      Select(btnPlannerWeekPersistSelected)
-                                    Text: ="Delete meeting"
-                                    Width: =Parent.Width
-                              - btnPlannerWeekCancelDelete:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Cancel delete"
-                                    Appearance: =ButtonAppearance.Outline
-                                    BasePaletteColor: =RGBA(102,112,133,1)
-                                    Height: =42
-                                    OnSelect: =Set(varPlannerContextMode,"Summary")
-                                    Text: ="Cancel"
-                                    Width: =Parent.Width
                         - conPlannerWeekMoveEditor:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -1042,21 +976,9 @@ Screens:
                                         CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0,
                                         "Warning: this overlaps another planned meeting.",
                                         LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && (varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) || varPlannerDraftStart<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) || varPlannerDraftDuration<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)),
-                                        "This move differs from the generated cadence. Acknowledge before confirming.",
+                                        "This move differs from the generated cadence. Review before confirming.",
                                         "This time works."
                                       )
-                              - btnPlannerWeekAcknowledge:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Acknowledge move warning"
-                                    AlignInContainer: =AlignInContainer.Stretch
-                                    Appearance: =If(varPlannerWarningAcknowledged,ButtonAppearance.Primary,ButtonAppearance.Outline)
-                                    BasePaletteColor: =RGBA(154,91,0,1)
-                                    Height: =40
-                                    OnSelect: =Set(varPlannerWarningAcknowledged,!varPlannerWarningAcknowledged)
-                                    Text: =If(varPlannerWarningAcknowledged,"✓ Warning acknowledged","Acknowledge warning")
-                                    Visible: =!IsPlannerHardStop(varPlannerDraftDate) && (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && (varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) || varPlannerDraftStart<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) || varPlannerDraftDuration<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes))))
-                                    Width: =Parent.Width
                               - btnPlannerWeekSaveMove:
                                   Control: ModernButton
                                   Properties:
@@ -1068,7 +990,7 @@ Screens:
                                         LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed" ||
                                         IsPlannerHardStop(varPlannerDraftDate) ||
                                         (varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)) ||
-                                        ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && (varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) || varPlannerDraftStart<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) || varPlannerDraftDuration<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)))) && !varPlannerWarningAcknowledged),
+                                        (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && (varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) || varPlannerDraftStart<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) || varPlannerDraftDuration<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)))),
                                         DisplayMode.Disabled,
                                         DisplayMode.Edit
                                       )
@@ -1080,7 +1002,7 @@ Screens:
                                           {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,originalGeneratedDate:selectedEvent.OriginalGeneratedDate,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
                                           ClearCollect(colPlannerUndo,{Action:"Move",SubjectId:eventId,EventName:eventName,PreviousDate:previousDate,PreviousStart:previousStart,PreviousEnd:previousEnd,PreviousStatus:previousStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
                                           With(
-                                            {updatedEvent:Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:If(varPlannerWarningAcknowledged,"NeedsReview","Ready"),WarningAcknowledged:varPlannerWarningAcknowledged})},
+                                            {updatedEvent:Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:"Approved",WarningAcknowledged:true})},
                                             With(
                                               {changedState:LookUp(colPlannerLayerState,PlanningLayer=updatedEvent.PlanningLayer)},
                                               UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true})
@@ -1125,3 +1047,69 @@ Screens:
                               Size: =12
                               Text: ="✓ " & If(CountRows(colPlannerMutationReceipt)>0 && First(colPlannerMutationReceipt).SubjectId=varPlannerSelectedEventId,First(colPlannerMutationReceipt).Summary,varPlannerReceipt)
                               Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerReceipt)
+                        - conPlannerWeekDelete:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =244
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =10
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =varPlannerContextMode="Delete"
+                            Children:
+                              - txtPlannerWeekDeleteTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =48
+                                    LayoutMinWidth: =0
+                                    Size: =23
+                                    Text: ="Delete " & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventName) & "?"
+                              - txtPlannerWeekDeleteHelp:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    Color: =RGBA(102,112,133,1)
+                                    Height: =64
+                                    LayoutMinWidth: =0
+                                    Size: =13
+                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated","This generated occurrence will be excluded so regeneration does not recreate it.","This manual meeting will be removed. You can undo immediately afterward.")
+                              - btnPlannerWeekConfirmDelete:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Confirm delete meeting"
+                                    BasePaletteColor: =RGBA(180,35,24,1)
+                                    Height: =44
+                                    OnSelect: |-
+                                      =With(
+                                        {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
+                                        ClearCollect(colPlannerUndo,{Action:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,PreviousDate:selectedEvent.EventDate,PreviousStart:selectedEvent.StartTime,PreviousEnd:selectedEvent.EndTime,PreviousStatus:selectedEvent.DecisionStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
+                                        If(selectedEvent.SourceType="Generated",Collect(colPlannerExclusions,{ExclusionId:"EXC-" & selectedEvent.EventId,EventId:selectedEvent.EventId,RuleSlotId:Coalesce(selectedEvent.RuleSlotId,selectedEvent.EventId),SourceRuleId:selectedEvent.SourceRuleId,EventName:selectedEvent.EventName,OriginalGeneratedDate:selectedEvent.OriginalGeneratedDate,MappingDecision:"",PlanYear:selectedEvent.PlanYear,Reason:"Deleted by user",CreatedAt:Now()}));
+                                        RemoveIf(colCalProofEvents,EventId=selectedEvent.EventId);
+                                        With({changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true}));
+                                        Set(varPlannerReceipt,selectedEvent.EventName & " deleted. Undo is available.");
+                                        ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:selectedEvent.EventDate,StartTime:selectedEvent.StartTime,DurationMinutes:selectedEvent.DurationMinutes,DecisionStatus:"Deleted",Summary:varPlannerReceipt,OccurredAt:Now()});
+                                        Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Delete",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
+                                      );
+                                      Set(varPlannerSelectedEventId,"");
+                                      Set(varPlannerContextMode,"Empty");
+                                      Select(btnPlannerWeekPersistSelected)
+                                    Text: ="Delete meeting"
+                                    Width: =Parent.Width
+                              - btnPlannerWeekCancelDelete:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Cancel delete"
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(102,112,133,1)
+                                    Height: =42
+                                    OnSelect: =Set(varPlannerContextMode,"Summary")
+                                    Text: ="Cancel"
+                                    Width: =Parent.Width

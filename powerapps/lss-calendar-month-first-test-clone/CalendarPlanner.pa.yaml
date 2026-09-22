@@ -2233,19 +2233,8 @@ Screens:
                                     PaddingTop: =0
                                     Size: =12
                                     Text: |-
-                                      =If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0,"Warning: this overlaps another planned meeting.","Warning: this move differs from the generated cadence.")
+                                      =If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0,"Warning: this overlaps another planned meeting.","Warning: this move differs from the generated cadence. Review before confirming.")
                                     Visible: =!IsPlannerHardStop(varPlannerDraftDate) && (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (varPlannerContextMode="Move" && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate)))
-                              - btnPlannerAcknowledge:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: =If(varPlannerWarningAcknowledged,"Warning acknowledged","Acknowledge warning")
-                                    Appearance: =If(varPlannerWarningAcknowledged,ButtonAppearance.Primary,ButtonAppearance.Outline)
-                                    BasePaletteColor: =RGBA(154,91,0,1)
-                                    Height: =40
-                                    OnSelect: =Set(varPlannerWarningAcknowledged,!varPlannerWarningAcknowledged)
-                                    Text: =If(varPlannerWarningAcknowledged,"✓ Warning acknowledged","Acknowledge warning")
-                                    Visible: =!IsPlannerHardStop(varPlannerDraftDate) && (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (varPlannerContextMode="Move" && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate)))
-                                    Width: =Parent.Width
                               - btnPlannerSaveEditor:
                                   Control: ModernButton
                                   Properties:
@@ -2254,8 +2243,8 @@ Screens:
                                     DisplayMode: |-
                                       =If(
                                         IsBlank(varPlannerDraftName) || (varPlannerAddKind="Existing meeting type" && IsBlank(varPlannerDraftRuleId)) || IsPlannerHardStop(varPlannerDraftDate) || (!IsBlank(LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer)) && LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer,Status)="Confirmed") ||
-                                        ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (varPlannerContextMode="Move" && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate))) && !varPlannerWarningAcknowledged) ||
-                                        (varPlannerContextMode="Move" && varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)),
+                                        ((CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+varPlannerDraftStart && EndTime>varPlannerDraftStart)>0 || (varPlannerContextMode="Move" && LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate))) ||
+                                        (varPlannerContextMode="Move" && varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && varPlannerDraftStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes))),
                                         DisplayMode.Disabled,
                                         DisplayMode.Edit
                                       )
@@ -2282,13 +2271,13 @@ Screens:
                                           With(
                                             {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,originalGeneratedDate:selectedEvent.OriginalGeneratedDate,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
                                             ClearCollect(colPlannerUndo,{Action:"Move",SubjectId:eventId,EventName:eventName,PreviousDate:previousDate,PreviousStart:previousStart,PreviousEnd:previousEnd,PreviousStatus:previousStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
-                                            Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:If(varPlannerWarningAcknowledged,"NeedsReview","Ready"),WarningAcknowledged:varPlannerWarningAcknowledged});
+                                            Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:"Approved",WarningAcknowledged:true});
                                             With(
                                               {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
                                               UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true})
                                             );
                                             Set(varPlannerReceipt,eventName & " moved from " & Text(previousDate,"mmm d") & " at " & Text(previousStart,"h:mm AM/PM") & " to " & Text(varPlannerDraftDate,"mmm d") & " at " & Text(varPlannerDraftStart,"h:mm AM/PM") & ". Original generated date remains " & Text(originalGeneratedDate,"mmm d") & ".");
-                                            ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Move",SubjectId:eventId,EventName:eventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,DurationMinutes:varPlannerDraftDuration,DecisionStatus:If(varPlannerWarningAcknowledged,"NeedsReview","Ready"),Summary:varPlannerReceipt,OccurredAt:Now()});
+                                            ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Move",SubjectId:eventId,EventName:eventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,DurationMinutes:varPlannerDraftDuration,DecisionStatus:"Approved",Summary:varPlannerReceipt,OccurredAt:Now()});
                                             Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Move",SubjectId:eventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                           )
                                         )
