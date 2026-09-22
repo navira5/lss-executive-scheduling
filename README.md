@@ -142,6 +142,54 @@ The prototype does not:
 - include the day-to-day Executive Scheduling Advisor; or
 - replace LSS's final review and approval.
 
+## Current Canvas clone handoff (2026-09-22)
+
+The most current Power Apps Canvas work is preserved separately at
+[`powerapps/lss-calendar-month-first-test-clone/`](powerapps/lss-calendar-month-first-test-clone/).
+This is the clone being tested in the Power Apps authoring session; it is not
+the older `powerapps/lss-calendar-app/` snapshot and it has not been published
+as the production app.
+
+The clone exists because the original month-first planner went through several
+unstable iterations: imported packages produced blank calendars, some screens
+felt frozen, Month/Week editing actions were inconsistent, the context panel
+could take over the screen, and rule-generated dates could be confused with
+manual exceptions. The clone isolates the work while leaving the original app
+untouched.
+
+The clone's current contract is deliberately simple:
+
+- SharePoint test lists remain the source of saved rules and plan rows.
+- Rules generate recurring meetings; a user edits a rule to change a recurring
+  pattern, or edits one meeting for a one-off exception.
+- Holidays and blocked days are hard stops. A generated meeting moved to the
+  next business day is marked `NeedsReview` and must be approved.
+- Different-title overlaps (for example, Rachel's meeting and Karen's meeting)
+  are allowed after user review. Same-title/same-time duplicates cannot be
+  accepted.
+- Manual moves outrank rules. Regeneration preserves them and flags conflicts
+  instead of silently overwriting them.
+- Other recurring and one-time meetings remain visible as their own category.
+- Needs attention is a persistent action in Year, Month, and Week. It filters
+  to unresolved dates/months, jumps to the first affected period, and lets the
+  user select a flagged day and use the normal Approve, Move, or Delete
+  actions. Approval immediately removes the unresolved flag.
+
+The clone source includes the synced Canvas YAML files and a detailed next-agent
+handoff in its own README. Its current validation receipt is:
+
+- `compile_canvas`: passed for all 6 synced files.
+- Accessibility check: no errors.
+- App Checker: 23 pre-existing medium performance findings remain, including a
+  `CalendarPlanner` complexity estimate of 360. These are known optimization
+  work, not a reason to throw away the clone or rewrite the app again.
+
+The next agent should sync the active authoring session before editing, compile
+after targeted changes, test the Needs attention workflow in all three views,
+and avoid publishing or replacing the original app until the functional demo is
+accepted. See the clone README for exact test steps, list names, app identity,
+and the full issue history.
+
 ## Evidence and implementation
 
 The unchanged source documents remain under `docs/source/`. Normalized historical evidence and assumptions live in `data/source-data.ts`.

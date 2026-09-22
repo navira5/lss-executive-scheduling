@@ -1,0 +1,2677 @@
+Screens:
+  BoardRulesReview:
+    Properties:
+      Fill: =RGBA(247,248,250,1)
+      LoadingSpinnerColor: =RGBA(91,59,127,1)
+      OnVisible: |-
+        =If(
+
+            IsBlank(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId && PlanningLayer=varPlannerActiveLayer).RuleId),
+            Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer=varPlannerActiveLayer),"SortOrder",SortOrder.Ascending)).RuleId)
+        );
+        With(
+            {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
+            ClearCollect(
+                colBrvMonthSelection,
+                {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
+                {MonthNumber:2,MonthName:"February",IsSelected:"February" in monthsText},
+                {MonthNumber:3,MonthName:"March",IsSelected:"March" in monthsText},
+                {MonthNumber:4,MonthName:"April",IsSelected:"April" in monthsText},
+                {MonthNumber:5,MonthName:"May",IsSelected:"May" in monthsText},
+                {MonthNumber:6,MonthName:"June",IsSelected:"June" in monthsText},
+                {MonthNumber:7,MonthName:"July",IsSelected:"July" in monthsText},
+                {MonthNumber:8,MonthName:"August",IsSelected:"August" in monthsText},
+                {MonthNumber:9,MonthName:"September",IsSelected:"September" in monthsText},
+                {MonthNumber:10,MonthName:"October",IsSelected:"October" in monthsText},
+                {MonthNumber:11,MonthName:"November",IsSelected:"November" in monthsText},
+                {MonthNumber:12,MonthName:"December",IsSelected:"December" in monthsText}
+            )
+        );
+        Set(varBrvReceiptVisible,false);
+        Set(varBrvSaveAttempted,false);
+        Set(varBrvShowDetails,false)
+    Children:
+      - conBrvRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(247,248,250,1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =16
+            PaddingBottom: =If(App.Width<760,16,24)
+            PaddingLeft: =If(App.Width<760,16,24)
+            PaddingRight: =If(App.Width<760,16,24)
+            PaddingTop: =If(App.Width<760,16,24)
+            Width: =Parent.Width
+          Children:
+            - btnBrvPersistLayerState:
+                Control: ModernButton
+                Properties:
+                  AccessibleLabel: ="Save layer regeneration status"
+                  Height: =0
+                  OnSelect: |-
+                    =Clear(colPlannerPersistenceErrors);
+                    ForAll(
+                      colPlannerLayerState As plannerLayer,
+                      With(
+                        {layerKey:"LSSPLN1|"&Text(varPlannerYear)&"|L|"&Text(plannerLayer.StepNumber),layerPayload:JSON({ConfirmedAt:Text(plannerLayer.ConfirmedAt,"yyyy-mm-dd hh:mm:ss"),LastGeneratedAt:Text(plannerLayer.LastGeneratedAt,"yyyy-mm-dd hh:mm:ss"),NeedsRegeneration:plannerLayer.NeedsRegeneration})},
+                        With(
+                          {savedLayer:IfError(Patch('LSS Test Planned Calendar 20260921',With({existingLayer:LookUp(colPlannerStoredRows,Code=layerKey)},If(IsBlank(existingLayer.ID),Defaults('LSS Test Planned Calendar 20260921'),existingLayer)),{Title:plannerLayer.PlanningLayer,Code:layerKey,EventDate:Date(varPlannerYear,1,1),Category:"PLNR_LAYER",SourceRule:Text(plannerLayer.StepNumber),Status:plannerLayer.Status,ReadyforOutlook:false,PlanningNotes:layerPayload}),Blank())},
+                          If(IsBlank(savedLayer.ID),Collect(colPlannerPersistenceErrors,{Key:layerKey,Message:"Layer state was not saved"}),RemoveIf(colPlannerStoredRows,Code=layerKey);Collect(colPlannerStoredRows,savedLayer))
+                        )
+                      )
+                    );
+                    If(CountRows(colPlannerPersistenceErrors)>0,Set(varPlannerPersistenceStatus,"Rule saved, but planning state failed to save"),Set(varPlannerPersistenceStatus,"Rule and planning state saved"))
+                  Text: =""
+                  Visible: =false
+                  Width: =0
+            - btnBrvRefreshMonthSelection:
+                Control: ModernButton
+                Properties:
+                  AccessibleLabel: ="Refresh selected months for the current rule"
+                  Height: =0
+                  OnSelect: |-
+                    =With(
+                      {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
+                      ClearCollect(
+                        colBrvMonthSelection,
+                        {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
+                        {MonthNumber:2,MonthName:"February",IsSelected:"February" in monthsText},
+                        {MonthNumber:3,MonthName:"March",IsSelected:"March" in monthsText},
+                        {MonthNumber:4,MonthName:"April",IsSelected:"April" in monthsText},
+                        {MonthNumber:5,MonthName:"May",IsSelected:"May" in monthsText},
+                        {MonthNumber:6,MonthName:"June",IsSelected:"June" in monthsText},
+                        {MonthNumber:7,MonthName:"July",IsSelected:"July" in monthsText},
+                        {MonthNumber:8,MonthName:"August",IsSelected:"August" in monthsText},
+                        {MonthNumber:9,MonthName:"September",IsSelected:"September" in monthsText},
+                        {MonthNumber:10,MonthName:"October",IsSelected:"October" in monthsText},
+                        {MonthNumber:11,MonthName:"November",IsSelected:"November" in monthsText},
+                        {MonthNumber:12,MonthName:"December",IsSelected:"December" in monthsText}
+                      )
+                    )
+                  Text: =""
+                  Visible: =false
+                  Width: =0
+            - conBrvHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(217,222,231,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  FillPortions: =0
+                  Height: =If(App.Width<760,176,104)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =12
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =16
+                  PaddingLeft: =20
+                  PaddingRight: =20
+                  PaddingTop: =16
+                  RadiusBottomLeft: =12
+                  RadiusBottomRight: =12
+                  RadiusTopLeft: =12
+                  RadiusTopRight: =12
+                Children:
+                  - conBrvHeaderCopy:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =If(App.Width<760,0,1)
+                        Height: =If(App.Width<760,96,80)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                      Children:
+                        - txtBrvEyebrow:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Saved planning rules"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(91,59,127,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="SAVED PLANNING RULES"
+                              Wrap: =false
+                        - txtBrvTitle:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Rule Book"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =34
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =28
+                              Text: ="Rule Book"
+                              Wrap: =false
+                        - txtBrvSubtitle:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Maintain meeting rules in one place. Keep the calendar simple; edit complexity here."
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(102,112,133,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width<760,38,20)
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: ="Maintain meeting rules in one place. Keep the calendar simple; edit complexity here."
+                              VerticalAlign: =VerticalAlign.Top
+                  - btnBrvAddRule:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Add a new planning rule"
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BasePaletteColor: =RGBA(91,59,127,1)
+                        Color: =RGBA(255,255,255,1)
+                        DisplayMode: |
+                          =DisplayMode.Edit
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =120
+                        OnSelect: |
+                          =Set(varBrvReceiptVisible,false);
+                          Set(varBrvSaveAttempted,false);
+                          With({draftId:"DRAFT-" & Text(GUID()),nextOrder:Max(colMeetingRulebook,SortOrder)+1},
+                           Collect(colMeetingRulebook,{SortOrder:nextOrder,RuleId:draftId,SourceRecordId:Blank(),MeetingName:"",Cadence:"Quarterly",MonthsText:"",StartMonth:"January",WeekOfMonth:"First",PreferredDay:"Monday",AnchorMonth:"January",AnchorDay:1,SecondPreferredDay:"Thursday",SecondWeekOfMonth:"Fourth",StartTimeText:"9:00 AM",DurationMinutes:60,Format:"Hybrid",Flexibility:"Flexible",RuleStatus:"Needs validation",PlanningLayer:If(varPlannerActiveLayer="All","General",varPlannerActiveLayer),RuleSummary:"",IsDraft:true});
+                           Set(varBrvSelectedRuleId,draftId)
+                          );
+                          Reset(inpBrvMeetingName); Reset(drpBrvCadence); Reset(drpBrvStartMonth); Reset(drpBrvCadAnchorMonth); Reset(drpBrvCadAnchorDay); Reset(drpBrvWeek); Reset(drpBrvDay); Reset(drpBrvCadSecondDay); Reset(drpBrvCadSecondWeek); Reset(inpBrvTime); Reset(numBrvDuration); Reset(drpBrvFormat); Reset(drpBrvFlexibility); Reset(drpBrvStatus); Reset(drpBrvFamily); Select(btnBrvRefreshMonthSelection)
+                        PaddingBottom: =0
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        PaddingTop: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =14
+                        Text: ="+ Add rule"
+                        Tooltip: ="New-rule creation will be enabled in a later rule-management slice."
+                        Width: =If(App.Width<760,Parent.Width,120)
+                  - btnBrvBack:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Back to the annual calendar"
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: =ButtonAppearance.Outline
+                        BasePaletteColor: =RGBA(91,59,127,1)
+                        Color: =RGBA(31,41,55,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =180
+                        OnSelect: =Set(varPlannerView,"Year");Navigate(CalendarPlanner,ScreenTransition.None)
+                        PaddingBottom: =0
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        PaddingTop: =0
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =14
+                        Text: ="Back to calendar"
+                        Width: =If(App.Width<760,Parent.Width,180)
+            - conBrvScope:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(217,222,231,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  FillPortions: =0
+                  Height: =If(App.Width<760,224,64)
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =10
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =10
+                  RadiusBottomLeft: =12
+                  RadiusBottomRight: =12
+                  RadiusTopLeft: =12
+                  RadiusTopRight: =12
+                Children:
+                  - txtBrvScope:
+                      Control: ModernText
+                      Properties:
+                        AccessibleLabel: ="Choose a planning layer"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(102,112,133,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =If(App.Width<760,24,40)
+                        LayoutMinWidth: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =12
+                        Text: ="Layers"
+                        Wrap: =false
+                  - btnBrvLayerBoard:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Show Board rules"
+                        Appearance: =If(varPlannerActiveLayer="Board",ButtonAppearance.Primary,ButtonAppearance.Outline)
+                        BasePaletteColor: =If(varPlannerActiveLayer="Board",RGBA(91,59,127,1),RGBA(102,112,133,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =If(App.Width<760,Parent.Width,136)
+                        OnSelect: |-
+                          =Set(varPlannerActiveLayer,"Board");
+                          Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Board"),"SortOrder",SortOrder.Ascending)).RuleId);
+                          Reset(inpBrvMeetingName); Reset(drpBrvCadence); Reset(drpBrvStartMonth); Reset(drpBrvCadAnchorMonth); Reset(drpBrvCadAnchorDay); Reset(drpBrvWeek); Reset(drpBrvDay); Reset(drpBrvCadSecondDay); Reset(drpBrvCadSecondWeek); Reset(inpBrvTime); Reset(numBrvDuration); Reset(drpBrvFormat); Reset(drpBrvFlexibility); Reset(drpBrvStatus); Select(btnBrvRefreshMonthSelection);
+                          Set(varBrvReceiptVisible,false); Set(varBrvSaveAttempted,false)
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =13
+                        Text: ="●  Board  " & Text(CountIf(colMeetingRulebook,PlanningLayer="Board"))
+                        Width: =If(App.Width<760,Parent.Width,136)
+                  - btnBrvLayerCommittees:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Show Committee rules"
+                        Appearance: =If(varPlannerActiveLayer="Board Committees",ButtonAppearance.Primary,ButtonAppearance.Outline)
+                        BasePaletteColor: =If(varPlannerActiveLayer="Board Committees",RGBA(91,59,127,1),RGBA(102,112,133,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =If(App.Width<760,Parent.Width,160)
+                        OnSelect: |-
+                          =Set(varPlannerActiveLayer,"Board Committees");
+                          Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Board Committees"),"SortOrder",SortOrder.Ascending)).RuleId);
+                          Reset(inpBrvMeetingName); Reset(drpBrvCadence); Reset(drpBrvStartMonth); Reset(drpBrvCadAnchorMonth); Reset(drpBrvCadAnchorDay); Reset(drpBrvWeek); Reset(drpBrvDay); Reset(drpBrvCadSecondDay); Reset(drpBrvCadSecondWeek); Reset(inpBrvTime); Reset(numBrvDuration); Reset(drpBrvFormat); Reset(drpBrvFlexibility); Reset(drpBrvStatus); Select(btnBrvRefreshMonthSelection);
+                          Set(varBrvReceiptVisible,false); Set(varBrvSaveAttempted,false)
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =13
+                        Text: ="●  Committees  " & Text(CountIf(colMeetingRulebook,PlanningLayer="Board Committees"))
+                        Width: =If(App.Width<760,Parent.Width,160)
+                  - btnBrvLayerExecutive:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Show Executive rules"
+                        Appearance: =If(varPlannerActiveLayer="Executive Leadership",ButtonAppearance.Primary,ButtonAppearance.Outline)
+                        BasePaletteColor: =If(varPlannerActiveLayer="Executive Leadership",RGBA(91,59,127,1),RGBA(102,112,133,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =If(App.Width<760,Parent.Width,152)
+                        OnSelect: |-
+                          =Set(varPlannerActiveLayer,"Executive Leadership");
+                          Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Executive Leadership"),"SortOrder",SortOrder.Ascending)).RuleId);
+                          Reset(inpBrvMeetingName); Reset(drpBrvCadence); Reset(drpBrvStartMonth); Reset(drpBrvCadAnchorMonth); Reset(drpBrvCadAnchorDay); Reset(drpBrvWeek); Reset(drpBrvDay); Reset(drpBrvCadSecondDay); Reset(drpBrvCadSecondWeek); Reset(inpBrvTime); Reset(numBrvDuration); Reset(drpBrvFormat); Reset(drpBrvFlexibility); Reset(drpBrvStatus); Select(btnBrvRefreshMonthSelection);
+                          Set(varBrvReceiptVisible,false); Set(varBrvSaveAttempted,false)
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =13
+                        Text: ="●  Executive  " & Text(CountIf(colMeetingRulebook,PlanningLayer="Executive Leadership"))
+                        Width: =If(App.Width<760,Parent.Width,152)
+                  - btnBrvLayerOperations:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Show Operations rules"
+                        Appearance: =If(varPlannerActiveLayer="Organization & Operations",ButtonAppearance.Primary,ButtonAppearance.Outline)
+                        BasePaletteColor: =If(varPlannerActiveLayer="Organization & Operations",RGBA(91,59,127,1),RGBA(102,112,133,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =If(App.Width<760,Parent.Width,160)
+                        OnSelect: |-
+                          =Set(varPlannerActiveLayer,"Organization & Operations");
+                          Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Organization & Operations"),"SortOrder",SortOrder.Ascending)).RuleId);
+                          Reset(inpBrvMeetingName); Reset(drpBrvCadence); Reset(drpBrvStartMonth); Reset(drpBrvCadAnchorMonth); Reset(drpBrvCadAnchorDay); Reset(drpBrvWeek); Reset(drpBrvDay); Reset(drpBrvCadSecondDay); Reset(drpBrvCadSecondWeek); Reset(inpBrvTime); Reset(numBrvDuration); Reset(drpBrvFormat); Reset(drpBrvFlexibility); Reset(drpBrvStatus); Select(btnBrvRefreshMonthSelection);
+                          Set(varBrvReceiptVisible,false); Set(varBrvSaveAttempted,false)
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =13
+                        Text: ="●  Operations  " & Text(CountIf(colMeetingRulebook,PlanningLayer="Organization & Operations"))
+                        Width: =If(App.Width<760,Parent.Width,160)
+                  - btnBrvLayerOperations_1:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Show other recurring rules"
+                        Appearance: |+
+                          =If(varPlannerActiveLayer="General",ButtonAppearance.Primary,ButtonAppearance.Outline)
+
+                        BasePaletteColor: |+
+                          =If(varPlannerActiveLayer="General",RGBA(168,95,16,1),RGBA(102,112,133,1))
+
+
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =If(App.Width<760,Parent.Width,160)
+                        OnSelect: |
+                          =Set(varPlannerActiveLayer,"General");
+                          If(CountIf(colMeetingRulebook,PlanningLayer="General")>0,Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="General"),"SortOrder",SortOrder.Ascending)).RuleId));
+                          Reset(inpBrvMeetingName); Reset(drpBrvCadence); Reset(drpBrvStartMonth); Reset(drpBrvCadAnchorMonth); Reset(drpBrvCadAnchorDay); Reset(drpBrvWeek); Reset(drpBrvDay); Reset(drpBrvCadSecondDay); Reset(drpBrvCadSecondWeek); Reset(inpBrvTime); Reset(numBrvDuration); Reset(drpBrvFormat); Reset(drpBrvFlexibility); Reset(drpBrvStatus); Select(btnBrvRefreshMonthSelection); Set(varBrvReceiptVisible,false); Set(varBrvSaveAttempted,false)
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =13
+                        Text: |
+                          ="●  Other recurring  " & Text(CountIf(colMeetingRulebook,PlanningLayer="General"))
+                        Width: =If(App.Width<760,Parent.Width,160)
+                  - btnBrvLayerBoard_1:
+                      Control: ModernButton
+                      Properties:
+                        AccessibleLabel: ="Show all rules"
+                        Appearance: |+
+                          =If(varPlannerActiveLayer="All",ButtonAppearance.Primary,ButtonAppearance.Outline)
+
+
+                        BasePaletteColor: =If(varPlannerActiveLayer="Board",RGBA(91,59,127,1),RGBA(102,112,133,1))
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Layout: =ButtonLayout.TextOnly
+                        LayoutMinWidth: =If(App.Width<760,Parent.Width,136)
+                        OnSelect: |+
+                          =Set(varPlannerActiveLayer,"All");
+                          Set(varBrvSelectedRuleId,First(SortByColumns(colMeetingRulebook,"SortOrder",SortOrder.Ascending)).RuleId);
+                          Reset(inpBrvMeetingName); Reset(drpBrvCadence); Reset(drpBrvStartMonth); Reset(drpBrvCadAnchorMonth); Reset(drpBrvCadAnchorDay); Reset(drpBrvWeek); Reset(drpBrvDay); Reset(drpBrvCadSecondDay); Reset(drpBrvCadSecondWeek); Reset(inpBrvTime); Reset(numBrvDuration); Reset(drpBrvFormat); Reset(drpBrvFlexibility); Reset(drpBrvStatus); Select(btnBrvRefreshMonthSelection); Set(varBrvReceiptVisible,false); Set(varBrvSaveAttempted,false)
+
+
+                        RadiusBottomLeft: =8
+                        RadiusBottomRight: =8
+                        RadiusTopLeft: =8
+                        RadiusTopRight: =8
+                        Size: =13
+                        Text: |+
+                          ="All  " & Text(CountRows(colMeetingRulebook))
+
+
+                        Width: =If(App.Width<760,Parent.Width,136)
+            - conBrvWorkspace:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Height: |-
+                    =With(
+                        {cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},
+                        With(
+                            {
+                                editorHeight:
+                                    32 + 18 + 12 + If(App.Width<760,106,52) + 12 + If(App.Width<760,72,52) + 12 + If(App.Width<760,160,76) + 12 +
+                                    If(App.Width<760,112+If(cadence.UsesStartMonth,84,0),112) +
+                                    If(cadence.UsesAnchorDate,12+If(App.Width<760,188,104),0) +
+                                    If(cadence.UsesSpecificMonths,12+312,0) +
+                                    If(cadence.UsesWeek || cadence.UsesDay,12+If(App.Width<760 && cadence.UsesWeek && cadence.UsesDay,160,76),0) +
+                                    If(cadence.UsesSecondDay || cadence.UsesSecondWeek,12+76,0) +
+                                    12 + If(App.Width<760,160,76) + 12 + If(App.Width<760,160,76) + 12 + 76 +
+                                    12 + 40 + 12 + If(App.Width<760,100,44) +
+                                    If(varBrvReceiptVisible,12+440,0) + 12 + 76
+                            },
+                            If(App.Width<760,700+16+editorHeight,Max(700,editorHeight))
+                        )
+                    )
+                  LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =16
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                Children:
+                  - conBrvListPane:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =If(App.Width<760,AlignInContainer.Stretch,AlignInContainer.Start)
+                        BorderColor: =RGBA(217,222,231,1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255,255,255,1)
+                        FillPortions: =0
+                        Height: |
+                          =Parent.Height
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =8
+                        LayoutMaxWidth: =If(App.Width<760,0,320)
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =12
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        PaddingTop: =12
+                        RadiusBottomLeft: =12
+                        RadiusBottomRight: =12
+                        RadiusTopLeft: =12
+                        RadiusTopRight: =12
+                        Width: =If(App.Width<760,Parent.Width,320)
+                      Children:
+                        - txtBrvListTitle:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Meeting rules"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =24
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =16
+                              Text: ="Meeting rules"
+                              Wrap: =false
+                        - inpBrvRuleSearch:
+                            Control: ModernTextInput
+                            Properties:
+                              AccessibleLabel: ="Search meeting rules"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =Appearance.Outline
+                              BasePaletteColor: =RGBA(91,59,127,1)
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =40
+                              LayoutMinWidth: =0
+                              Placeholder: ="Search meeting rules"
+                              TriggerOutput: =TriggerOutput.Delayed
+                              Type: =TextInputType.Search
+                              Width: =Parent.Width
+                        - galBrvRules:
+                            Control: Gallery
+                            Variant: Vertical
+                            Properties:
+                              AccessibleLabel: ="Meeting rules. Select a rule to edit."
+                              BorderColor: =RGBA(217,222,231,1)
+                              DelayItemLoading: =false
+                              Height: =640
+                              Items: |+
+                                =SortByColumns(Filter(colMeetingRulebook,(varPlannerActiveLayer="All" || PlanningLayer=varPlannerActiveLayer) && (IsBlank(inpBrvRuleSearch.Text) || StartsWith(MeetingName,inpBrvRuleSearch.Text))),"SortOrder",SortOrder.Ascending)
+
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              LoadingSpinner: =LoadingSpinner.None
+                              OnSelect: |
+                                =Set(varBrvSelectedRuleId,ThisItem.RuleId);
+                                Reset(inpBrvMeetingName);
+                                Reset(drpBrvCadence);
+                                Reset(drpBrvStartMonth);
+                                Reset(drpBrvCadAnchorMonth);
+                                Reset(drpBrvCadAnchorDay);
+                                Reset(drpBrvWeek);
+                                Reset(drpBrvDay);
+                                Reset(drpBrvCadSecondDay);
+                                Reset(drpBrvCadSecondWeek);
+                                Reset(inpBrvTime);
+                                Reset(numBrvDuration);
+                                Reset(drpBrvFormat);
+                                Reset(drpBrvFlexibility);
+                                Reset(drpBrvStatus);
+                                With(
+                                 {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
+                                 ClearCollect(
+                                  colBrvMonthSelection,
+                                  {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
+                                  {MonthNumber:2,MonthName:"February",IsSelected:"February" in monthsText},
+                                  {MonthNumber:3,MonthName:"March",IsSelected:"March" in monthsText},
+                                  {MonthNumber:4,MonthName:"April",IsSelected:"April" in monthsText},
+                                  {MonthNumber:5,MonthName:"May",IsSelected:"May" in monthsText},
+                                  {MonthNumber:6,MonthName:"June",IsSelected:"June" in monthsText},
+                                  {MonthNumber:7,MonthName:"July",IsSelected:"July" in monthsText},
+                                  {MonthNumber:8,MonthName:"August",IsSelected:"August" in monthsText},
+                                  {MonthNumber:9,MonthName:"September",IsSelected:"September" in monthsText},
+                                  {MonthNumber:10,MonthName:"October",IsSelected:"October" in monthsText},
+                                  {MonthNumber:11,MonthName:"November",IsSelected:"November" in monthsText},
+                                  {MonthNumber:12,MonthName:"December",IsSelected:"December" in monthsText}
+                                 )
+                                );
+                                Set(varBrvSaveAttempted,false);
+                                Set(varBrvReceiptVisible,false)
+                              ShowScrollbar: =false
+                              TabIndex: =0
+                              TemplatePadding: =4
+                              TemplateSize: =84
+                              Width: =Parent.Width
+                            Children:
+                              - conBrvRuleRow:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =If(ThisItem.RuleId=varBrvSelectedRuleId,RGBA(91,59,127,1),RGBA(217,222,231,1))
+                                    BorderThickness: =If(ThisItem.RuleId=varBrvSelectedRuleId,2,1)
+                                    DropShadow: =DropShadow.None
+                                    Fill: =If(ThisItem.RuleId=varBrvSelectedRuleId,RGBA(252,250,253,1),RGBA(255,255,255,1))
+                                    Height: =Parent.TemplateHeight
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =2
+                                    PaddingBottom: =6
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    PaddingTop: =6
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Width: =Parent.TemplateWidth
+                                  Children:
+                                    - txtBrvRuleName:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Meeting group " & ThisItem.MeetingName
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =22
+                                          LayoutMinWidth: =0
+                                          OnSelect: |
+                                            =Set(varBrvSelectedRuleId,ThisItem.RuleId);
+                                            Reset(inpBrvMeetingName);
+                                            Reset(drpBrvCadence);
+                                            Reset(drpBrvStartMonth);
+                                            Reset(drpBrvCadAnchorMonth);
+                                            Reset(drpBrvCadAnchorDay);
+                                            Reset(drpBrvWeek);
+                                            Reset(drpBrvDay);
+                                            Reset(drpBrvCadSecondDay);
+                                            Reset(drpBrvCadSecondWeek);
+                                            Reset(inpBrvTime);
+                                            Reset(numBrvDuration);
+                                            Reset(drpBrvFormat);
+                                            Reset(drpBrvFlexibility);
+                                            Reset(drpBrvStatus);
+                                            With(
+                                             {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
+                                             ClearCollect(
+                                              colBrvMonthSelection,
+                                              {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
+                                              {MonthNumber:2,MonthName:"February",IsSelected:"February" in monthsText},
+                                              {MonthNumber:3,MonthName:"March",IsSelected:"March" in monthsText},
+                                              {MonthNumber:4,MonthName:"April",IsSelected:"April" in monthsText},
+                                              {MonthNumber:5,MonthName:"May",IsSelected:"May" in monthsText},
+                                              {MonthNumber:6,MonthName:"June",IsSelected:"June" in monthsText},
+                                              {MonthNumber:7,MonthName:"July",IsSelected:"July" in monthsText},
+                                              {MonthNumber:8,MonthName:"August",IsSelected:"August" in monthsText},
+                                              {MonthNumber:9,MonthName:"September",IsSelected:"September" in monthsText},
+                                              {MonthNumber:10,MonthName:"October",IsSelected:"October" in monthsText},
+                                              {MonthNumber:11,MonthName:"November",IsSelected:"November" in monthsText},
+                                              {MonthNumber:12,MonthName:"December",IsSelected:"December" in monthsText}
+                                             )
+                                            );
+                                            Set(varBrvSaveAttempted,false);
+                                            Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =14
+                                          Text: =If(ThisItem.IsDraft,"New rule",ThisItem.MeetingName)
+                                          Wrap: =false
+                                    - txtBrvRuleSummary:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Schedule summary for " & ThisItem.MeetingName
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(102,112,133,1)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =46
+                                          LayoutMinWidth: =0
+                                          OnSelect: |
+                                            =Set(varBrvSelectedRuleId,ThisItem.RuleId);
+                                            Reset(inpBrvMeetingName);
+                                            Reset(drpBrvCadence);
+                                            Reset(drpBrvStartMonth);
+                                            Reset(drpBrvCadAnchorMonth);
+                                            Reset(drpBrvCadAnchorDay);
+                                            Reset(drpBrvWeek);
+                                            Reset(drpBrvDay);
+                                            Reset(drpBrvCadSecondDay);
+                                            Reset(drpBrvCadSecondWeek);
+                                            Reset(inpBrvTime);
+                                            Reset(numBrvDuration);
+                                            Reset(drpBrvFormat);
+                                            Reset(drpBrvFlexibility);
+                                            Reset(drpBrvStatus);
+                                            With(
+                                             {monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},
+                                             ClearCollect(
+                                              colBrvMonthSelection,
+                                              {MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},
+                                              {MonthNumber:2,MonthName:"February",IsSelected:"February" in monthsText},
+                                              {MonthNumber:3,MonthName:"March",IsSelected:"March" in monthsText},
+                                              {MonthNumber:4,MonthName:"April",IsSelected:"April" in monthsText},
+                                              {MonthNumber:5,MonthName:"May",IsSelected:"May" in monthsText},
+                                              {MonthNumber:6,MonthName:"June",IsSelected:"June" in monthsText},
+                                              {MonthNumber:7,MonthName:"July",IsSelected:"July" in monthsText},
+                                              {MonthNumber:8,MonthName:"August",IsSelected:"August" in monthsText},
+                                              {MonthNumber:9,MonthName:"September",IsSelected:"September" in monthsText},
+                                              {MonthNumber:10,MonthName:"October",IsSelected:"October" in monthsText},
+                                              {MonthNumber:11,MonthName:"November",IsSelected:"November" in monthsText},
+                                              {MonthNumber:12,MonthName:"December",IsSelected:"December" in monthsText}
+                                             )
+                                            );
+                                            Set(varBrvSaveAttempted,false);
+                                            Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: |
+                                            =ThisItem.Cadence & " · " & If(!IsBlank(ThisItem.RuleSummary),ThisItem.RuleSummary,If(ThisItem.Cadence="As needed — no dates generated automatically","no automatic dates",ThisItem.WeekOfMonth & " " & ThisItem.PreferredDay)) & Char(10) & If(ThisItem.RuleStatus="Confirmed","✓ Confirmed",ThisItem.RuleStatus)
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Wrap: =false
+                  - conBrvEditorPane:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(217,222,231,1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255,255,255,1)
+                        FillPortions: =If(App.Width<760,0,1)
+                        Height: |
+                          =Parent.Height
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =12
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =20
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =20
+                        RadiusBottomLeft: =12
+                        RadiusBottomRight: =12
+                        RadiusTopLeft: =12
+                        RadiusTopRight: =12
+                      Children:
+                        - txtBrvEditorEyebrow:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Selected rule"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(102,112,133,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Text: ="SELECTED RULE"
+                              Wrap: =false
+                        - conBrvEditorHeading:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =If(App.Width<760,106,52)
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                            Children:
+                              - txtBrvEditorTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Selected meeting " & LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MeetingName
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(31,41,55,1)
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =If(App.Width<760,54,34)
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =24
+                                    Text: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MeetingName
+                                    Wrap: =App.Width<760
+                              - bdgBrvEditorStatus:
+                                  Control: Badge
+                                  Properties:
+                                    AccessibleLabel: ="Selected rule status " & LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus
+                                    AlignInContainer: =If(App.Width<760,AlignInContainer.Start,AlignInContainer.Center)
+                                    Appearance: ='BadgeCanvas.Appearance'.Tint
+                                    Content: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus
+                                    DisplayMode: =DisplayMode.View
+                                    Font: =Font.'Segoe UI'
+                                    FontColor: =If(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus="Confirmed",RGBA(37,122,84,1),RGBA(154,91,0,1))
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    Shape: ='BadgeCanvas.Shape'.Rounded
+                                    ThemeColor: =If(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus="Confirmed",'BadgeCanvas.ThemeColor'.Success,'BadgeCanvas.ThemeColor'.Warning)
+                                    Width: =140
+                        - txtBrvCurrentSummary:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Plain language rule summary"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(221,210,232,1)
+                              BorderThickness: =1
+                              Color: =RGBA(81,69,97,1)
+                              Fill: =RGBA(243,239,247,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =If(App.Width<760,84,56)
+                              LayoutMinWidth: =0
+                              PaddingBottom: =10
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =10
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Size: =13
+                              Text: |-
+                                =With(
+                                    {rule:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId)},
+                                    "This rule generates " & rule.MeetingName & " · " & rule.Cadence & " · " &
+                                    Switch(
+                                        rule.Cadence,
+                                        "One time",rule.AnchorMonth & " " & Text(rule.AnchorDay) & ", 2027",
+                                        "Twice a week",rule.PreferredDay & " and " & rule.SecondPreferredDay,
+                                        "Weekly",rule.PreferredDay,
+                                        "Every two weeks","first occurrence " & rule.AnchorMonth & " " & Text(rule.AnchorDay) & ", 2027",
+                                        "Twice a month",rule.WeekOfMonth & " and " & rule.SecondWeekOfMonth & " " & rule.PreferredDay,
+                                        "Monthly",rule.WeekOfMonth & " " & rule.PreferredDay,
+                                        "Every two months","starting " & rule.StartMonth & " · " & rule.WeekOfMonth & " " & rule.PreferredDay,
+                                        "Quarterly","starting " & rule.StartMonth & " · " & rule.WeekOfMonth & " " & rule.PreferredDay,
+                                        "Specific months",rule.MonthsText & " · " & rule.WeekOfMonth & " " & rule.PreferredDay,
+                                        "Annually","starting " & rule.StartMonth & " · " & rule.WeekOfMonth & " " & rule.PreferredDay,
+                                        "As needed — no dates generated automatically","no automatic dates",
+                                        "Schedule not set"
+                                    ) & " · " & rule.StartTimeText & " · " & Text(rule.DurationMinutes) & " minutes · " & rule.Format & " · " & rule.Flexibility
+                                )
+                              VerticalAlign: =VerticalAlign.Top
+                        - txtBrvSectionDetails:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Meeting details section"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =34
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =16
+                              Text: ="1. Meeting details"
+                              Wrap: =false
+                        - conBrvNameField:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =If(App.Width<760,160,76)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                            Children:
+                              - conBrvMeetingNameInput:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtBrvMeetingNameLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Meeting name label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Meeting name"
+                                          Wrap: =false
+                                    - inpBrvMeetingName:
+                                        Control: ModernTextInput
+                                        Properties:
+                                          AccessibleLabel: ="Meeting name"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MeetingName
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          TriggerOutput: =TriggerOutput.FocusOut
+                                          ValidationState: =If(varBrvSaveAttempted && IsBlank(Trim(Self.Text)),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                              - conBrvFamilyInput:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtBrvFamilyLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Meeting family label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Belongs to"
+                                          Wrap: =false
+                                    - drpBrvFamily:
+                                        Control: ModernCombobox
+                                        Properties:
+                                          AccessibleLabel: ="Choose the meeting rule family"
+                                          DefaultSelectedItems: =Filter(Table({Label:"Board"},{Label:"Committees"},{Label:"Executive"},{Label:"Operations"},{Label:"Other recurring"}),Label=Switch(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).PlanningLayer,"Board","Board","Board Committees","Committees","Executive Leadership","Executive","Organization & Operations","Operations","General","Other recurring","Other recurring"))
+                                          Height: =44
+                                          IsSearchable: =false
+                                          ItemDisplayText: =ThisItem.Label
+                                          Items: =Table({Label:"Board"},{Label:"Committees"},{Label:"Executive"},{Label:"Operations"},{Label:"Other recurring"})
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          SelectMultiple: =false
+                                          Width: =Parent.Width
+                        - txtBrvSectionRecurrence:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Recurrence section"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =34
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =16
+                              Text: ="2. Recurrence"
+                              Wrap: =false
+                        - conBrvCadenceRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =With({cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},If(App.Width<760,112+If(cadence.UsesStartMonth,84,0),112))
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                            Children:
+                              - conBrvCadenceField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =112
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtBrvCadenceLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="How often label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="How often?"
+                                          Wrap: =false
+                                    - drpBrvCadence:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: ="How often does this meeting happen"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp(colBrvCadenceOptions,Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Cadence)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =SortByColumns(colBrvCadenceOptions,"SortOrder",SortOrder.Ascending)
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                                    - txtBrvCadenceHelp:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: |-
+                                            ="Cadence guidance: " & LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).HelpText
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(102,112,133,1)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =36
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Text: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).HelpText
+                                          VerticalAlign: =VerticalAlign.Top
+                              - conBrvStartMonthField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    Visible: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesStartMonth
+                                  Children:
+                                    - txtBrvStartMonthLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: =If(drpBrvCadence.Selected.Value="Annually","Month label","Starting month label")
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: =If(drpBrvCadence.Selected.Value="Annually","Month","Starting month")
+                                          Wrap: =false
+                                    - drpBrvStartMonth:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: =If(drpBrvCadence.Selected.Value="Annually","Month for annual cadence","Starting month for " & drpBrvCadence.Selected.Value)
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).StartMonth)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =[{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}]
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesStartMonth && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                        - conBrvCadAnchorDateRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =If(App.Width<760,188,104)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesAnchorDate
+                            Children:
+                              - txtBrvCadAnchorDateLabel:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =If(drpBrvCadence.Selected.Value="One time","Meeting date in 2027","First occurrence in 2027")
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =24
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =13
+                                    Text: =If(drpBrvCadence.Selected.Value="One time","Meeting date (2027)","First occurrence (2027)")
+                                    Wrap: =false
+                              - conBrvCadAnchorFields:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Height: =If(App.Width<760,160,76)
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - conBrvCadAnchorMonthField:
+                                        Control: GroupContainer
+                                        Variant: AutoLayout
+                                        Properties:
+                                          FillPortions: =If(App.Width<760,0,1)
+                                          Height: =76
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                        Children:
+                                          - txtBrvCadAnchorMonthLabel:
+                                              Control: ModernText
+                                              Properties:
+                                                AccessibleLabel: ="Anchor month label"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =RGBA(31,41,55,1)
+                                                Font: =Font.'Segoe UI'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =24
+                                                LayoutMinWidth: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =13
+                                                Text: ="Month"
+                                                Wrap: =false
+                                          - drpBrvCadAnchorMonth:
+                                              Control: ModernDropdown
+                                              Properties:
+                                                AccessibleLabel: =If(drpBrvCadence.Selected.Value="One time","Meeting date month in 2027","First occurrence month in 2027")
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Appearance: =Appearance.Outline
+                                                BasePaletteColor: =RGBA(91,59,127,1)
+                                                Color: =RGBA(31,41,55,1)
+                                                Default: =LookUp([{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).AnchorMonth)
+                                                Font: =Font.'Segoe UI'
+                                                Height: =44
+                                                ItemDisplayText: =ThisItem.Value
+                                                Items: =[{Value:"January"},{Value:"February"},{Value:"March"},{Value:"April"},{Value:"May"},{Value:"June"},{Value:"July"},{Value:"August"},{Value:"September"},{Value:"October"},{Value:"November"},{Value:"December"}]
+                                                LayoutMinWidth: =0
+                                                Required: =true
+                                                ValidationState: =If(varBrvSaveAttempted && LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesAnchorDate && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                                Width: =Parent.Width
+                                    - conBrvCadAnchorDayField:
+                                        Control: GroupContainer
+                                        Variant: AutoLayout
+                                        Properties:
+                                          FillPortions: =If(App.Width<760,0,1)
+                                          Height: =76
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                        Children:
+                                          - txtBrvCadAnchorDayLabel:
+                                              Control: ModernText
+                                              Properties:
+                                                AccessibleLabel: ="Anchor day label"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =RGBA(31,41,55,1)
+                                                Font: =Font.'Segoe UI'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =24
+                                                LayoutMinWidth: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =13
+                                                Text: ="Day"
+                                                Wrap: =false
+                                          - drpBrvCadAnchorDay:
+                                              Control: ModernDropdown
+                                              Properties:
+                                                AccessibleLabel: =If(drpBrvCadence.Selected.Value="One time","Meeting date day in 2027","First occurrence day in 2027")
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Appearance: =Appearance.Outline
+                                                BasePaletteColor: =RGBA(91,59,127,1)
+                                                Color: =RGBA(31,41,55,1)
+                                                Default: =LookUp(Sequence(Switch(drpBrvCadAnchorMonth.Selected.Value,"February",28,"April",30,"June",30,"September",30,"November",30,31)),Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).AnchorDay)
+                                                Font: =Font.'Segoe UI'
+                                                Height: =44
+                                                ItemDisplayText: =Text(ThisItem.Value)
+                                                Items: =Sequence(Switch(drpBrvCadAnchorMonth.Selected.Value,"February",28,"April",30,"June",30,"September",30,"November",30,31))
+                                                LayoutMinWidth: =0
+                                                Required: =true
+                                                ValidationState: =If(varBrvSaveAttempted && LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesAnchorDate && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                                Width: =Parent.Width
+                        - conBrvMonthsField:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =312
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesSpecificMonths
+                            Children:
+                              - txtBrvMonthsLabel:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Choose all months that apply"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =24
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =13
+                                    Text: ="Choose all months that apply"
+                                    Wrap: =false
+                              - txtBrvMonthsHelp:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Select one or more months. You can change your choices before saving."
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(102,112,133,1)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =38
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Select one or more months. You can change your choices before saving."
+                                    VerticalAlign: =VerticalAlign.Top
+                              - conBrvCadMonthsOrderedRow1:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Height: =44
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - btnBrvCadMonthJan:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=1).IsSelected,"Deselect January","Select January")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=1).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=1).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=1),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=1).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="January"
+                                    - btnBrvCadMonthFeb:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=2).IsSelected,"Deselect February","Select February")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=2).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=2).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=2),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=2).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="February"
+                                    - btnBrvCadMonthMar:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=3).IsSelected,"Deselect March","Select March")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=3).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=3).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=3),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=3).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="March"
+                              - conBrvCadMonthsOrderedRow2:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Height: =44
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - btnBrvCadMonthApr:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=4).IsSelected,"Deselect April","Select April")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=4).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=4).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=4),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=4).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="April"
+                                    - btnBrvCadMonthMay:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=5).IsSelected,"Deselect May","Select May")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=5).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=5).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=5),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=5).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="May"
+                                    - btnBrvCadMonthJun:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=6).IsSelected,"Deselect June","Select June")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=6).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=6).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=6),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=6).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="June"
+                              - conBrvCadMonthsOrderedRow3:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Height: =44
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - btnBrvCadMonthJul:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=7).IsSelected,"Deselect July","Select July")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=7).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=7).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=7),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=7).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="July"
+                                    - btnBrvCadMonthAug:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=8).IsSelected,"Deselect August","Select August")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=8).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=8).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=8),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=8).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="August"
+                                    - btnBrvCadMonthSep:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=9).IsSelected,"Deselect September","Select September")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=9).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=9).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=9),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=9).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="September"
+                              - conBrvCadMonthsOrderedRow4:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Height: =44
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - btnBrvCadMonthOct:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=10).IsSelected,"Deselect October","Select October")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=10).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=10).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=10),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=10).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="October"
+                                    - btnBrvCadMonthNov:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=11).IsSelected,"Deselect November","Select November")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=11).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=11).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=11),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=11).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="November"
+                                    - btnBrvCadMonthDec:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =If(LookUp(colBrvMonthSelection,MonthNumber=12).IsSelected,"Deselect December","Select December")
+                                          Align: =Align.Center
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =If(LookUp(colBrvMonthSelection,MonthNumber=12).IsSelected,ButtonAppearance.Primary,ButtonAppearance.Outline)
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =If(LookUp(colBrvMonthSelection,MonthNumber=12).IsSelected,RGBA(255,255,255,1),RGBA(91,59,127,1))
+                                          FillPortions: =1
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Layout: =ButtonLayout.TextOnly
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Patch(colBrvMonthSelection,LookUp(colBrvMonthSelection,MonthNumber=12),{IsSelected:!LookUp(colBrvMonthSelection,MonthNumber=12).IsSelected});Set(varBrvReceiptVisible,false)
+                                          PaddingBottom: =0
+                                          PaddingLeft: =4
+                                          PaddingRight: =4
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="December"
+                              - txtBrvCadMonthSelectionSummary:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =If(CountRows(Filter(colBrvMonthSelection,IsSelected))=0,"No months selected","Selected months " & Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "))
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(36,87,167,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =50
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: |-
+                                      =If(CountRows(Filter(colBrvMonthSelection,IsSelected))=0,"No months selected","Selected: " & Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "))
+                                    VerticalAlign: =VerticalAlign.Top
+                        - conBrvWeekDayRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =With({cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},If(App.Width<760 && cadence.UsesWeek && cadence.UsesDay,160,76))
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =With({cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},cadence.UsesWeek || cadence.UsesDay)
+                            Children:
+                              - conBrvWeekField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    Visible: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesWeek
+                                  Children:
+                                    - txtBrvWeekLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Which week label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Which week?"
+                                          Wrap: =false
+                                    - drpBrvWeek:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: ="Week of month"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).WeekOfMonth)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =[{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}]
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesWeek && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                              - conBrvDayField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    Visible: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesDay
+                                  Children:
+                                    - txtBrvDayLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Preferred day label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Preferred day"
+                                          Wrap: =false
+                                    - drpBrvDay:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: ="Preferred weekday"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).PreferredDay)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =[{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}]
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesDay && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                        - conBrvCadSecondPatternRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =76
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =With({cadence:LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value)},cadence.UsesSecondDay || cadence.UsesSecondWeek)
+                            Children:
+                              - conBrvCadSecondDayField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    Visible: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesSecondDay
+                                  Children:
+                                    - txtBrvCadSecondDayLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Second weekday label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Second weekday"
+                                          Wrap: =false
+                                    - drpBrvCadSecondDay:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: ="Second weekday. Choose a different weekday from the first."
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp([{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).SecondPreferredDay)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =[{Value:"Monday"},{Value:"Tuesday"},{Value:"Wednesday"},{Value:"Thursday"},{Value:"Friday"}]
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesSecondDay && (IsBlank(Self.Selected.Value) || Self.Selected.Value=drpBrvDay.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                              - conBrvCadSecondWeekField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    Visible: =LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesSecondWeek
+                                  Children:
+                                    - txtBrvCadSecondWeekLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Second week label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Second week"
+                                          Wrap: =false
+                                    - drpBrvCadSecondWeek:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: ="Second week of month. Choose a different week from the first."
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp([{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).SecondWeekOfMonth)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =[{Value:"First"},{Value:"Second"},{Value:"Third"},{Value:"Fourth"},{Value:"Last"}]
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && LookUp(colBrvCadenceOptions,Value=drpBrvCadence.Selected.Value).UsesSecondWeek && (IsBlank(Self.Selected.Value) || Self.Selected.Value=drpBrvWeek.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                        - txtBrvSectionTimeFormat:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Time and format section"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =34
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =16
+                              Text: ="3. Time & format"
+                              Wrap: =false
+                        - conBrvTimeDurationRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =If(App.Width<760,160,76)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                            Children:
+                              - conBrvTimeField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtBrvTimeLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Start time label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Start time"
+                                          Wrap: =false
+                                    - inpBrvTime:
+                                        Control: ModernTextInput
+                                        Properties:
+                                          AccessibleLabel: ="Start time such as 5:00 PM"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).StartTimeText
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          LayoutMinWidth: =0
+                                          Placeholder: ="5:00 PM"
+                                          Required: =true
+                                          TriggerOutput: =TriggerOutput.FocusOut
+                                          ValidationState: =If(varBrvSaveAttempted && IsBlank(Trim(Self.Text)),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                              - conBrvDurationField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtBrvDurationLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Duration minutes label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Duration (minutes)"
+                                          Wrap: =false
+                                    - numBrvDuration:
+                                        Control: ModernNumberInput
+                                        Properties:
+                                          AccessibleLabel: ="Duration in minutes from 1 to 1440"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).DurationMinutes
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          LayoutMinWidth: =0
+                                          Max: =1440
+                                          Min: =1
+                                          Precision: =DecimalPrecision.'0'
+                                          ValidationState: =If(varBrvSaveAttempted && (Self.Value<1 || Self.Value>1440),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                        - txtBrvSectionPlanningBehavior:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Planning behavior section"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              Height: =34
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =16
+                              Text: ="4. Planning behavior"
+                              Wrap: =false
+                        - conBrvSetupRow:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =If(App.Width<760,160,76)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                            Children:
+                              - conBrvFormatField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtBrvFormatLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Format label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Format"
+                                          Wrap: =false
+                                    - drpBrvFormat:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: ="Meeting format"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp([{Value:"In person"},{Value:"Virtual"},{Value:"Hybrid"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Format)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =[{Value:"In person"},{Value:"Virtual"},{Value:"Hybrid"}]
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                              - conBrvFlexibilityField:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =If(App.Width<760,0,1)
+                                    Height: =76
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =4
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                  Children:
+                                    - txtBrvFlexibilityLabel:
+                                        Control: ModernText
+                                        Properties:
+                                          AccessibleLabel: ="Flexibility label"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =RGBA(31,41,55,1)
+                                          Font: =Font.'Segoe UI'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          LayoutMinWidth: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =13
+                                          Text: ="Flexibility"
+                                          Wrap: =false
+                                    - drpBrvFlexibility:
+                                        Control: ModernDropdown
+                                        Properties:
+                                          AccessibleLabel: ="Scheduling flexibility"
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: =Appearance.Outline
+                                          BasePaletteColor: =RGBA(91,59,127,1)
+                                          Color: =RGBA(31,41,55,1)
+                                          Default: =LookUp([{Value:"Fixed"},{Value:"Flexible"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Flexibility)
+                                          Font: =Font.'Segoe UI'
+                                          Height: =44
+                                          ItemDisplayText: =ThisItem.Value
+                                          Items: =[{Value:"Fixed"},{Value:"Flexible"}]
+                                          LayoutMinWidth: =0
+                                          Required: =true
+                                          ValidationState: =If(varBrvSaveAttempted && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                          Width: =Parent.Width
+                        - txtBrvSectionDetailsSource:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Status and source section"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(31,41,55,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Bold
+                              LayoutMinWidth: =0
+                              PaddingBottom: =4
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =4
+                              Text: ="5. Status & source"
+                              Wrap: =false
+                        - conBrvStatusField:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =76
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                            Children:
+                              - txtBrvStatusLabel:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Rule status label"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =24
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =13
+                                    Text: ="Rule status"
+                                    Wrap: =false
+                              - drpBrvStatus:
+                                  Control: ModernDropdown
+                                  Properties:
+                                    AccessibleLabel: ="Rule status"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =Appearance.Outline
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Color: =RGBA(31,41,55,1)
+                                    Default: =LookUp([{Value:"Confirmed"},{Value:"Needs validation"}],Value=LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =44
+                                    ItemDisplayText: =ThisItem.Value
+                                    Items: =[{Value:"Confirmed"},{Value:"Needs validation"}]
+                                    LayoutMinWidth: =0
+                                    Required: =true
+                                    ValidationState: =If(varBrvSaveAttempted && IsBlank(Self.Selected.Value),ValidationState.Error,ValidationState.None)
+                                    Width: =Parent.Width
+                        - txtBrvValidation:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Rule validation message"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(180,35,24,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              LayoutMinWidth: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =13
+                              Text: |-
+                                =With(
+                                    {cadence:LookUp(colBrvCadenceOptions,Value=Coalesce(drpBrvCadence.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Cadence))},
+                                    If(
+                                        IsBlank(Trim(inpBrvMeetingName.Text)),
+                                        "Enter a meeting name.",
+                                        IsBlank(Trim(inpBrvTime.Text)),
+                                        "Enter a start time.",
+                                        numBrvDuration.Value<1 || numBrvDuration.Value>1440,
+                                        "Enter a duration between 1 and 1440 minutes.",
+                                        cadence.UsesSpecificMonths && CountRows(Filter(colBrvMonthSelection,IsSelected))=0,
+                                        "Select at least one month.",
+                                        cadence.UsesSecondDay && (!IsBlank(drpBrvCadSecondDay.Selected.Value) && drpBrvCadSecondDay.Selected.Value=drpBrvDay.Selected.Value),
+                                        "Choose two different weekdays.",
+                                        cadence.UsesSecondWeek && (!IsBlank(drpBrvCadSecondWeek.Selected.Value) && drpBrvCadSecondWeek.Selected.Value=drpBrvWeek.Selected.Value),
+                                        "Choose two different weeks of the month.",
+                                        "Check the highlighted required field before saving."
+                                    )
+                                )
+                              Visible: |-
+                                =With(
+                                    {cadence:LookUp(colBrvCadenceOptions,Value=Coalesce(drpBrvCadence.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Cadence))},
+                                    varBrvSaveAttempted && !(
+                                        !IsBlank(LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleId) &&
+                                        !IsBlank(Trim(inpBrvMeetingName.Text)) &&
+                                        !IsBlank(cadence.Value) &&
+                                        !IsBlank(Trim(inpBrvTime.Text)) &&
+                                        !IsBlank(Coalesce(drpBrvFormat.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Format)) &&
+                                        !IsBlank(Coalesce(drpBrvFlexibility.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Flexibility)) &&
+                                        !IsBlank(Coalesce(drpBrvStatus.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).RuleStatus)) &&
+                                        numBrvDuration.Value>=1 && numBrvDuration.Value<=1440 &&
+                                        (!cadence.UsesAnchorDate || (!IsBlank(drpBrvCadAnchorMonth.Selected.Value) && !IsBlank(drpBrvCadAnchorDay.Selected.Value))) &&
+                                        (!cadence.UsesStartMonth || !IsBlank(Coalesce(drpBrvStartMonth.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).StartMonth))) &&
+                                        (!cadence.UsesSpecificMonths || CountRows(Filter(colBrvMonthSelection,IsSelected))>0) &&
+                                        (!cadence.UsesWeek || !IsBlank(Coalesce(drpBrvWeek.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).WeekOfMonth))) &&
+                                        (!cadence.UsesDay || !IsBlank(Coalesce(drpBrvDay.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).PreferredDay))) &&
+                                        (!cadence.UsesSecondDay || (!IsBlank(drpBrvCadSecondDay.Selected.Value) && drpBrvCadSecondDay.Selected.Value<>drpBrvDay.Selected.Value)) &&
+                                        (!cadence.UsesSecondWeek || (!IsBlank(drpBrvCadSecondWeek.Selected.Value) && drpBrvCadSecondWeek.Selected.Value<>drpBrvWeek.Selected.Value))
+                                    )
+                                )
+                        - btnBrvDetailsToggle:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: =If(varBrvShowDetails,"Hide rule source details","Show rule source details")
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Start
+                              Appearance: =ButtonAppearance.Subtle
+                              BasePaletteColor: =RGBA(91,59,127,1)
+                              Color: =RGBA(91,59,127,1)
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =34
+                              Layout: =ButtonLayout.TextOnly
+                              LayoutMinWidth: =170
+                              OnSelect: =Set(varBrvShowDetails,!varBrvShowDetails)
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              RadiusBottomLeft: =6
+                              RadiusBottomRight: =6
+                              RadiusTopLeft: =6
+                              RadiusTopRight: =6
+                              Size: =12
+                              Text: =If(varBrvShowDetails,"Hide details","Show details & source")
+                              Width: =180
+                        - txtBrvSourceDetails:
+                            Control: ModernText
+                            Properties:
+                              AccessibleLabel: ="Rule source details"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =RGBA(102,112,133,1)
+                              Fill: =RGBA(247,248,250,1)
+                              Font: =Font.'Segoe UI'
+                              Height: =44
+                              LayoutMinWidth: =0
+                              PaddingBottom: =8
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =8
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Size: =11
+                              Text: |-
+                                ="Source: connected LSS meeting rulebook. Saving updates the existing rule; it does not create a new rule or change the calendar until you regenerate that layer."
+                              VerticalAlign: =VerticalAlign.Top
+                              Visible: =varBrvShowDetails
+                        - conBrvActions:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(217,222,231,1)
+                              BorderThickness: =1
+                              Fill: =RGBA(251,252,253,1)
+                              FillPortions: =0
+                              Height: =If(App.Width<760,108,56)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =If(App.Width<760,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                              LayoutGap: =8
+                              LayoutJustifyContent: =LayoutJustifyContent.End
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =6
+                              PaddingLeft: =8
+                              PaddingRight: =8
+                              PaddingTop: =6
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                            Children:
+                              - btnBrvCancel:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Cancel unsaved rule changes"
+                                    Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Layout: =ButtonLayout.TextOnly
+                                    LayoutMinWidth: =0
+                                    OnSelect: |
+                                      =With(
+                                        {selectedRule:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId)},
+                                        If(selectedRule.IsDraft,RemoveIf(colMeetingRulebook,RuleId=varBrvSelectedRuleId);Set(varBrvSelectedRuleId,First(SortByColumns(Filter(colMeetingRulebook,!IsDraft),"SortOrder",SortOrder.Ascending)).RuleId))
+                                      );
+                                      Reset(inpBrvMeetingName);
+                                      Reset(drpBrvCadence);
+                                      Reset(drpBrvStartMonth);
+                                      Reset(drpBrvCadAnchorMonth);
+                                      Reset(drpBrvCadAnchorDay);
+                                      Reset(drpBrvWeek);
+                                      Reset(drpBrvDay);
+                                      Reset(drpBrvCadSecondDay);
+                                      Reset(drpBrvCadSecondWeek);
+                                      Reset(inpBrvTime);
+                                      Reset(numBrvDuration);
+                                      Reset(drpBrvFormat);
+                                      Reset(drpBrvFlexibility);
+                                      Reset(drpBrvStatus);
+                                      With({monthsText:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).MonthsText},ClearCollect(colBrvMonthSelection,{MonthNumber:1,MonthName:"January",IsSelected:"January" in monthsText},{MonthNumber:2,MonthName:"February",IsSelected:"February" in monthsText},{MonthNumber:3,MonthName:"March",IsSelected:"March" in monthsText},{MonthNumber:4,MonthName:"April",IsSelected:"April" in monthsText},{MonthNumber:5,MonthName:"May",IsSelected:"May" in monthsText},{MonthNumber:6,MonthName:"June",IsSelected:"June" in monthsText},{MonthNumber:7,MonthName:"July",IsSelected:"July" in monthsText},{MonthNumber:8,MonthName:"August",IsSelected:"August" in monthsText},{MonthNumber:9,MonthName:"September",IsSelected:"September" in monthsText},{MonthNumber:10,MonthName:"October",IsSelected:"October" in monthsText},{MonthNumber:11,MonthName:"November",IsSelected:"November" in monthsText},{MonthNumber:12,MonthName:"December",IsSelected:"December" in monthsText}));
+                                      Set(varBrvSaveAttempted,false);
+                                      Set(varBrvReceiptVisible,false);
+                                      Set(varBrvDeleteConfirmVisible,false)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =0
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Size: =14
+                                    Text: ="Cancel changes"
+                                    Width: =If(App.Width<760,Parent.Width,Min(180,(Parent.Width-8)/2))
+                              - btnBrvSave:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Save meeting rule edits"
+                                    Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Color: =RGBA(255,255,255,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Layout: =ButtonLayout.TextOnly
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =With(
+                                          {
+                                              cadence:LookUp(colBrvCadenceOptions,Value=Coalesce(drpBrvCadence.Selected.Value,LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId).Cadence)),
+                                              currentRule:LookUp(colMeetingRulebook,RuleId=varBrvSelectedRuleId)
+                                          },
+                                          If(
+                                              !IsBlank(currentRule.RuleId) &&
+                                              !IsBlank(Trim(inpBrvMeetingName.Text)) &&
+                                              (!currentRule.IsDraft || !IsBlank(Coalesce(drpBrvFamily.Selected.Label,Switch(currentRule.PlanningLayer,"Board","Board","Board Committees","Committees","Executive Leadership","Executive","Organization & Operations","Operations","General","Other recurring")))) &&
+                                              !IsBlank(cadence.Value) &&
+                                              !IsBlank(Trim(inpBrvTime.Text)) &&
+                                              !IsBlank(Coalesce(drpBrvFormat.Selected.Value,currentRule.Format)) &&
+                                              !IsBlank(Coalesce(drpBrvFlexibility.Selected.Value,currentRule.Flexibility)) &&
+                                              !IsBlank(Coalesce(drpBrvStatus.Selected.Value,currentRule.RuleStatus)) &&
+                                              numBrvDuration.Value>=1 && numBrvDuration.Value<=1440 &&
+                                              (!cadence.UsesAnchorDate || (!IsBlank(drpBrvCadAnchorMonth.Selected.Value) && !IsBlank(drpBrvCadAnchorDay.Selected.Value))) &&
+                                              (!cadence.UsesStartMonth || !IsBlank(Coalesce(drpBrvStartMonth.Selected.Value,currentRule.StartMonth))) &&
+                                              (!cadence.UsesSpecificMonths || CountRows(Filter(colBrvMonthSelection,IsSelected))>0) &&
+                                              (!cadence.UsesWeek || !IsBlank(Coalesce(drpBrvWeek.Selected.Value,currentRule.WeekOfMonth))) &&
+                                              (!cadence.UsesDay || !IsBlank(Coalesce(drpBrvDay.Selected.Value,currentRule.PreferredDay))) &&
+                                              (!cadence.UsesSecondDay || (!IsBlank(drpBrvCadSecondDay.Selected.Value) && drpBrvCadSecondDay.Selected.Value<>drpBrvDay.Selected.Value)) &&
+                                              (!cadence.UsesSecondWeek || (!IsBlank(drpBrvCadSecondWeek.Selected.Value) && drpBrvCadSecondWeek.Selected.Value<>drpBrvWeek.Selected.Value)),
+                                              Set(varBrvSaveFailed,false);
+                                              With(
+                                                  {
+                                                      savedLocal:Patch(
+                                                          colMeetingRulebook,
+                                                          currentRule,
+                                                          {
+                                                              MeetingName:Trim(inpBrvMeetingName.Text),
+                                                              Cadence:cadence.Value,
+                                                              MonthsText:If(cadence.UsesSpecificMonths,Concat(SortByColumns(Filter(colBrvMonthSelection,IsSelected),"MonthNumber",SortOrder.Ascending),MonthName,", "),currentRule.MonthsText),
+                                                              StartMonth:If(cadence.UsesStartMonth,Coalesce(drpBrvStartMonth.Selected.Value,currentRule.StartMonth),currentRule.StartMonth),
+                                                              WeekOfMonth:If(cadence.UsesWeek,Coalesce(drpBrvWeek.Selected.Value,currentRule.WeekOfMonth),currentRule.WeekOfMonth),
+                                                              PreferredDay:If(cadence.UsesDay,Coalesce(drpBrvDay.Selected.Value,currentRule.PreferredDay),currentRule.PreferredDay),
+                                                              AnchorMonth:If(cadence.UsesAnchorDate,drpBrvCadAnchorMonth.Selected.Value,currentRule.AnchorMonth),
+                                                              AnchorDay:If(cadence.UsesAnchorDate,drpBrvCadAnchorDay.Selected.Value,currentRule.AnchorDay),
+                                                              SecondPreferredDay:If(cadence.UsesSecondDay,drpBrvCadSecondDay.Selected.Value,currentRule.SecondPreferredDay),
+                                                              SecondWeekOfMonth:If(cadence.UsesSecondWeek,drpBrvCadSecondWeek.Selected.Value,currentRule.SecondWeekOfMonth),
+                                                              StartTimeText:Trim(inpBrvTime.Text),
+                                                              DurationMinutes:numBrvDuration.Value,
+                                                              Format:Coalesce(drpBrvFormat.Selected.Value,currentRule.Format),
+                                                              Flexibility:Coalesce(drpBrvFlexibility.Selected.Value,currentRule.Flexibility),
+                                                              RuleStatus:Coalesce(drpBrvStatus.Selected.Value,currentRule.RuleStatus),PlanningLayer:If(currentRule.IsDraft,Switch(Coalesce(drpBrvFamily.Selected.Label,Switch(currentRule.PlanningLayer,"Board","Board","Board Committees","Committees","Executive Leadership","Executive","Organization & Operations","Operations","General","Other recurring")),"Board","Board","Committees","Board Committees","Executive","Executive Leadership","Operations","Organization & Operations","Other recurring","General",currentRule.PlanningLayer),currentRule.PlanningLayer),IsDraft:false
+                                                          }
+                                                      )
+                                                  },
+                                                  Set(varBrvSavedLayer,savedLocal.PlanningLayer);
+                                                  If(
+                                                      savedLocal.PlanningLayer="Board",
+                                                      With(
+                                                          {existingBoardRule:LookUp(colBoardRuleProof,RuleId=savedLocal.RuleId)},
+                                                          If(
+                                                              IsBlank(existingBoardRule.RuleId),
+                                                              Collect(colBoardRuleProof,savedLocal),
+                                                              Patch(colBoardRuleProof,existingBoardRule,savedLocal)
+                                                          )
+                                                      )
+                                                  );
+                                                  With(
+                                                      {
+                                                          sourceRule:LookUp(colMeetingSourceRules,ID=savedLocal.SourceRecordId || Title=currentRule.MeetingName || ("PowerAppsRuleId=" & savedLocal.RuleId) in Coalesce(Notes,"") || (savedLocal.PlanningLayer="Board" && ("PowerAppsBoardRule=" & savedLocal.RuleId) in Coalesce(Notes,"")))
+                                                      },
+                                                          With(
+                                                              {
+                                                                  savedSource:IfError(Patch(
+                                                                      'LSS Test Meeting Types 20260921',
+                                                                      If(IsBlank(sourceRule.ID),Defaults('LSS Test Meeting Types 20260921'),sourceRule),
+                                                                      {
+                                                                          Title:savedLocal.MeetingName,
+                                                                          Category:{Value:Switch(savedLocal.PlanningLayer,"Board","Board","Board Committees","Committee","Executive Leadership","Executive","Organization & Operations","Organization","Organization")},
+                                                                          Cadence:{Value:savedLocal.Cadence},
+                                                                          'Start Month':{Value:If(savedLocal.Cadence="One time",savedLocal.AnchorMonth,savedLocal.StartMonth)},
+                                                                          WeekOfMonth:{Value:savedLocal.WeekOfMonth},
+                                                                          DayOfWeek:{Value:savedLocal.PreferredDay},
+                                                                          PreferredTime:savedLocal.StartTimeText,
+                                                                          DurationMinutes:savedLocal.DurationMinutes,
+                                                                          Modality:{Value:savedLocal.Format},
+                                                                          Flexibility:{Value:savedLocal.Flexibility},
+                                                                          Frequency:sourceRule.Frequency,
+                                                                          RuleStatus:{Value:savedLocal.RuleStatus},
+                                                                          Completed:savedLocal.RuleStatus="Confirmed",
+                                                                          Notes:Trim(First(Split(Coalesce(sourceRule.Notes,""),"PowerAppsRuleData=")).Value & If(("PowerAppsRuleId=" & savedLocal.RuleId) in Coalesce(sourceRule.Notes,""),"",Char(10)&"PowerAppsRuleId="&savedLocal.RuleId) & Char(10) & "PowerAppsRuleData=" & JSON({Cadence:savedLocal.Cadence,MonthsText:savedLocal.MonthsText,StartMonth:savedLocal.StartMonth,WeekOfMonth:savedLocal.WeekOfMonth,PreferredDay:savedLocal.PreferredDay,AnchorMonth:savedLocal.AnchorMonth,AnchorDay:savedLocal.AnchorDay,SecondPreferredDay:savedLocal.SecondPreferredDay,SecondWeekOfMonth:savedLocal.SecondWeekOfMonth,StartTimeText:savedLocal.StartTimeText,DurationMinutes:savedLocal.DurationMinutes,Format:savedLocal.Format,Flexibility:savedLocal.Flexibility,RuleStatus:savedLocal.RuleStatus,RuleBookFamily:savedLocal.PlanningLayer}))
+                                                                      }
+                                                                  ),Set(varBrvSaveFailed,true);Blank())
+                                                              },
+                                                              If(
+                                                                  !varBrvSaveFailed && !IsBlank(savedSource.ID),
+                                                                  Patch(colMeetingRulebook,savedLocal,{SourceRecordId:savedSource.ID});
+                                                                  If(savedLocal.PlanningLayer="Board",Patch(colBoardRuleProof,LookUp(colBoardRuleProof,RuleId=savedLocal.RuleId),savedLocal,{SourceRecordId:savedSource.ID}));
+                                                                  Set(varBrvReceipt,LookUp(colMeetingRulebook,RuleId=savedLocal.RuleId));
+                                                                  Refresh('LSS Test Meeting Types 20260921');
+                                                                  ClearCollect(colMeetingSourceRules,'LSS Test Meeting Types 20260921');
+                                                                  ClearCollect(colBoardSourceRules,Filter(colMeetingSourceRules,Category.Value="Board")),
+                                                                  Set(varBrvSaveFailed,true);
+                                                                  Patch(colMeetingRulebook,savedLocal,currentRule);
+                                                                  If(savedLocal.PlanningLayer="Board",Patch(colBoardRuleProof,LookUp(colBoardRuleProof,RuleId=savedLocal.RuleId),currentRule))
+                                                              )
+                                                      )
+                                                  )
+                                              );
+                                              If(
+                                              !varBrvSaveFailed,
+                                              If(
+                                                  varBrvSavedLayer="Board",
+                                                  Clear(colCalProofBoardConfirmationReceipt)
+                                              );
+                                              If(
+                                                  varBrvSavedLayer="General" && CountIf(colPlannerLayerState,PlanningLayer="General")=0,
+                                                  Collect(colPlannerLayerState,{StepNumber:5,PlanningLayer:"General",ShortName:"Other recurring",Status:"Not started",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false});
+                                                  Set(varPlannerShowGeneral,true)
+                                              );
+                                              With(
+                                                  {savedState:LookUp(colPlannerLayerState,PlanningLayer=varBrvSavedLayer)},
+                                                  UpdateIf(
+                                                      colPlannerLayerState,
+                                                      PlanningLayer=varBrvSavedLayer,
+                                                      {
+                                                          Status:If(savedState.Status="Not started","Not started","Needs regeneration"),
+                                                          NeedsRegeneration:savedState.Status<>"Not started"
+                                                      }
+                                                  );
+                                                  UpdateIf(
+                                                      colPlannerLayerState,
+                                                      StepNumber>savedState.StepNumber && Status<>"Not started",
+                                                      {Status:"Needs revalidation",NeedsRegeneration:true}
+                                                  );
+                                                  Set(
+                                                      varPlannerLayerReceipt,
+                                                      varBrvSavedLayer & " rule saved. " &
+                                                      If(savedState.Status="Not started","Build the layer when ready.","Regenerate the layer to apply the change.") &
+                                                      If(CountIf(colPlannerLayerState,StepNumber>savedState.StepNumber && Status="Needs revalidation")>0," Later completed layers also need revalidation.","")
+                                                  )
+                                              );
+                                              Select(btnBrvPersistLayerState);
+                                              Set(varBrvReceiptVisible,true);
+                                              Set(varBrvSaveAttempted,false),
+                                              Set(varBrvReceiptVisible,false);
+                                              Set(varBrvSaveAttempted,true);
+                                              Notify("Rule was not saved. Check the connected rulebook and try again.",NotificationType.Error)
+                                              ),
+                                              Set(varBrvSaveAttempted,true);
+                                              Set(varBrvReceiptVisible,false)
+                                          )
+                                      )
+                                    PaddingBottom: =0
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =0
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Size: =14
+                                    Text: ="Save changes"
+                                    Width: =If(App.Width<760,Parent.Width,Min(180,(Parent.Width-8)/2))
+                              - btnBrvCancel_1:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Delete this rule"
+                                    Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Layout: =ButtonLayout.TextOnly
+                                    LayoutMinWidth: =0
+                                    OnSelect: |
+                                      =Set(varBrvDeleteConfirmVisible,true);
+                                      Set(varBrvDeleteRuleId,varBrvSelectedRuleId);
+                                      ClearCollect(colBrvDeleteMeetings,Filter('LSS Test Planned Calendar 20260921',Category="PLNR_EVENT" && SourceRule=varBrvSelectedRuleId));
+                                      RemoveIf(colBrvDeleteMeetings,Status="Deleted");
+                                      Notify("Choose whether future generated meetings for this rule should stay or be deleted. Past, manual/Special, and Outlook-linked meetings are unchanged.",NotificationType.Warning,12000)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =0
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Size: =14
+                                    Text: ="Delete rule"
+                                    Visible: |
+                                      =!Coalesce(varBrvDeleteConfirmVisible,false)
+                                    Width: =If(App.Width<760,Parent.Width,Min(180,(Parent.Width-8)/2))
+                              - btnBrvCancel_2:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Keep future meetings and remove only the rule"
+                                    Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Layout: =ButtonLayout.TextOnly
+                                    LayoutMinWidth: =0
+                                    OnSelect: |
+                                      =Set(varBrvDeletedRuleSnapshot,LookUp(colMeetingRulebook,RuleId=varBrvDeleteRuleId));
+                                      Set(varBrvDeletedSourceSnapshot,LookUp(colMeetingSourceRules,ID=varBrvDeletedRuleSnapshot.SourceRecordId));
+                                      Clear(colBrvDeletedMeetingUndo);
+                                      If(!IsBlank(varBrvDeletedSourceSnapshot.ID),Patch('LSS Test Meeting Types 20260921',LookUp('LSS Test Meeting Types 20260921',ID=varBrvDeletedSourceSnapshot.ID),{Notes:Coalesce(varBrvDeletedSourceSnapshot.Notes,"") & Char(10) & "PowerAppsRuleDeleted=" & varBrvDeleteRuleId & "|" & Text(Now())}));
+                                      RemoveIf(colMeetingRulebook,RuleId=varBrvDeleteRuleId);
+                                      If(varBrvDeletedRuleSnapshot.PlanningLayer="Board",RemoveIf(colBoardRuleProof,RuleId=varBrvDeleteRuleId));
+                                      Set(varBrvSelectedRuleId,Blank());
+                                      Set(varBrvDeleteConfirmVisible,false);
+                                      Set(varBrvDeleteReceiptVisible,true);
+                                      Notify("Rule deleted. Future meetings were kept. Undo is available for this session.",NotificationType.Success,8000)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =0
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Size: =14
+                                    Text: ="Keep future meetings"
+                                    Visible: |
+                                      =varBrvDeleteConfirmVisible
+                                    Width: =If(App.Width<760,Parent.Width,Min(180,(Parent.Width-8)/2))
+                              - btnBrvCancel_3:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Delete this rule and its future generated meetings"
+                                    Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Layout: =ButtonLayout.TextOnly
+                                    LayoutMinWidth: =0
+                                    OnSelect: |
+                                      =Set(varBrvDeletedRuleSnapshot,LookUp(colMeetingRulebook,RuleId=varBrvDeleteRuleId));
+                                      Set(varBrvDeletedSourceSnapshot,LookUp(colMeetingSourceRules,ID=varBrvDeletedRuleSnapshot.SourceRecordId));
+                                      ClearCollect(colBrvDeletedMeetingUndo,Filter(colBrvDeleteMeetings,EventDate>=Today()));
+                                      ForAll(colBrvDeletedMeetingUndo As deletedMeeting,Patch('LSS Test Planned Calendar 20260921',LookUp('LSS Test Planned Calendar 20260921',ID=deletedMeeting.ID),{Status:"Deleted"}));
+                                      If(!IsBlank(varBrvDeletedSourceSnapshot.ID),Patch('LSS Test Meeting Types 20260921',LookUp('LSS Test Meeting Types 20260921',ID=varBrvDeletedSourceSnapshot.ID),{Notes:Coalesce(varBrvDeletedSourceSnapshot.Notes,"") & Char(10) & "PowerAppsRuleDeleted=" & varBrvDeleteRuleId & "|" & Text(Now())}));
+                                      RemoveIf(colMeetingRulebook,RuleId=varBrvDeleteRuleId);
+                                      If(varBrvDeletedRuleSnapshot.PlanningLayer="Board",RemoveIf(colBoardRuleProof,RuleId=varBrvDeleteRuleId));
+                                      Set(varBrvSelectedRuleId,Blank());
+                                      Set(varBrvDeleteConfirmVisible,false);
+                                      Set(varBrvDeleteReceiptVisible,true);
+                                      Notify("Rule deleted. Future generated meetings were removed; past meetings were kept. Undo is available for this session.",NotificationType.Success,8000)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =0
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Size: =14
+                                    Text: ="Delete future meetings"
+                                    Visible: |
+                                      =varBrvDeleteConfirmVisible
+                                    Width: =If(App.Width<760,Parent.Width,Min(180,(Parent.Width-8)/2))
+                              - btnBrvCancel_5:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Undo the most recent rule deletion in this session"
+                                    Align: =Align.Center
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Layout: =ButtonLayout.TextOnly
+                                    LayoutMinWidth: =0
+                                    OnSelect: |
+                                      =If(!IsBlank(varBrvDeletedSourceSnapshot.ID),Patch('LSS Test Meeting Types 20260921',LookUp('LSS Test Meeting Types 20260921',ID=varBrvDeletedSourceSnapshot.ID),{Notes:varBrvDeletedSourceSnapshot.Notes}));
+                                      ForAll(colBrvDeletedMeetingUndo As restoredMeeting,Patch('LSS Test Planned Calendar 20260921',LookUp('LSS Test Planned Calendar 20260921',ID=restoredMeeting.ID),{Status:restoredMeeting.Status}));
+                                      Collect(colMeetingRulebook,varBrvDeletedRuleSnapshot);
+                                      If(varBrvDeletedRuleSnapshot.PlanningLayer="Board",Collect(colBoardRuleProof,varBrvDeletedRuleSnapshot));
+                                      Set(varBrvSelectedRuleId,varBrvDeletedRuleSnapshot.RuleId);
+                                      Clear(colBrvDeletedMeetingUndo);
+                                      Set(varBrvDeletedRuleSnapshot,Blank());
+                                      Set(varBrvDeletedSourceSnapshot,Blank());
+                                      Set(varBrvDeleteReceiptVisible,false);
+                                      Notify("Deletion undone.",NotificationType.Success,5000)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =0
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Size: =14
+                                    Text: ="Undo"
+                                    Visible: |
+                                      =varBrvDeleteReceiptVisible
+                                    Width: =If(App.Width<760,Parent.Width,Min(180,(Parent.Width-8)/2))
+                        - conBrvReceipt:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(167,243,208,1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(236,253,245,1)
+                              FillPortions: =0
+                              Height: =112
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =12
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =12
+                              RadiusBottomLeft: =10
+                              RadiusBottomRight: =10
+                              RadiusTopLeft: =10
+                              RadiusTopRight: =10
+                              Visible: =varBrvReceiptVisible
+                            Children:
+                              - txtBrvReceiptTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Rule saved locally"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(37,122,84,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =28
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =16
+                                    Text: ="Changes saved"
+                                    Wrap: =false
+                              - txtBrvReceiptBody:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: ="Saved local rule proof with all edited fields"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(37,122,84,1)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =56
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: =varBrvReceipt.MeetingName & " is saved. The existing rule, identity, and recurrence data were preserved."
+                                    VerticalAlign: =VerticalAlign.Top

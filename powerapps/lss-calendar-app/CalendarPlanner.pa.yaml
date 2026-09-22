@@ -224,7 +224,7 @@ Screens:
                         BasePaletteColor: =RGBA(37,99,235,1)
                         Height: =44
                         LayoutMinWidth: =156
-                        OnSelect: =Set(varPlannerShowPlanningStatus,!varPlannerShowPlanningStatus);Set(varPlannerContextMode,If(varPlannerShowPlanningStatus,"Layer",If(IsBlank(varPlannerSelectedEventId),"Empty","Summary")))
+                        OnSelect: =Set(varPlannerShowPlanningStatus,!varPlannerShowPlanningStatus)
                         Text: =If(varPlannerShowPlanningStatus,"Close planning","Open planning")
                   - btnPlanYrStepBoard:
                       Control: ModernButton
@@ -526,10 +526,10 @@ Screens:
                   DropShadow: =DropShadow.None
                   Fill: =RGBA(239,246,255,1)
                   FillPortions: =0
-                  Height: =If(varPlannerShowPlanningStatus,If(App.Width<900,382,306),0)
+                  Height: =If(varPlannerShowPlanningStatus,If(App.Width<900,290,86),0)
                   LayoutAlignItems: =LayoutAlignItems.Stretch
-                  LayoutDirection: =LayoutDirection.Vertical
-                  LayoutGap: =4
+                  LayoutDirection: =If(App.Width<900,LayoutDirection.Vertical,LayoutDirection.Horizontal)
+                  LayoutGap: =10
                   LayoutMinHeight: =0
                   LayoutMinWidth: =0
                   PaddingBottom: =12
@@ -549,7 +549,7 @@ Screens:
                         Color: =RGBA(15,43,91,1)
                         Font: =Font.'Segoe UI'
                         FontWeight: =FontWeight.Bold
-                        Height: =32
+                        Height: =0
                         LayoutMinWidth: =0
                         PaddingBottom: =0
                         PaddingLeft: =0
@@ -557,6 +557,7 @@ Screens:
                         PaddingTop: =0
                         Size: =18
                         Text: ="Planning status"
+                        Visible: =false
                   - conPlannerStatusBoard:
                       Control: GroupContainer
                       Variant: AutoLayout
@@ -613,7 +614,7 @@ Screens:
                                       readyCount>0 && reviewCount>0,
                                       UpdateIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="Ready",{DecisionStatus:"Approved"});
                                       Set(varPlannerLayerReceipt,Text(readyCount)&" clear Board date"&If(readyCount=1," was","s were")&" approved. "&Text(reviewCount)&" exception"&If(reviewCount=1," remains","s remain")&" for review."),
-                                      Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                        Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Empty")
                                     )
                                   )
                                 )
@@ -668,7 +669,7 @@ Screens:
                                 If(
                                   CountIf(colMeetingRulebook,PlanningLayer="Board Committees" && RuleStatus<>"Confirmed")>0,
                                   Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Board Committees"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
-                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Empty")
                                 )
                               Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Board Committees" && RuleStatus<>"Confirmed")>0,"Review rules",If(LookUp(colPlannerLayerState,PlanningLayer="Board Committees",Status)="Not started","Start","Open"))
                   - conPlannerStatusExecutive:
@@ -721,7 +722,7 @@ Screens:
                                 If(
                                   CountIf(colMeetingRulebook,PlanningLayer="Executive Leadership" && RuleStatus<>"Confirmed")>0,
                                   Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Executive Leadership"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
-                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Empty")
                                 )
                               Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Executive Leadership" && RuleStatus<>"Confirmed")>0,"Review rules",If(LookUp(colPlannerLayerState,PlanningLayer="Executive Leadership",Status)="Not started","Start","Open"))
                   - conPlannerStatusOperations:
@@ -774,7 +775,7 @@ Screens:
                                 If(
                                   CountIf(colMeetingRulebook,PlanningLayer="Organization & Operations" && RuleStatus<>"Confirmed")>0,
                                   Set(varBrvSelectedRuleId,Coalesce(First(SortByColumns(Filter(colMeetingRulebook,PlanningLayer="Organization & Operations"),"SortOrder",SortOrder.Ascending)).RuleId,varBrvSelectedRuleId));Navigate(BoardRulesReview,ScreenTransition.None),
-                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Layer")
+                                  Set(varPlannerShowPlanningStatus,false);Set(varPlannerContextMode,"Empty")
                                 )
                               Text: =If(CountIf(colMeetingRulebook,PlanningLayer="Organization & Operations" && RuleStatus<>"Confirmed")>0,"Review rules",If(LookUp(colPlannerLayerState,PlanningLayer="Organization & Operations",Status)="Not started","Start","Open"))
             - conPlannerBoardWorkflow:
@@ -2281,7 +2282,7 @@ Screens:
                                                       PaddingRight: =0
                                                       PaddingTop: =0
                                                       Size: =7
-                                                      Text: ="+" & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)))))-1)
+                                                      Text: ="+" & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)))))-1) & " more"
                                                       Visible: =ThisItem.IsCurrentMonth && CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)))))>1
                                                       Wrap: =false
                   - conPlannerContext:
@@ -2353,7 +2354,7 @@ Screens:
                                     PaddingRight: =0
                                     PaddingTop: =0
                                     Size: =24
-                                    Text: ="Select a meeting"
+                                    Text: ="Planning context"
                                     Wrap: =false
                               - txtPlannerEmptyHelp:
                                   Control: ModernText
@@ -2361,14 +2362,15 @@ Screens:
                                     AccessibleLabel: =Self.Text
                                     Color: =RGBA(71,85,105,1)
                                     Font: =Font.'Segoe UI'
-                                    Height: =72
+                                    Height: =154
                                     LayoutMinWidth: =0
                                     PaddingBottom: =0
                                     PaddingLeft: =0
                                     PaddingRight: =0
                                     PaddingTop: =0
                                     Size: =13
-                                    Text: ="Choose a meeting to see its details and actions. You can also add a one-time meeting or block a date."
+                                    Text: |-
+                                      ="Select a meeting for its details and actions." & Char(10) & Char(10) & "Board: " & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && !IsDeleted)) & " dates · " & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board" && DecisionStatus="Approved" && !IsDeleted)) & " approved" & Char(10) & "Committees: " & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Board Committees" && !IsDeleted)) & " dates" & Char(10) & "Executive: " & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Executive Leadership" && !IsDeleted)) & " dates" & Char(10) & "Operations: " & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && PlanningLayer="Organization & Operations" && !IsDeleted)) & " dates"
                                     VerticalAlign: =VerticalAlign.Top
                               - btnPlannerEmptyAdd:
                                   Control: ModernButton
@@ -2410,7 +2412,7 @@ Screens:
                               LayoutGap: =10
                               LayoutMinHeight: =0
                               LayoutMinWidth: =0
-                              Visible: =varPlannerContextMode="Layer"
+                              Visible: =false
                             Children:
                               - txtPlanYrLayerTitle:
                                   Control: ModernText
@@ -2496,6 +2498,32 @@ Screens:
                                     Text: |-
                                       =If(CountIf(colCalProofClosures,ClosureDate=varPlannerFocusedDate && IsActive)>0,"Closed: " & LookUp(colCalProofClosures,ClosureDate=varPlannerFocusedDate && IsActive,ClosureName),"Available planning date") & Char(10) & Text(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerFocusedDate)) & " meeting" & If(CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerFocusedDate)=1,"","s") & " on this date."
                                     VerticalAlign: =VerticalAlign.Top
+                              - galPlanYrDateMeetings:
+                                  Control: Gallery
+                                  Variant: Vertical
+                                  Properties:
+                                    AccessibleLabel: ="Meetings on " & Text(varPlannerFocusedDate,"mmmm d")
+                                    DelayItemLoading: =false
+                                    Height: =Min(3,CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerFocusedDate && !IsDeleted))*46
+                                    Items: =SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerFocusedDate && !IsDeleted),"StartTime",SortOrder.Ascending)
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    LoadingSpinner: =LoadingSpinner.None
+                                    Selectable: =false
+                                    ShowScrollbar: =false
+                                    TemplatePadding: =0
+                                    TemplateSize: =46
+                                  Children:
+                                    - btnPlanYrDateMeeting:
+                                        Control: ModernButton
+                                        Properties:
+                                          AccessibleLabel: =ThisItem.EventName & ", " & Text(ThisItem.StartTime,"h:mm AM/PM")
+                                          Appearance: =ButtonAppearance.Outline
+                                          BasePaletteColor: =If(ThisItem.AutoAdjusted && ThisItem.DecisionStatus="NeedsReview",RGBA(217,119,6,1),RGBA(37,99,235,1))
+                                          Height: =40
+                                          OnSelect: =Set(varPlannerSelectedEventId,ThisItem.EventId);Set(varPlannerContextMode,"Summary")
+                                          Text: =Text(ThisItem.StartTime,"h:mm AM/PM") & " · " & ThisItem.EventName
+                                          Width: =Parent.TemplateWidth
                               - btnPlanYrDateAdd:
                                   Control: ModernButton
                                   Properties:
@@ -2754,7 +2782,7 @@ Screens:
                                         ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Approve",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:selectedEvent.EventDate,StartTime:selectedEvent.StartTime,DurationMinutes:selectedEvent.DurationMinutes,DecisionStatus:"Approved",Summary:varPlannerReceipt,OccurredAt:Now()});
                                         Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Approve proposed date",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                       )
-                                    Text: ="Approve " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"mmm d")
+                                    Text: ="Approve " & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventName) & " → " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate),"mmm d")
                                     Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview"
                                     Width: =Parent.Width
                               - btnPlannerMove:

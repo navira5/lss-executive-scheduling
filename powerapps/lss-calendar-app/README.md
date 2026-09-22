@@ -1,6 +1,10 @@
 # LSS Calendar App — Canvas source snapshot
 
-This directory records the current saved Canvas App source from the Power Apps authoring session through 2026-09-16.
+This directory records the earlier saved Canvas App source from the Power Apps authoring session through 2026-09-16.
+
+The current month-first clone is preserved separately in
+`../lss-calendar-month-first-test-clone/`. Do not treat this older directory as
+the latest clone or overwrite it when testing the current app.
 
 - The app was **not published** as part of this snapshot.
 - This is a working draft for product-owner review; it does not indicate that the complete multi-layer product is approved.
