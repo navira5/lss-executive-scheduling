@@ -1090,6 +1090,18 @@ Screens:
                                     OnSelect: =Set(varPlannerDraftDirty,false);Set(varPlannerContextMode,"Summary")
                                     Text: ="Cancel"
                                     Width: =Parent.Width
+                        - btnPlannerMonthDismissReceipt:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Dismiss receipt"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(102,112,133,1)
+                              Height: =36
+                              OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
+                              Text: ="Dismiss receipt"
+                              Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
+                              Width: =Parent.Width
                         - txtPlannerMonthReceipt:
                             Control: ModernText
                             Properties:
@@ -1118,15 +1130,3 @@ Screens:
                                 )
                               VerticalAlign: =VerticalAlign.Top
                               Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
-                        - btnPlannerMonthDismissReceipt:
-                            Control: ModernButton
-                            Properties:
-                              AccessibleLabel: ="Dismiss receipt"
-                              AlignInContainer: =AlignInContainer.Stretch
-                              Appearance: =ButtonAppearance.Outline
-                              BasePaletteColor: =RGBA(102,112,133,1)
-                              Height: =36
-                              OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
-                              Text: ="Dismiss"
-                              Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
-                              Width: =Parent.Width

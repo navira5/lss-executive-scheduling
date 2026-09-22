@@ -2631,6 +2631,16 @@ Screens:
                               RadiusTopRight: =8
                               Visible: =!IsBlank(varPlannerReceipt)
                             Children:
+                              - btnPlannerDismissReceipt:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Dismiss receipt"
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(102,112,133,1)
+                                    Height: =36
+                                    OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
+                                    Text: ="Dismiss receipt"
+                                    Width: =Parent.Width
                               - txtPlannerReceipt:
                                   Control: ModernText
                                   Properties:
@@ -2660,16 +2670,6 @@ Screens:
                                         If(StartsWith(varPlannerReceipt,"No meetings added") || StartsWith(varPlannerReceipt,"Wait until"),"⚠ ","✓ ") & varPlannerReceipt
                                       )
                                     VerticalAlign: =VerticalAlign.Top
-                              - btnPlannerDismissReceipt:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Dismiss receipt"
-                                    Appearance: =ButtonAppearance.Outline
-                                    BasePaletteColor: =RGBA(102,112,133,1)
-                                    Height: =36
-                                    OnSelect: =Set(varPlannerReceipt,"");Clear(colPlannerMutationReceipt)
-                                    Text: ="Dismiss"
-                                    Width: =Parent.Width
                               - btnPlannerUndo:
                                   Control: ModernButton
                                   Properties:
