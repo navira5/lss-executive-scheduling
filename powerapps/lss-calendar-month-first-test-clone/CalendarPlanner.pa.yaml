@@ -2360,7 +2360,7 @@ Screens:
                                       =With(
                                         {candidateStart:If(IsBlank(drpPlannerStartTime.Selected.Value),varPlannerDraftStart,TimeValue(drpPlannerStartTime.Selected.Value))},
                                         If(
-                                          IsBlank(varPlannerDraftName) || (varPlannerAddKind="Existing meeting type" && IsBlank(varPlannerDraftRuleId)) || IsPlannerHardStop(varPlannerDraftDate) || (!IsBlank(LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer)) && LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer,Status)="Confirmed") ||
+                                          IsBlank(varPlannerDraftName) || (varPlannerAddKind="Existing meeting type" && IsBlank(varPlannerDraftRuleId)) || IsPlannerHardStop(varPlannerDraftDate) ||
                                           (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+candidateStart && EndTime>candidateStart)>0) ||
                                           (varPlannerContextMode="Move" && varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && candidateStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)),
                                           DisplayMode.Disabled,

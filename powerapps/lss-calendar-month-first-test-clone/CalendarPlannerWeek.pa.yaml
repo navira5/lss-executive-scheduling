@@ -851,7 +851,7 @@ Screens:
                                     AccessibleLabel: ="Move selected meeting"
                                     AlignInContainer: =AlignInContainer.Stretch
                                     BasePaletteColor: =RGBA(91,59,127,1)
-                                    DisplayMode: =If(LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed",DisplayMode.Disabled,DisplayMode.Edit)
+                                    DisplayMode: =DisplayMode.Edit
                                     Height: =44
                                     OnSelect: |-
                                       =Set(varPlannerContextMode,"Move");
@@ -992,7 +992,6 @@ Screens:
                                       =With(
                                         {candidateStart:If(IsBlank(drpPlannerWeekMoveTime.Selected.Value),varPlannerDraftStart,TimeValue(drpPlannerWeekMoveTime.Selected.Value))},
                                         If(
-                                          LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed" ||
                                           IsPlannerHardStop(varPlannerDraftDate) ||
                                           (varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && candidateStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)) ||
                                           CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+candidateStart && EndTime>candidateStart)>0,
