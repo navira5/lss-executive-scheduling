@@ -173,6 +173,7 @@ Screens:
                         LayoutMinWidth: =190
                         OnSelect: |-
                           =Set(varPlannerPendingAddAll,true);
+                          Set(varPlannerReturnView,"Month");
                           Set(varPlannerContextMode,"");
                           Set(varPlannerView,"Year");
                           Navigate(CalendarPlanner,ScreenTransition.None)
@@ -188,6 +189,7 @@ Screens:
                         LayoutMinWidth: =124
                         OnSelect: |-
                           =Set(varPlannerPendingAddAll,false);
+                          Set(varPlannerReturnView,"Month");
                           Set(varPlannerContextMode,"StartClean");
                           Set(varPlannerView,"Year");
                           Navigate(CalendarPlanner,ScreenTransition.None)
@@ -1106,6 +1108,31 @@ Screens:
                                 )
                               VerticalAlign: =VerticalAlign.Top
                               Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
+                        - btnPlannerMonthUndo:
+                            Control: ModernButton
+                            Properties:
+                              AccessibleLabel: ="Undo last calendar change"
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: =ButtonAppearance.Outline
+                              BasePaletteColor: =RGBA(62,93,138,1)
+                              DisplayMode: =If(CountRows(colPlannerUndo)=0,DisplayMode.Disabled,DisplayMode.Edit)
+                              Height: =40
+                              OnSelect: |-
+                                =With(
+                                  {undoRow:First(colPlannerUndo)},
+                                  If(
+                                    undoRow.Action="Reset",
+                                    ForAll(Filter(colPlannerUndo,Action="Reset") As resetRow,Collect(colCalProofEvents,resetRow.SnapshotEvent));Set(varPlannerReceipt,"Reset undone; meetings restored."),
+                                    undoRow.Action="Add",
+                                    ForAll(Filter(colPlannerUndo,Action="Add") As addedRow,RemoveIf(colCalProofEvents,EventId=addedRow.SubjectId));Set(varPlannerReceipt,"Added meetings removed."),
+                                    Set(varPlannerReceipt,"Last change can be undone from Year view.")
+                                  )
+                                );
+                                Clear(colPlannerUndo);
+                                Set(varPlannerContextMode,"Empty")
+                              Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
+                              Text: ="Undo"
+                              Width: =Parent.Width
                         - conPlannerMonthDelete:
                             Control: GroupContainer
                             Variant: AutoLayout

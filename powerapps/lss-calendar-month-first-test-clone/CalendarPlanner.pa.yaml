@@ -1051,6 +1051,13 @@ Screens:
                                                 CountIf(colPlannerAddAllMissing,PlanningLayer="General")>0 && IsBlank(LookUp(colPlannerLayerState,PlanningLayer="General").PlanningLayer),
                                                 Collect(colPlannerLayerState,{StepNumber:5,PlanningLayer:"General",ShortName:"Other recurring",Status:"Not started",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false})
                                               );
+                                              ClearCollect(
+                                                colPlannerUndo,
+                                                ForAll(
+                                                  colPlannerAddAllMissing As addedEvent,
+                                                  {Action:"Add",SubjectId:addedEvent.EventId,EventName:addedEvent.EventName,PreviousDate:addedEvent.EventDate,PreviousStart:addedEvent.StartTime,PreviousEnd:addedEvent.EndTime,PreviousStatus:addedEvent.DecisionStatus,PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:First(colCalProofClosures)}
+                                                )
+                                              );
                                               Collect(colCalProofEvents,colPlannerAddAllMissing);
                                               Collect(colPlannerLayerRuleEvents,colPlannerAddAllMissing);
                                               ForAll(
@@ -1072,6 +1079,16 @@ Screens:
                                               );
                                               Select(btnPlannerPersistYear)
                                             )
+                                          )
+                                        );
+                                        With(
+                                          {returnView:varPlannerReturnView},
+                                          Set(varPlannerReturnView,"");
+                                          If(
+                                            returnView="Month",
+                                            Set(varPlannerView,"Month");Navigate(CalendarPlannerMonth,ScreenTransition.None),
+                                            returnView="Week",
+                                            Set(varPlannerView,"Week");Navigate(CalendarPlannerWeek,ScreenTransition.None)
                                           )
                                         )
                                       )
@@ -1592,6 +1609,66 @@ Screens:
                               Size: =11
                               Text: =If(IsBlank(varPlannerEditorFromView),"CONTEXT PANEL","PLANNING EDITOR")
                               Wrap: =false
+                        - conPlannerTopReceipt:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(134,239,172,1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(240,253,244,1)
+                              FillPortions: =0
+                              Height: =190
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =10
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Visible: =varPlannerView="Year" && !IsBlank(varPlannerReceipt)
+                            Children:
+                              - txtPlannerTopReceipt:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    Color: =If(StartsWith(varPlannerReceipt,"No meetings added") || StartsWith(varPlannerReceipt,"Wait until"),RGBA(154,91,0,1),RGBA(37,122,84,1))
+                                    FillPortions: =1
+                                    Font: =Font.'Segoe UI'
+                                    Height: =120
+                                    LayoutMinWidth: =0
+                                    Size: =12
+                                    Text: |-
+                                      =If(
+                                        CountRows(colPlannerMutationReceipt)>0,
+                                        With(
+                                          {receipt:First(colPlannerMutationReceipt)},
+                                          "✓ " & receipt.Summary & Char(10) &
+                                          "Meeting: " & receipt.EventName & Char(10) &
+                                          "Type: " & receipt.SourceType & If(!IsBlank(receipt.SourceRuleId)," · Rule " & receipt.SourceRuleId,"") & Char(10) &
+                                          "Date/time: " & Text(receipt.EventDate,"mmm d, yyyy") & " · " & Text(receipt.StartTime,"h:mm AM/PM") & " · " & Text(receipt.DurationMinutes) & " minutes" & Char(10) &
+                                          "Status: " & receipt.DecisionStatus
+                                        ),
+                                        If(StartsWith(varPlannerReceipt,"No meetings added") || StartsWith(varPlannerReceipt,"Wait until"),"⚠ ","✓ ") & varPlannerReceipt
+                                      )
+                                    VerticalAlign: =VerticalAlign.Top
+                              - btnPlannerTopUndo:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Undo last change"
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(62,93,138,1)
+                                    DisplayMode: =If(CountRows(colPlannerUndo)=0,DisplayMode.Disabled,DisplayMode.Edit)
+                                    Height: =40
+                                    OnSelect: =Select(btnPlannerUndo)
+                                    Text: ="Undo"
+                                    Width: =Parent.Width
                         - conPlannerAttention:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -1833,10 +1910,27 @@ Screens:
                                     OnSelect: |-
                                       =With(
                                         {removedCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear),retainedRuleCount:CountRows(colMeetingRulebook),retainedClosureCount:CountIf(colCalProofClosures,PlanYear=varPlannerYear && IsActive)},
+                                        ClearCollect(
+                                          colPlannerUndo,
+                                          ForAll(
+                                            Filter(colCalProofEvents,PlanYear=varPlannerYear) As resetEvent,
+                                            {
+                                              Action:"Reset",
+                                              SubjectId:resetEvent.EventId,
+                                              EventName:resetEvent.EventName,
+                                              PreviousDate:resetEvent.EventDate,
+                                              PreviousStart:resetEvent.StartTime,
+                                              PreviousEnd:resetEvent.EndTime,
+                                              PreviousStatus:resetEvent.DecisionStatus,
+                                              PreviousActive:false,
+                                              SnapshotEvent:resetEvent,
+                                              SnapshotClosure:First(colCalProofClosures)
+                                            }
+                                          )
+                                        );
                                         RemoveIf(colCalProofEvents,PlanYear=varPlannerYear);
                                         RemoveIf(colPlannerExclusions,PlanYear=varPlannerYear);
                                         RemoveIf(colPlannerHistory,true);
-                                        Clear(colPlannerUndo);
                                         Clear(colCalProofGenerationReceipt);
                                         Clear(colCalProofBoardConfirmationReceipt);
                                         Clear(colPlannerLayerBuildReceipt);
@@ -1852,7 +1946,17 @@ Screens:
                                         Set(varPlannerAcceptAllAdjustments,false);
                                         Set(varPlannerReceipt,"Saved "&Text(varPlannerYear)&" calendar reset. "&Text(removedCount)&" meetings removed; "&Text(retainedRuleCount)&" rules and "&Text(retainedClosureCount)&" active closures retained.");
                                         ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Reset",SubjectId:Text(varPlannerYear),EventName:"Clean planning year",SourceType:"Local",SourceRuleId:"",PlanningLayer:"All",Category:"Reset",EventDate:Date(varPlannerYear,1,1),StartTime:Time(0,0,0),DurationMinutes:0,DecisionStatus:"Complete",Summary:varPlannerReceipt,OccurredAt:Now()});
-                                        Select(btnPlannerPersistYear)
+                                        Select(btnPlannerPersistYear);
+                                        With(
+                                          {returnView:varPlannerReturnView},
+                                          Set(varPlannerReturnView,"");
+                                          If(
+                                            returnView="Month",
+                                            Set(varPlannerView,"Month");Set(varPlannerContextMode,"Empty");Navigate(CalendarPlannerMonth,ScreenTransition.None),
+                                            returnView="Week",
+                                            Set(varPlannerView,"Week");Set(varPlannerContextMode,"Empty");Navigate(CalendarPlannerWeek,ScreenTransition.None)
+                                          )
+                                        )
                                       )
                                     Text: ="Reset calendar"
                                     Width: =Parent.Width
@@ -1863,7 +1967,18 @@ Screens:
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(102,112,133,1)
                                     Height: =44
-                                    OnSelect: =Set(varPlannerContextMode,If(varPlannerActiveStep="Final Review","FinalReview","Layer"))
+                                    OnSelect: |-
+                                      =With(
+                                        {returnView:varPlannerReturnView},
+                                        Set(varPlannerReturnView,"");
+                                        If(
+                                          returnView="Month",
+                                          Set(varPlannerView,"Month");Set(varPlannerContextMode,"Empty");Navigate(CalendarPlannerMonth,ScreenTransition.None),
+                                          returnView="Week",
+                                          Set(varPlannerView,"Week");Set(varPlannerContextMode,"Empty");Navigate(CalendarPlannerWeek,ScreenTransition.None),
+                                          Set(varPlannerContextMode,If(varPlannerActiveStep="Final Review","FinalReview","Layer"))
+                                        )
+                                      )
                                     Text: ="Cancel"
                                     Width: =Parent.Width
                         - conPlannerSummary:
@@ -2033,6 +2148,7 @@ Screens:
                                       Reset(drpPlannerStartTime);
                                       Reset(numPlannerDuration)
                                     Text: ="Move meeting"
+                                    Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerSelectedEventId) && (varPlannerView<>"Year" || LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview")
                                     Width: =Parent.Width
                               - btnPlannerDelete:
                                   Control: ModernButton
@@ -2044,7 +2160,7 @@ Screens:
                                     Height: =44
                                     OnSelect: =Set(varPlannerEditorFromView,"Year");Set(varPlannerContextMode,"Delete")
                                     Text: ="Delete meeting"
-                                    Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerSelectedEventId)
+                                    Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerSelectedEventId) && (varPlannerView<>"Year" || LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DecisionStatus)="NeedsReview")
                                     Width: =Parent.Width
                               - btnPlannerEditSourceRule:
                                   Control: ModernButton
@@ -2618,7 +2734,7 @@ Screens:
                               RadiusBottomRight: =8
                               RadiusTopLeft: =8
                               RadiusTopRight: =8
-                              Visible: =!IsBlank(varPlannerReceipt)
+                              Visible: =false
                             Children:
                               - txtPlannerReceipt:
                                   Control: ModernText
@@ -2663,6 +2779,8 @@ Screens:
                                         If(
                                           undoRow.Action="Add",
                                           RemoveIf(colCalProofEvents,EventId=undoRow.SubjectId);Set(varPlannerReceipt,"Added meeting removed."),
+                                          undoRow.Action="Reset",
+                                          ForAll(Filter(colPlannerUndo,Action="Reset") As resetRow,Collect(colCalProofEvents,resetRow.SnapshotEvent));Set(varPlannerReceipt,"Reset undone; meetings restored."),
                                           undoRow.Action="Move",
                                           If(IsPlannerHardStop(undoRow.PreviousDate),Set(varPlannerReceipt,"Undo needs confirmation because the previous date is now a hard stop."),Patch(colCalProofEvents,LookUp(colCalProofEvents,EventId=undoRow.SubjectId),{EventDate:undoRow.PreviousDate,CurrentDate:undoRow.PreviousDate,StartTime:undoRow.PreviousStart,EndTime:undoRow.PreviousEnd,DecisionStatus:undoRow.PreviousStatus});Set(varPlannerReceipt,"Move undone; previous placement restored.")),
                                           undoRow.Action="Delete",
