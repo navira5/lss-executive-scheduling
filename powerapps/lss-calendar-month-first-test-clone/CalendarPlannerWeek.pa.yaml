@@ -995,7 +995,7 @@ Screens:
                                           LookUp(colPlannerLayerState,PlanningLayer=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,PlanningLayer),Status)="Confirmed" ||
                                           IsPlannerHardStop(varPlannerDraftDate) ||
                                           (varPlannerDraftDate=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) && candidateStart=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) && varPlannerDraftDuration=LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)) ||
-                                          (CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+candidateStart && EndTime>candidateStart)>0 || (LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated" && (varPlannerDraftDate<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate) || candidateStart<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,StartTime) || varPlannerDraftDuration<>LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,DurationMinutes)))),
+                                          CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventId<>varPlannerSelectedEventId && EventDate=varPlannerDraftDate && StartTime<Time(0,0,0)+Time(0,varPlannerDraftDuration,0)+candidateStart && EndTime>candidateStart)>0,
                                           DisplayMode.Disabled,
                                           DisplayMode.Edit
                                         )
