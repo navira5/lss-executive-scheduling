@@ -218,6 +218,8 @@ saved test data during the final unattended pass.
    apparently unreachable controls have been identified, but removal awaits
    plan approval and regression testing. Retain hidden handlers called with
    `Select`, especially persistence, hydration, Add-all, and Undo.
+   The exact candidate list and safe test plan are in
+   [Year-view complexity cleanup](../../docs/power-apps-milestones/year-complexity-cleanup-plan.md).
 5. The Canvas Outlook demo is **one source only: Navira's calendar, read-only**.
    Office 365 Outlook is not connected yet. Do not add Outlook create, update,
    delete, invitation, or second-calendar behavior to this demo.

@@ -203,6 +203,9 @@ must sync the live Canvas session before editing and must not restart from the
 older `powerapps/lss-calendar-app/` snapshot or the Next.js comparison UI.
 The [Reset/Undo repair and isolated test plan](docs/power-apps-milestones/reset-undo-repair-test-plan.md)
 records the exact source gaps and the safety gate before a destructive test.
+The [Year-view complexity cleanup plan](docs/power-apps-milestones/year-complexity-cleanup-plan.md)
+lists 14 additional hidden-control candidates and the required regression
+checks; that removal still awaits approval and has not been made.
 
 The read-only Outlook Phase 1 source audit, proposed Canvas edit plan, and
 acceptance matrix are in
