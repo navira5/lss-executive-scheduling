@@ -152,7 +152,9 @@ is not asked to approve the date they just chose.
   IDs **in memory only**; they do not persist the Undo result. Reset also
   removes exclusions and resets layer state and receipts, which Undo does not
   restore. A disabled Undo was observed after Reset, but its exact runtime
-  cause has not been established. Do not promise Reset→Undo is safe.
+  cause has not been established. Do not promise Reset→Undo is safe. See the
+  [Reset/Undo repair and isolated test plan](../../docs/power-apps-milestones/reset-undo-repair-test-plan.md)
+  for source evidence and the required before/after/reopen tests.
 
 ## Context-panel UX changes completed
 

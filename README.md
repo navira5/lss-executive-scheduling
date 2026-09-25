@@ -183,8 +183,7 @@ Current saved-source verification:
 
 - `compile_canvas`: passed for all 6 synced files.
 - Coauthoring round trip: passed; all six clone YAML files now match a fresh
-  live-server sync, including `_EditorState.pa.yaml`. The latest parity update
-  in this working tree is not yet a GitHub commit.
+  live-server sync, including `_EditorState.pa.yaml`.
 - Accessibility check: no errors.
 - App Checker: 24 medium performance findings remain, primarily legacy
   collection/`ForAll` patterns and Year-screen control count. The Year
@@ -202,6 +201,8 @@ See the clone README for the complete issue history, formulas, live test
 receipt, known limitations, and safe continuation checklist. Future agents
 must sync the live Canvas session before editing and must not restart from the
 older `powerapps/lss-calendar-app/` snapshot or the Next.js comparison UI.
+The [Reset/Undo repair and isolated test plan](docs/power-apps-milestones/reset-undo-repair-test-plan.md)
+records the exact source gaps and the safety gate before a destructive test.
 
 The read-only Outlook Phase 1 source audit, proposed Canvas edit plan, and
 acceptance matrix are in
