@@ -142,53 +142,61 @@ The prototype does not:
 - include the day-to-day Executive Scheduling Advisor; or
 - replace LSS's final review and approval.
 
-## Current Canvas clone handoff (2026-09-22)
+## Live Canvas app handoff (updated 2026-09-25)
 
-The most current Power Apps Canvas work is preserved separately at
+The current Power Apps implementation is preserved at
 [`powerapps/lss-calendar-month-first-test-clone/`](powerapps/lss-calendar-month-first-test-clone/).
-This is the clone being tested in the Power Apps authoring session; it is not
-the older `powerapps/lss-calendar-app/` snapshot and it has not been published
-as the production app.
+Although its display name still includes “Test,” this clone is now the working
+main Canvas app. It was compiled, synchronized back from the live coauthoring
+server, tested in Power Apps Studio, and published successfully on 2026-09-25.
 
-The clone exists because the original month-first planner went through several
-unstable iterations: imported packages produced blank calendars, some screens
-felt frozen, Month/Week editing actions were inconsistent, the context panel
-could take over the screen, and rule-generated dates could be confused with
-manual exceptions. The clone isolates the work while leaving the original app
-untouched.
+The current view contract is:
 
-The clone's current contract is deliberately simple:
+- **Year is read-only overview:** all 12 months, chips/counts/flags, lightweight
+  meeting detail, and **Open in Month**. Year does not expose Add, Block, Move,
+  Delete, Approve, or Edit rule actions.
+- **Month is the primary planning workspace:** Add, Block, Move, Delete, Reset,
+  and Needs attention all stay in the right context panel while the calendar
+  remains visible.
+- **Week is the precise scheduling workspace:** it uses the same in-panel
+  actions plus exact time/duration validation.
+- Reset and Add from rules remember the initiating Month/Week view and return
+  to it after the shared worker completes.
+- Undo is bound to the shared snapshot collection and becomes active when a
+  reset or rule-generation snapshot exists.
+- Needs attention counts only non-deleted `NeedsReview` records, advances to
+  the next unresolved item after resolution, and clears when none remain.
+- Move warnings recalculate from the live draft date/time/duration. The stale
+  warning/disabled Confirm defect was fixed, the acknowledgement step was
+  removed, and a saved manual move is immediately treated as approved.
 
-- SharePoint test lists remain the source of saved rules and plan rows.
-- Rules generate recurring meetings; a user edits a rule to change a recurring
-  pattern, or edits one meeting for a one-off exception.
-- Holidays and blocked days are hard stops. A generated meeting moved to the
-  next business day is marked `NeedsReview` and must be approved.
-- Different-title overlaps (for example, Rachel's meeting and Karen's meeting)
-  are allowed after user review. Same-title/same-time duplicates cannot be
-  accepted.
-- Manual moves outrank rules. Regeneration preserves them and flags conflicts
-  instead of silently overwriting them.
-- Other recurring and one-time meetings remain visible as their own category.
-- Needs attention is a persistent action in Year, Month, and Week. It filters
-  to unresolved dates/months, jumps to the first affected period, and lets the
-  user select a flagged day and use the normal Approve, Move, or Delete
-  actions. Approval immediately removes the unresolved flag.
+Canvas app identity:
 
-The clone source includes the synced Canvas YAML files and a detailed next-agent
-handoff in its own README. Its current validation receipt is:
+- App: `LSS Calendar Month-first Test`
+- App ID: `6022cba8-0bb4-45f8-9147-307dad49c2c5`
+- Environment: `Default-f656b17f-7f78-425e-b239-c96571057ba9`
+
+Final verification:
 
 - `compile_canvas`: passed for all 6 synced files.
+- Coauthoring round trip: passed; the committed YAML is the server-synchronized
+  state, including `_EditorState.pa.yaml`.
 - Accessibility check: no errors.
-- App Checker: 23 pre-existing medium performance findings remain, including a
-  `CalendarPlanner` complexity estimate of 360. These are known optimization
-  work, not a reason to throw away the clone or rewrite the app again.
+- App Checker: 26 medium performance findings remain, primarily legacy
+  collection/`ForAll` patterns and Year-screen control count. They are known
+  optimization debt, not formula or accessibility failures.
+- Runtime preview verified Month/Week Add, Block, Needs attention, in-panel
+  Reset confirmation, Year read-only navigation, valid move enablement/save,
+  and return-view behavior.
+- The unattended final pass did not click the destructive Reset confirmation or
+  execute Delete against saved data. Their formulas and in-panel confirmation
+  paths were inspected; the final destructive-reset/Undo test remains an
+  attended acceptance step.
 
-The next agent should sync the active authoring session before editing, compile
-after targeted changes, test the Needs attention workflow in all three views,
-and avoid publishing or replacing the original app until the functional demo is
-accepted. See the clone README for exact test steps, list names, app identity,
-and the full issue history.
+See the clone README for the complete issue history, formulas, live test
+receipt, known limitations, and safe continuation checklist. Future agents
+must sync the live Canvas session before editing and must not restart from the
+older `powerapps/lss-calendar-app/` snapshot or the Next.js comparison UI.
 
 ## Evidence and implementation
 

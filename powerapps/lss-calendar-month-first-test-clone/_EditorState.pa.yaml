@@ -1,0 +1,6 @@
+EditorState:
+  ScreensOrder:
+    - BoardRulesReview
+    - CalendarPlanner
+    - CalendarPlannerMonth
+    - CalendarPlannerWeek

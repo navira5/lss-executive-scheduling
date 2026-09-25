@@ -1,158 +1,223 @@
-# LSS Calendar Month-first Test — clone handoff
+# LSS Calendar Month-first Test — live Canvas app handoff
 
-This directory is the current Canvas App clone source exported from the active
-Power Apps authoring session on **2026-09-22**. It is intentionally separate
-from `powerapps/lss-calendar-app/`, which is the older repository snapshot of
-the main planner source.
+This directory contains the current server-synchronized source for the live
+Power Apps Canvas app. It is the app now being treated as the main calendar
+planner, even though its display name still includes “Test.”
 
-## Identity and safety boundary
+## Current status — 2026-09-25
 
 - Canvas app: **LSS Calendar Month-first Test**
 - App ID: `6022cba8-0bb4-45f8-9147-307dad49c2c5`
 - Environment: `Default-f656b17f-7f78-425e-b239-c96571057ba9`
-- Working source was synced from the live authoring session before this handoff.
-- The original app was not modified by the clone work.
-- The clone has not been published as a production app.
-- No credentials, tokens, or secrets belong in this directory.
-- `_EditorState.pa.yaml` is deliberately omitted; Power Apps Studio owns it.
+- Studio URL: `https://make.powerapps.com/e/Default-f656b17f-7f78-425e-b239-c96571057ba9/canvas/?action=edit&app-id=%2Fproviders%2FMicrosoft.PowerApps%2Fapps%2F6022cba8-0bb4-45f8-9147-307dad49c2c5`
+- Published: **yes**, on 2026-09-25 at approximately 8:46 AM Eastern.
+- `compile_canvas`: passed for all six Canvas files.
+- Coauthoring round trip: passed; the six files in this directory were synced
+  back from the live server after the final changes.
+- Accessibility checker: no errors.
+- App Checker: 26 medium performance findings remain. They are optimization
+  debt, not formula or accessibility errors; see **Known follow-up work**.
+- The full repository `npm test` command was attempted, but the host is on
+  Node 20 and the script stalled while `npx` tried to obtain Node 22.13.1, so
+  it was interrupted. That web-prototype test harness is separate from the
+  successful Canvas compile, live Studio tests, and server round trip above.
 
-The clone uses the test SharePoint lists already connected in the app:
+The six files are:
 
-- `LSS Test Meeting Types 20260921` — rule/source data
-- `LSS Test Planned Calendar 20260921` — saved plan rows, events, exclusions,
-  closures, and layer receipts
+- `App.pa.yaml`
+- `BoardRulesReview.pa.yaml`
+- `CalendarPlanner.pa.yaml`
+- `CalendarPlannerMonth.pa.yaml`
+- `CalendarPlannerWeek.pa.yaml`
+- `_EditorState.pa.yaml`
 
-The source files are `App.pa.yaml`, `CalendarPlanner.pa.yaml`,
-`CalendarPlannerMonth.pa.yaml`, `CalendarPlannerWeek.pa.yaml`, and
-`BoardRulesReview.pa.yaml`.
+Do not edit these files as if they were a separate web prototype. They are the
+source representation of the live Canvas app and should be changed through a
+Canvas Authoring MCP coauthoring session: connect to the app, sync to a fresh
+working directory, make targeted YAML changes, compile, test in Studio, and
+sync back before committing.
 
-## Why the clone exists
+## Why this app/clone exists
 
-The main app had become difficult to test safely while its month-first calendar
-behavior was changing. There were frozen or very slow screens, repeated
-imports, unclear separation between rule-generated dates and manual exceptions,
-and a risk that a fix would overwrite the original app. The clone provides an
-isolated, testable copy while preserving the original app and its data.
+The earlier planner became unsafe and frustrating to iterate on: imported
+packages sometimes produced blank calendars, large screens felt frozen, the
+context panel could take over the screen, Month and Week actions behaved
+differently, and regeneration could blur the distinction between generated
+dates and deliberate manual exceptions. The clone was created so the new
+month-first workflow could be rebuilt and tested without overwriting the
+original app.
 
-The clone is not a vendor calendar and does not use Virto, JFDI, or another
-third-party calendar product. It is a standard Power Apps Canvas implementation
-over SharePoint-backed lists.
+That migration is now effectively complete: this clone is the working main
+app. The original remains a recovery reference only. Do not restart the work
+from the older `powerapps/lss-calendar-app/` snapshot and do not replace this
+app with the Next.js or static preview; those are comparison/reference
+implementations, not the live Power Apps product.
 
-## Current product contract
+## Data and safety boundary
 
-### Views
+The app is connected to these test SharePoint lists:
 
-- **Year** is the annual overview. It renders only the months that contain an
-  unresolved decision when the Needs attention mode is active.
-- **Month** is the primary planning workspace for adding meetings, blocking
-  days, moving meetings, deleting meetings, and resolving flags.
-- **Week** is the precise scheduling workspace for exact times, overlaps, and
-  back-to-back meetings.
-- The same saved event records are shared across all three views; the views do
-  not maintain duplicate meeting state.
+- `LSS Test Meeting Types 20260921` — scheduling rules/source data
+- `LSS Test Planned Calendar 20260921` — saved meetings, exclusions,
+  closures, layer state, and mutation receipts
 
-### Needs attention workflow
+No credentials or tokens belong in this directory. Keep changes scoped to the
+test lists until the production migration is explicitly approved.
 
-The Needs attention button is present in Year, Month, and Week. Clicking it:
+## Product contract
 
-1. switches the current view into Attention mode;
-2. filters Year to months containing unresolved events;
-3. jumps Month and Week to the earliest unresolved event;
-4. shows only unresolved event chips in the filtered calendar; and
-5. lets the user select the flagged date/meeting and use the normal context
-   actions: **Approve**, **Move meeting**, or **Delete meeting**.
+### Year = overview only
 
-Approving a decision changes its `DecisionStatus` to `Approved`, persists the
-mutation receipt, and removes it immediately from the unresolved count. The
-right panel is a guide/shortcut, not a replacement for selecting the flagged
-date on the calendar.
+- Shows all 12 months in the ordinary state.
+- Shows meeting chips, counts, holidays/closures, and flags.
+- In **Needs attention** mode, shows only months containing unresolved items.
+- Selecting a meeting shows lightweight detail and **Open in Month**.
+- Add, Block, Move, Delete, Approve, and Edit source rule are intentionally
+  hidden in Year view. The controls still exist in source for state continuity,
+  but their `Visible` property is `false`.
 
-### Scheduling rules and decisions
+### Month = primary planning workspace
 
-- Rules generate meetings. Editing the rule is the way to change a recurring
-  pattern.
-- A holiday or blocked day is a hard stop: a meeting must never remain on that
-  date.
-- If a generated date lands on a blocked day, the planner proposes the next
-  business day and marks the event `NeedsReview`; the user must approve it.
-- A manual move or manual exception is intentional user judgment. Regeneration
-  preserves it and flags a resulting conflict instead of silently overwriting
-  it.
-- Meetings may overlap when they have different titles/owners (for example,
-  Rachel runs one and Karen runs another). The overlap is flagged, but the
-  user may accept it.
-- An overlap with the **same meeting title and same time** cannot be accepted.
-- `Other recurring` and one-time meetings are first-class categories and must
-  not disappear when the four principal planning families are filtered.
+- Add meeting, Block day, Move meeting, Delete meeting, and Needs attention
+  all run in the right context panel while the calendar remains visible.
+- Reset opens its confirmation in the right context panel and returns to the
+  same Month after the worker finishes.
+- Add meetings from rules returns to the same Month and focused period.
+- Undo is visible and enabled whenever `colPlannerUndo` contains a snapshot.
 
-## Important history for the next agent
+### Week = precise scheduling workspace
 
-The project spent several iterations trying to make an imported package,
-Virto overlay, and a custom calendar behave like the requested planner. Virto
-was rejected because it introduced vendor cost/licensing and did not provide a
-realistic editing workflow. The working direction is the native Canvas clone.
+- The same context-panel actions are available without leaving the calendar.
+- Exact start time and duration drive overlap validation.
+- Reset and Add from rules preserve Week view and the focused week.
+- Undo uses the same shared undo collection.
 
-The main usability failures that drove the clone were:
+The same records in `colCalProofEvents` back all three views; the views do not
+maintain separate meeting state.
 
-- a blank calendar after import or hydration;
-- Add meeting navigating away from the current Month view;
-- Week missing Add meeting and Block day actions;
-- a full-screen context panel with poor spacing;
-- holiday/blocked-day labels and meeting chips clipping;
-- rule saves reporting “Complete the visible required fields” despite visible
-  values;
-- flags persisting after the meeting was approved;
-- Needs attention listing a meeting without telling the user which month/day to
-  open; and
-- regeneration risking the loss of manual moves.
+## Needs attention behavior
 
-The current clone addresses the functional path first. Cosmetic polish and the
-remaining performance warnings should be handled after the user verifies the
-workflow, not by rebuilding the app from scratch.
+The badge counts only unresolved records:
 
-## Validation already run
+```powerfx
+DecisionStatus = "NeedsReview" && !IsDeleted
+```
 
-On 2026-09-22, after syncing the authoring session:
+Clicking **Needs attention** in any view focuses the earliest unresolved event.
+Year filters to affected months; Month and Week remain on their respective
+screens. Approve, Move, and Delete operate in the context panel. After each
+resolution the formula re-queries the shared event collection, advances to the
+next unresolved event, and clears Attention mode when none remain. Accepted or
+manually moved events immediately leave the badge count.
 
-- Canvas YAML validation: **passed** (`compile_canvas`, 6 files).
-- Accessibility validation: **no errors**.
-- App Checker still reports 23 pre-existing medium performance findings,
-  including a screen complexity estimate of 360 for `CalendarPlanner`.
-  Those warnings are not a reason to discard the clone; they identify future
-  optimization work. Do not claim the performance work is complete.
+## Move behavior and the defect that was fixed
 
-## How to continue safely
+The previous Move form reused stale warning state. A warning produced for a
+9:00 AM slot could remain after the user selected 10:00 AM, and the Confirm
+button could stay disabled even when the new slot was valid.
 
-1. Sync the active Canvas authoring session into a working directory before
-   editing YAML. Syncing is important because Studio owns the current state.
-2. Compile after every targeted edit; do not regenerate an entire screen just
-   because a formula has a compile error.
-3. Test the clone in this order:
-   - reset the 2027 calendar;
-   - add meetings from rules;
-   - click Needs attention in Year, confirm only affected months remain;
-   - click a flagged day and approve/move/delete from the context panel;
-   - confirm the badge count drops after approval;
-   - repeat in Month and Week;
-   - test a different-title overlap and a same-title/same-time overlap;
-   - test a holiday/blocked-day date and confirm no meeting remains on the
-     hard-stop date.
-4. Keep SharePoint writes scoped to the test lists until the client workflow is
-   accepted.
-5. Do not publish the original app or delete the clone until the user signs
-   off on the functional demo.
+Month and Week now calculate overlap directly from the current draft values:
+
+```powerfx
+EventId <> varPlannerSelectedEventId &&
+EventDate = varPlannerDraftDate &&
+StartTime < DateAdd(varPlannerDraftStart, varPlannerDraftDuration, TimeUnit.Minutes) &&
+EndTime > varPlannerDraftStart
+```
+
+The warning and `DisplayMode` use the same expression. A valid changed slot
+enables **Confirm move** immediately. The old “Acknowledge warning” step was
+removed. Saving a manual move writes `DecisionStatus: "Approved"`, so the user
+is not asked to approve the date they just chose.
+
+## Reset, Add from rules, and Undo
+
+- Reset begins in Month/Week with a visible in-panel confirmation rather than
+  navigating to a separate editor or immediately switching to Year.
+- The existing Year worker performs the destructive reset only after that
+  confirmation, captures event snapshots in `colPlannerUndo`, persists the
+  result, and uses `varPlannerReturnView` to navigate back to the initiating
+  Month or Week.
+- Add from rules also sets `varPlannerReturnView`, uses the shared generation
+  worker, records added event IDs in `colPlannerUndo`, and returns to the
+  initiating view/focus.
+- Month and Week Undo handles `Reset` by restoring snapshot events and handles
+  `Add` by removing the newly generated IDs. The button is enabled whenever
+  the undo collection is nonempty.
+
+## Context-panel UX changes completed
+
+- Add meeting no longer opens a full-screen Planning Editor from Month/Week.
+- Block day no longer opens a full-screen Planning Editor from Month/Week.
+- Move, Delete, and Reset confirmations stay in the current context panel.
+- Mutation receipts stay in the panel and do not require a separate “Dismiss
+  receipt” step to continue the core workflow.
+- Unnecessary warning acknowledgement and duplicate post-save approval steps
+  were removed.
+- The context panel uses deliberate padding and internal scrolling so receipts
+  and actions remain reachable without pushing the active calendar away.
+
+## Live verification completed
+
+The following paths were exercised in Power Apps Studio preview against the
+live coauthoring session:
+
+- Month Add opens in the context panel and Cancel returns to the Month.
+- Month Block opens in the context panel and Cancel returns to the Month.
+- Week Add opens in the context panel and Cancel returns to the Week.
+- Week Block opens in the context panel and Cancel returns to the Week.
+- Needs attention remains in Month and Week and focuses an unresolved item.
+- Year shows only lightweight detail plus **Open in Month**; the editing
+  actions are absent.
+- **Open in Month** focuses the selected meeting in Month view.
+- Leadership Team Meeting was moved from 9:00 AM to 10:00 AM: the stale overlap
+  warning cleared, Confirm became active, and the move saved. It was then moved
+  back to 9:00 AM successfully.
+- Undo became visible and active after the move.
+- Add meetings from rules returned to the initiating Month/focus.
+- Month Reset and Week Reset both opened their confirmation inside the context
+  panel and Cancel left the user on the same view.
+- The final source compiled clean, synchronized back from the server, and was
+  published successfully.
+
+One destructive path was deliberately not executed unattended: the final
+**Reset calendar** confirmation, because it deletes the current 2027 meeting
+rows. Its context-panel entry, worker handoff, snapshot construction, undo
+formula, persistence, and return-view formula were statically verified; run
+the final click only during an attended acceptance test.
+
+Delete confirmation was likewise inspected rather than executed against the
+saved test data during the final unattended pass.
 
 ## Known follow-up work
 
-- Reduce the `CalendarPlanner` control complexity below the recommended 300
-  only if it can be done without adding state or duplicating controls.
-- Optimize the remaining `ForAll`/collection performance warnings after a
-  real click-speed test; do not change rule semantics as part of optimization.
-- Finish the final Year-view read-only polish, including whether Add/Block
-  controls should be hidden outside the focused attention workflow.
-- Add a concise, visible list of affected meeting names/dates if testing shows
-  the filtered calendar still needs more orientation.
-- Decide the post-demo persistence/version-history presentation. The current
-  plan persists rows in the SharePoint test list and records mutation receipts;
-  it is not a download/re-upload workflow.
+1. Run the attended destructive-reset acceptance test:
+   - start in Month and record the focused month;
+   - Reset calendar and confirm;
+   - verify Month/focus is restored and Undo is enabled;
+   - click Undo and verify the meetings return;
+   - repeat once from Week if desired.
+2. If Add from rules actually adds missing rows, verify Undo removes only those
+   newly added rows and preserves pre-existing/manual meetings.
+3. Exercise Approve/Move/Delete on a multi-item Needs attention queue and verify
+   the count decrements and advances after every action.
+4. Reduce the remaining App Checker warnings without changing scheduling
+   semantics. Most are legacy collection/`ForAll` performance warnings plus the
+   large Year-screen control count.
+5. Outlook integration is the next product phase. Keep it behind preview and
+   explicit human confirmation; do not let Outlook become a second planner
+   source of truth.
 
+## Safe continuation checklist
+
+1. Connect the Canvas Authoring MCP session to the app ID/environment above.
+2. Sync to a new empty working directory. Never sync over an unsaved working
+   copy.
+3. Make small edits to the owning screen only; do not regenerate whole screens.
+4. Compile after each change wave.
+5. Test the exact runtime path in Studio preview.
+6. Run accessibility and App Checker. Treat formula/accessibility errors as
+   blockers; document medium performance warnings honestly.
+7. Save and publish only after the live path passes.
+8. Sync into a fresh temporary directory again and copy that exact server state
+   into this directory before committing.
