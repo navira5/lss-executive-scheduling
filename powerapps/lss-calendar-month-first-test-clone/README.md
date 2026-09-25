@@ -10,13 +10,17 @@ planner, even though its display name still includes “Test.”
 - App ID: `6022cba8-0bb4-45f8-9147-307dad49c2c5`
 - Environment: `Default-f656b17f-7f78-425e-b239-c96571057ba9`
 - Studio URL: `https://make.powerapps.com/e/Default-f656b17f-7f78-425e-b239-c96571057ba9/canvas/?action=edit&app-id=%2Fproviders%2FMicrosoft.PowerApps%2Fapps%2F6022cba8-0bb4-45f8-9147-307dad49c2c5`
-- Published: **yes**, on 2026-09-25 at approximately 8:46 AM Eastern.
+- Last known Publish action: 2026-09-25 at approximately 8:46 AM Eastern. A
+  later Year-view source cleanup was saved and verified in Studio, but no
+  subsequent Publish action is verified. **Do not publish during the current
+  stabilization pass.**
 - `compile_canvas`: passed for all six Canvas files.
-- Coauthoring round trip: passed; the six files in this directory were synced
-  back from the live server after the final changes.
+- Coauthoring round trip: passed. On 2026-09-25 the six repository YAML files
+  were compared against a fresh live-server sync; they now match byte-for-byte.
 - Accessibility checker: no errors.
-- App Checker: 26 medium performance findings remain. They are optimization
-  debt, not formula or accessibility errors; see **Known follow-up work**.
+- App Checker: **24** medium performance findings remain; the Year screen's
+  estimated complexity is **313**, down from 363. This is a checker estimate,
+  not measured runtime speed. See **Known follow-up work**.
 - The full repository `npm test` command was attempted, but the host is on
   Node 20 and the script stalled while `npx` tried to obtain Node 22.13.1, so
   it was interrupted. That web-prototype test harness is separate from the
@@ -73,8 +77,9 @@ test lists until the production migration is explicitly approved.
 - In **Needs attention** mode, shows only months containing unresolved items.
 - Selecting a meeting shows lightweight detail and **Open in Month**.
 - Add, Block, Move, Delete, Approve, and Edit source rule are intentionally
-  hidden in Year view. The controls still exist in source for state continuity,
-  but their `Visible` property is `false`.
+  hidden in Year view. Some controls still exist as programmatic handlers;
+  others are candidates for removal only after a reachability check and live
+  regression test.
 
 ### Month = primary planning workspace
 
@@ -83,14 +88,16 @@ test lists until the production migration is explicitly approved.
 - Reset opens its confirmation in the right context panel and returns to the
   same Month after the worker finishes.
 - Add meetings from rules returns to the same Month and focused period.
-- Undo is visible and enabled whenever `colPlannerUndo` contains a snapshot.
+- Undo's enabled state is tied to `colPlannerUndo`, but **Reset→Undo is not yet
+  a proven complete or durable reversal**; see the defect below.
 
 ### Week = precise scheduling workspace
 
 - The same context-panel actions are available without leaving the calendar.
 - Exact start time and duration drive overlap validation.
 - Reset and Add from rules preserve Week view and the focused week.
-- Undo uses the same shared undo collection.
+- Undo uses the same shared undo collection and likewise needs the persistence
+  regression test below.
 
 The same records in `colCalProofEvents` back all three views; the views do not
 maintain separate meeting state.
@@ -141,9 +148,11 @@ is not asked to approve the date they just chose.
 - Add from rules also sets `varPlannerReturnView`, uses the shared generation
   worker, records added event IDs in `colPlannerUndo`, and returns to the
   initiating view/focus.
-- Month and Week Undo handles `Reset` by restoring snapshot events and handles
-  `Add` by removing the newly generated IDs. The button is enabled whenever
-  the undo collection is nonempty.
+- Month and Week Undo currently restore Reset event snapshots or remove added
+  IDs **in memory only**; they do not persist the Undo result. Reset also
+  removes exclusions and resets layer state and receipts, which Undo does not
+  restore. A disabled Undo was observed after Reset, but its exact runtime
+  cause has not been established. Do not promise Reset→Undo is safe.
 
 ## Context-panel UX changes completed
 
@@ -177,36 +186,39 @@ live coauthoring session:
 - Add meetings from rules returned to the initiating Month/focus.
 - Month Reset and Week Reset both opened their confirmation inside the context
   panel and Cancel left the user on the same view.
-- The final source compiled clean, synchronized back from the server, and was
-  published successfully.
+- That earlier release compiled, synchronized, and was published. A later
+  Year-only source cleanup was saved and re-verified in Studio but has not
+  been published during this stabilization pass.
 
 One destructive path was deliberately not executed unattended: the final
 **Reset calendar** confirmation, because it deletes the current 2027 meeting
-rows. Its context-panel entry, worker handoff, snapshot construction, undo
-formula, persistence, and return-view formula were statically verified; run
-the final click only during an attended acceptance test.
+rows. Source inspection has since shown that Undo cannot completely reverse
+it. **Do not click Reset on the populated shared 2027/2028 plans for testing.**
+Use a disposable app connected to isolated test data, verify its data-source
+targets, and then perform Reset→Undo→reopen there.
 
 Delete confirmation was likewise inspected rather than executed against the
 saved test data during the final unattended pass.
 
 ## Known follow-up work
 
-1. Run the attended destructive-reset acceptance test:
-   - start in Month and record the focused month;
-   - Reset calendar and confirm;
-   - verify Month/focus is restored and Undo is enabled;
-   - click Undo and verify the meetings return;
-   - repeat once from Week if desired.
+1. Repair and test Reset/Undo in an **isolated app and isolated data source**.
+   Snapshot event IDs, exclusions, layer states, and closures; run
+   Reset→Undo→reopen from Month and Week; compare the durable post-state with
+   the snapshot before applying a fix to the shared app.
 2. If Add from rules actually adds missing rows, verify Undo removes only those
    newly added rows and preserves pre-existing/manual meetings.
 3. Exercise Approve/Move/Delete on a multi-item Needs attention queue and verify
    the count decrements and advances after every action.
-4. Reduce the remaining App Checker warnings without changing scheduling
-   semantics. Most are legacy collection/`ForAll` performance warnings plus the
-   large Year-screen control count.
-5. Outlook integration is the next product phase. Keep it behind preview and
-   explicit human confirmation; do not let Outlook become a second planner
-   source of truth.
+4. Continue the bounded Year-screen cleanup without changing scheduling
+   semantics. Two obsolete Month-only gallery controls were removed, reducing
+   the checker estimate from 363 to 313. Fourteen more permanently hidden,
+   apparently unreachable controls have been identified, but removal awaits
+   plan approval and regression testing. Retain hidden handlers called with
+   `Select`, especially persistence, hydration, Add-all, and Undo.
+5. The Canvas Outlook demo is **one source only: Navira's calendar, read-only**.
+   Office 365 Outlook is not connected yet. Do not add Outlook create, update,
+   delete, invitation, or second-calendar behavior to this demo.
 
 ## Safe continuation checklist
 
@@ -218,6 +230,7 @@ saved test data during the final unattended pass.
 5. Test the exact runtime path in Studio preview.
 6. Run accessibility and App Checker. Treat formula/accessibility errors as
    blockers; document medium performance warnings honestly.
-7. Save and publish only after the live path passes.
+7. Save tested source, but **do not publish** during the current stabilization
+   goal. Publishing is a separate release decision.
 8. Sync into a fresh temporary directory again and copy that exact server state
    into this directory before committing.

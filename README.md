@@ -147,8 +147,10 @@ The prototype does not:
 The current Power Apps implementation is preserved at
 [`powerapps/lss-calendar-month-first-test-clone/`](powerapps/lss-calendar-month-first-test-clone/).
 Although its display name still includes “Test,” this clone is now the working
-main Canvas app. It was compiled, synchronized back from the live coauthoring
-server, tested in Power Apps Studio, and published successfully on 2026-09-25.
+main Canvas app. An earlier release was compiled, tested in Power Apps Studio,
+and published on 2026-09-25. The subsequent Year-view cleanup is saved in the
+live coauthoring source and mirrored here, but has **not** been republished as
+part of the current stabilization pass.
 
 The current view contract is:
 
@@ -162,8 +164,9 @@ The current view contract is:
   actions plus exact time/duration validation.
 - Reset and Add from rules remember the initiating Month/Week view and return
   to it after the shared worker completes.
-- Undo is bound to the shared snapshot collection and becomes active when a
-  reset or rule-generation snapshot exists.
+- Undo's enabled state is bound to the shared snapshot collection. Source
+  audit found Reset→Undo is incomplete and Month/Week Undo is not durable;
+  do not rely on it to recover a reset of the shared calendar.
 - Needs attention counts only non-deleted `NeedsReview` records, advances to
   the next unresolved item after resolution, and clears when none remain.
 - Move warnings recalculate from the live draft date/time/duration. The stale
@@ -176,27 +179,40 @@ Canvas app identity:
 - App ID: `6022cba8-0bb4-45f8-9147-307dad49c2c5`
 - Environment: `Default-f656b17f-7f78-425e-b239-c96571057ba9`
 
-Final verification:
+Current saved-source verification:
 
 - `compile_canvas`: passed for all 6 synced files.
-- Coauthoring round trip: passed; the committed YAML is the server-synchronized
-  state, including `_EditorState.pa.yaml`.
+- Coauthoring round trip: passed; all six clone YAML files now match a fresh
+  live-server sync, including `_EditorState.pa.yaml`. The latest parity update
+  in this working tree is not yet a GitHub commit.
 - Accessibility check: no errors.
-- App Checker: 26 medium performance findings remain, primarily legacy
-  collection/`ForAll` patterns and Year-screen control count. They are known
-  optimization debt, not formula or accessibility failures.
+- App Checker: 24 medium performance findings remain, primarily legacy
+  collection/`ForAll` patterns and Year-screen control count. The Year
+  complexity estimate fell from 363 to 313 after two obsolete Month-only
+  controls were removed; this does not prove a runtime speed gain.
 - Runtime preview verified Month/Week Add, Block, Needs attention, in-panel
   Reset confirmation, Year read-only navigation, valid move enablement/save,
   and return-view behavior.
-- The unattended final pass did not click the destructive Reset confirmation or
-  execute Delete against saved data. Their formulas and in-panel confirmation
-  paths were inspected; the final destructive-reset/Undo test remains an
-  attended acceptance step.
+- The unattended final pass did not click destructive Reset or Delete against
+  saved data. Reset→Undo must be repaired and tested using an isolated app
+  **and isolated test data** before any destructive test against the shared
+  plan. Do not reset populated 2027 or 2028 merely to test it.
 
 See the clone README for the complete issue history, formulas, live test
 receipt, known limitations, and safe continuation checklist. Future agents
 must sync the live Canvas session before editing and must not restart from the
 older `powerapps/lss-calendar-app/` snapshot or the Next.js comparison UI.
+
+The read-only Outlook Phase 1 source audit, proposed Canvas edit plan, and
+acceptance matrix are in
+[`docs/power-apps-milestones/outlook-read-only-phase-1-prep.md`](docs/power-apps-milestones/outlook-read-only-phase-1-prep.md).
+This is preparation only: the Canvas app has not been changed for Outlook, and
+the Office 365 Outlook API connection must be added in Studio before building.
+The demo scope is **one read-only source: Navira's Outlook calendar**. Do not
+add a second calendar or Outlook write capability to the Canvas demo; LSS can
+specify any broader need after seeing the one-calendar journey. The older
+Next.js prototype's optional Outlook-write adapter is separate from this
+Canvas Phase 1 boundary.
 
 ## Evidence and implementation
 

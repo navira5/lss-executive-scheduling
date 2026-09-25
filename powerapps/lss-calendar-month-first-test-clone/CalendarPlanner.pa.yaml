@@ -1527,38 +1527,6 @@ Screens:
                                                       VerticalAlign: =VerticalAlign.Middle
                                                       Visible: =varPlannerView<>"Month" && ThisItem.IsCurrentMonth && (varPlannerContextMode<>"Attention" || PlannerHasAttentionOnDate(ThisItem.CellDate)) && CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && ((SourceType="Manual" && varPlannerShowManual)||(SourceType<>"Manual" && ((PlanningLayer="Board" && varPlannerShowBoard)||(PlanningLayer="Board Committees" && varPlannerShowCommittees)||(PlanningLayer="Executive Leadership" && varPlannerShowExecutive)||(PlanningLayer="Organization & Operations" && varPlannerShowOperations)||(PlanningLayer="General" && varPlannerShowGeneral)))))>0
                                                       Width: =Parent.Width
-                                                - btnPlannerMonthDayEventFirst:
-                                                    Control: ModernButton
-                                                    Properties:
-                                                      AccessibleLabel: ="Open the first meeting on " & Text(ThisItem.CellDate,"mmmm d")
-                                                      Align: =Align.Center
-                                                      BasePaletteColor: =RGBA(62,93,138,1)
-                                                      Height: =22
-                                                      LayoutMinWidth: =0
-                                                      OnSelect: =Set(varPlannerSelectedEventId,First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Summary")
-                                                      PaddingBottom: =0
-                                                      PaddingTop: =0
-                                                      Size: =10
-                                                      Text: =With({eventRecord:First(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending))},If(PlannerHasActualOverlap(eventRecord.EventId) || PlannerHasZeroGap(eventRecord.EventId),"! ","") & Text(eventRecord.StartTime,"h:mm") & " " & Upper(Left(Coalesce(eventRecord.ChipText,eventRecord.EventName),7)))
-                                                      VerticalAlign: =VerticalAlign.Middle
-                                                      Visible: =varPlannerView="Month" && ThisItem.IsCurrentMonth && CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId))>0
-                                                      Width: =Parent.Width
-                                                - btnPlannerMonthDayEventSecond:
-                                                    Control: ModernButton
-                                                    Properties:
-                                                      AccessibleLabel: ="Open the second meeting on " & Text(ThisItem.CellDate,"mmmm d")
-                                                      Align: =Align.Center
-                                                      BasePaletteColor: =RGBA(62,93,138,1)
-                                                      Height: =22
-                                                      LayoutMinWidth: =0
-                                                      OnSelect: =Set(varPlannerSelectedEventId,Last(FirstN(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending),2)).EventId);Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Summary")
-                                                      PaddingBottom: =0
-                                                      PaddingTop: =0
-                                                      Size: =10
-                                                      Text: =With({eventRecord:Last(FirstN(SortByColumns(Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId)),"StartTime",SortOrder.Ascending),2))},If(PlannerHasActualOverlap(eventRecord.EventId) || PlannerHasZeroGap(eventRecord.EventId),"! ","") & Text(eventRecord.StartTime,"h:mm") & " " & Upper(Left(Coalesce(eventRecord.ChipText,eventRecord.EventName),7)))
-                                                      VerticalAlign: =VerticalAlign.Middle
-                                                      Visible: =varPlannerView="Month" && ThisItem.IsCurrentMonth && CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=ThisItem.CellDate && !IsDeleted && PlannerEventIsVisible(EventId))>1
-                                                      Width: =Parent.Width
                                                 - txtPlannerYearMore:
                                                     Control: ModernText
                                                     Properties:
@@ -2058,16 +2026,6 @@ Screens:
                                     Size: =12
                                     Text: ="Originally generated for " & Text(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,OriginalGeneratedDate),"mmm d") & ". " & LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AdjustmentReason)
                                     Visible: =LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,AutoAdjusted)
-                              - btnPlannerOpenSelectedInMonth:
-                                  Control: ModernButton
-                                  Properties:
-                                    AccessibleLabel: ="Open the selected meeting in Month view"
-                                    BasePaletteColor: =RGBA(91,59,127,1)
-                                    Height: =44
-                                    OnSelect: =Set(varPlannerFocusedDate,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate));Set(varPlannerView,"Month");Set(varPlannerContextMode,"Summary");Navigate(CalendarPlannerMonth,ScreenTransition.None)
-                                    Text: ="Open in Month"
-                                    Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerSelectedEventId)
-                                    Width: =Parent.Width
                               - btnPlannerApprove:
                                   Control: ModernButton
                                   Properties:
@@ -2135,6 +2093,16 @@ Screens:
                                       Navigate(BoardRulesReview,ScreenTransition.None)
                                     Text: ="Edit source rule"
                                     Visible: =false
+                                    Width: =Parent.Width
+                              - btnPlannerOpenSelectedInMonth:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Open the selected meeting in Month view"
+                                    BasePaletteColor: =RGBA(91,59,127,1)
+                                    Height: =44
+                                    OnSelect: =Set(varPlannerFocusedDate,LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,EventDate));Set(varPlannerView,"Month");Set(varPlannerContextMode,"Summary");Navigate(CalendarPlannerMonth,ScreenTransition.None)
+                                    Text: ="Open in Month"
+                                    Visible: =varPlannerContextMode="Summary" && !IsBlank(varPlannerSelectedEventId)
                                     Width: =Parent.Width
                         - conPlannerEditor:
                             Control: GroupContainer
