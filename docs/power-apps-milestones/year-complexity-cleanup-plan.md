@@ -71,8 +71,22 @@ hydration. Do not click destructive Reset/Delete on shared data.
 
 Measure the Year App Checker estimate and actual Year opening/selection/filter
 response on the same browser and dataset before and after. Report them
-separately. The browser-control connection did not respond during this later
-audit turn, so no new runtime-performance result is claimed here.
+separately. The browser-control connection did not respond during the earlier
+audit, so no runtime-performance result is claimed for that pass.
+
+### Additional live, non-destructive check — 2026-09-25
+
+After the Mac was unlocked, Studio preview was reachable again. The existing
+Month screen showed 2027 saved counts of Board 10, Committees 20, Executive
+64, Operations 11, and One-time 0. Navigating to Year showed the 12-month
+calendar. Selecting the January 4 Executive Team Meeting displayed its
+read-only Year detail (1:00–3:00 PM, Ready) with **Open in Month** and no
+Year-side Move/Delete action. **Open in Month** reached the January Month
+screen with that same meeting selected; Move and Delete were available in its
+right context panel. This verifies that path in the current, unmodified app,
+not the proposed 14-control removal or a performance improvement. Week
+navigation was attempted but not verified because Chrome's active tab changed
+while the check was running. No meeting mutation, Reset, or Publish occurred.
 
 Await user approval before editing the Canvas app. A separate user decision is
 also needed for a disposable app plus isolated SharePoint test data to repair
