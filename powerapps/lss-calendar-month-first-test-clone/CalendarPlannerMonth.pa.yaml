@@ -375,7 +375,7 @@ Screens:
                         BasePaletteColor: =RGBA(154,91,0,1)
                         Height: =44
                         LayoutMinWidth: =100
-                        OnSelect: =Set(varPlannerContextMode,"Block");Set(varPlannerDraftDate,varPlannerFocusedDate);Set(varPlannerOverrideReason,"");Set(varPlannerDraftDirty,true);Set(varPlannerEditorFromView,"Month")
+                        OnSelect: =Set(varPlannerContextMode,"Block");Set(varPlannerDraftDate,varPlannerFocusedDate);Set(varPlannerOverrideReason,"");Set(varPlannerReceipt,"");Set(varPlannerDraftDirty,true);Set(varPlannerEditorFromView,"Month")
                         Text: ="Block day"
                         Visible: =false
                         Width: =0
@@ -543,7 +543,7 @@ Screens:
                                           BasePaletteColor: =If(ThisItem.IsCurrentMonth,RGBA(91,59,127,1),RGBA(148,163,184,1))
                                           Height: =24
                                           LayoutMinWidth: =0
-                                          OnSelect: =Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerSelectedEventId,Blank());Set(varPlannerSelectedClosureId,Blank());Set(varPlannerReceipt,"");Set(varPlannerContextMode,"Date")
+                                          OnSelect: =Set(varPlannerFocusedDate,ThisItem.CellDate);Set(varPlannerSelectedEventId,Blank());Set(varPlannerSelectedClosureId,LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive,ClosureId));Set(varPlannerReceipt,"");Set(varPlannerContextMode,If(IsBlank(varPlannerSelectedClosureId),"Date","Closure"));Set(varPlannerEditorFromView,"Month")
                                           Text: =Text(Day(ThisItem.CellDate))
                                     - btnPlannerMonthCellClosure:
                                         Control: ModernButton
@@ -557,9 +557,10 @@ Screens:
                                           OnSelect: |-
                                             =Set(varPlannerSelectedClosureId,LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive,ClosureId));
                                             Set(varPlannerFocusedDate,ThisItem.CellDate);
+                                            Set(varPlannerSelectedEventId,Blank());
+                                            Set(varPlannerReceipt,"");
                                             Set(varPlannerContextMode,"Closure");
-                                            Set(varPlannerEditorFromView,"Month");
-                                            Navigate(CalendarPlanner,ScreenTransition.None)
+                                            Set(varPlannerEditorFromView,"Month")
                                           Text: =LookUp(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive,ClosureLabel)
                                           Visible: =ThisItem.IsCurrentMonth && CountIf(colCalProofClosures,ClosureDate=ThisItem.CellDate && IsActive)>0
                                           Width: =Parent.Width
@@ -634,6 +635,114 @@ Screens:
                               Size: =11
                               Text: ="CONTEXT PANEL"
                               Wrap: =false
+                        - conPlannerMonthClosure:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =If(LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId,ClosureType)="User block",If(IsBlank(varPlannerReceipt),210,296),If(IsBlank(varPlannerReceipt),150,240))
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =10
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              Visible: =varPlannerContextMode="Closure"
+                            Children:
+                              - txtPlannerMonthClosureTitle:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(31,41,55,1)
+                                    Font: =Font.'Segoe UI'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =48
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: =LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId,ClosureName)
+                              - txtPlannerMonthClosureMeta:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(102,112,133,1)
+                                    Font: =Font.'Segoe UI'
+                                    Height: =92
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =13
+                                    Text: |-
+                                      =With(
+                                        {selectedClosure:LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId)},
+                                        Text(selectedClosure.ClosureDate,"dddd, mmmm d, yyyy") & Char(10) &
+                                        If(selectedClosure.ClosureType="User block","User-created blocked day",selectedClosure.ClosureType) & Char(10) &
+                                        "Source: " & Coalesce(selectedClosure.Source,"Not recorded") &
+                                        If(selectedClosure.IsActive,""," · Removed")
+                                      )
+                              - txtPlannerMonthClosureStatus:
+                                  Control: ModernText
+                                  Properties:
+                                    AccessibleLabel: =Self.Text
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =If(CountRows(colPlannerPersistenceErrors)=0,RGBA(37,122,84,1),RGBA(154,91,0,1))
+                                    Fill: =If(CountRows(colPlannerPersistenceErrors)=0,RGBA(240,253,244,1),RGBA(255,251,235,1))
+                                    Font: =Font.'Segoe UI'
+                                    Height: =72
+                                    LayoutMinWidth: =0
+                                    PaddingBottom: =4
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    PaddingTop: =4
+                                    Size: =12
+                                    Text: =varPlannerReceipt & Char(10) & varPlannerPersistenceStatus
+                                    Visible: =varPlannerContextMode="Closure" && !IsBlank(varPlannerReceipt)
+                              - btnPlannerMonthDeleteBlock:
+                                  Control: ModernButton
+                                  Properties:
+                                    AccessibleLabel: ="Delete selected blocked date"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: =ButtonAppearance.Outline
+                                    BasePaletteColor: =RGBA(180,35,24,1)
+                                    DisplayMode: =If(IsBlank(varPlannerSelectedClosureId),DisplayMode.Disabled,DisplayMode.Edit)
+                                    Height: =44
+                                    OnSelect: |-
+                                      =With(
+                                        {selectedClosure:LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId)},
+                                        If(
+                                          !IsBlank(selectedClosure.ClosureId) && selectedClosure.ClosureType="User block" && selectedClosure.IsActive,
+                                          Patch(colCalProofClosures,selectedClosure,{IsActive:false,ChangedAt:Now()});
+                                          Clear(colPlannerUndo);
+                                          Set(varPlannerPersistenceStatus,"Saving blocked-day removal");
+                                          Clear(colPlannerPersistenceErrors);
+                                          With(
+                                            {inactiveClosure:LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId),closureKey:"LSSPLN1|"&Text(varPlannerYear)&"|C|"&selectedClosure.ClosureId},
+                                            With(
+                                              {closurePayload:JSON({ClosureId:inactiveClosure.ClosureId,ClosureLabel:inactiveClosure.ClosureLabel,ClosureType:inactiveClosure.ClosureType,Source:inactiveClosure.Source,OverrideReason:inactiveClosure.OverrideReason}),savedClosure:LookUp(colPlannerStoredRows,Code=closureKey)},
+                                              IfError(
+                                                With(
+                                                  {writtenClosure:Patch('LSS Test Planned Calendar 20260921',If(IsBlank(savedClosure.ID),Defaults('LSS Test Planned Calendar 20260921'),savedClosure),{Title:inactiveClosure.ClosureName,Code:closureKey,EventDate:inactiveClosure.ClosureDate,Category:"PLNR_CLOSURE",Status:"Inactive",ReadyforOutlook:false,PlanningNotes:closurePayload})},
+                                                  If(IsBlank(savedClosure.ID),Collect(colPlannerStoredRows,writtenClosure),Patch(colPlannerStoredRows,savedClosure,writtenClosure))
+                                                ),
+                                                Collect(colPlannerPersistenceErrors,{Key:closureKey,Message:FirstError.Message});Blank()
+                                              )
+                                            )
+                                          );
+                                          Set(varPlannerPersistenceStatus,If(CountRows(colPlannerPersistenceErrors)=0,"Saved to shared planner","Save incomplete — "&Text(CountRows(colPlannerPersistenceErrors))&" record(s) failed"));
+                                          Set(varPlannerReceipt,"Deleted block " & selectedClosure.ClosureName & " on " & Text(selectedClosure.ClosureDate,"mmm d, yyyy") & ".");
+                                          Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Delete block",SubjectId:selectedClosure.ClosureId,Summary:varPlannerReceipt,ChangedAt:Now()})
+                                        )
+                                      )
+                                    Text: ="Delete block"
+                                    Visible: =varPlannerContextMode="Closure" && LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId,ClosureType)="User block" && LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId,IsActive)
+                                    Width: =Parent.Width
                         - conPlannerMonthAttention:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -1087,7 +1196,7 @@ Screens:
                                         {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
                                         With(
                                           {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,originalGeneratedDate:selectedEvent.OriginalGeneratedDate,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
-                                          ClearCollect(colPlannerUndo,{Action:"Move",SubjectId:eventId,EventName:eventName,PreviousDate:previousDate,PreviousStart:previousStart,PreviousEnd:previousEnd,PreviousStatus:previousStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
+                                          Clear(colPlannerUndo);
                                           Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:"Approved",WarningAcknowledged:true});
                                           With(
                                             {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
@@ -1153,7 +1262,7 @@ Screens:
                                   "Decision: " & receipt.DecisionStatus & " · Manual override: " & If(LookUp(colCalProofEvents,EventId=receipt.SubjectId,IsManualOverride),"Yes","No")
                                 )
                               VerticalAlign: =VerticalAlign.Top
-                              Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt)
+                              Visible: =CountRows(colPlannerMutationReceipt)>0 && !IsBlank(varPlannerReceipt) && varPlannerContextMode<>"Closure"
                         - conPlannerMonthDelete:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -1187,7 +1296,7 @@ Screens:
                                     Height: =64
                                     LayoutMinWidth: =0
                                     Size: =13
-                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated","This generated occurrence will be excluded so regeneration does not recreate it.","This manual meeting will be removed. You can undo immediately afterward.")
+                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated","This generated occurrence will be excluded so regeneration does not recreate it.","This manual meeting will be removed.")
                               - btnPlannerMonthConfirmDelete:
                                   Control: ModernButton
                                   Properties:
@@ -1197,11 +1306,11 @@ Screens:
                                     OnSelect: |-
                                       =With(
                                         {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
-                                        ClearCollect(colPlannerUndo,{Action:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,PreviousDate:selectedEvent.EventDate,PreviousStart:selectedEvent.StartTime,PreviousEnd:selectedEvent.EndTime,PreviousStatus:selectedEvent.DecisionStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
+                                        Clear(colPlannerUndo);
                                         If(selectedEvent.SourceType="Generated",Collect(colPlannerExclusions,{ExclusionId:"EXC-" & selectedEvent.EventId,EventId:selectedEvent.EventId,RuleSlotId:Coalesce(selectedEvent.RuleSlotId,selectedEvent.EventId),SourceRuleId:selectedEvent.SourceRuleId,EventName:selectedEvent.EventName,OriginalGeneratedDate:selectedEvent.OriginalGeneratedDate,MappingDecision:"",PlanYear:selectedEvent.PlanYear,Reason:"Deleted by user",CreatedAt:Now()}));
                                         RemoveIf(colCalProofEvents,EventId=selectedEvent.EventId);
                                         With({changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true}));
-                                        Set(varPlannerReceipt,selectedEvent.EventName & " deleted. Undo is available.");
+                                        Set(varPlannerReceipt,selectedEvent.EventName & " deleted.");
                                         ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:selectedEvent.EventDate,StartTime:selectedEvent.StartTime,DurationMinutes:selectedEvent.DurationMinutes,DecisionStatus:"Deleted",Summary:varPlannerReceipt,OccurredAt:Now()});
                                         Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Delete",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                       );
@@ -1233,27 +1342,22 @@ Screens:
                         - btnPlannerMonthUndo:
                             Control: ModernButton
                             Properties:
-                              AccessibleLabel: ="Undo last calendar change"
+                              AccessibleLabel: ="Undo calendar reset"
                               AlignInContainer: =AlignInContainer.Stretch
                               Appearance: =ButtonAppearance.Outline
                               BasePaletteColor: =RGBA(62,93,138,1)
-                              DisplayMode: =If(CountRows(colPlannerUndo)=0,DisplayMode.Disabled,DisplayMode.Edit)
-                              Height: =40
+                              DisplayMode: =If(CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset",DisplayMode.Edit,DisplayMode.Disabled)
+                              Height: =44
                               OnSelect: |-
-                                =With(
-                                  {undoRow:First(colPlannerUndo)},
-                                  If(
-                                    undoRow.Action="Reset",
-                                    ForAll(Filter(colPlannerUndo,Action="Reset") As resetRow,Collect(colCalProofEvents,resetRow.SnapshotEvent));Set(varPlannerReceipt,"Reset undone; meetings restored."),
-                                    undoRow.Action="Add",
-                                    ForAll(Filter(colPlannerUndo,Action="Add") As addedRow,RemoveIf(colCalProofEvents,EventId=addedRow.SubjectId));Set(varPlannerReceipt,"Added meetings removed."),
-                                    Set(varPlannerReceipt,"Last change can be undone from Year view.")
-                                  )
-                                );
-                                Clear(colPlannerUndo);
-                                Set(varPlannerContextMode,"Empty")
+                                =If(
+                                  CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset",
+                                  ForAll(Filter(colPlannerUndo,Action="Reset") As resetRow,Collect(colCalProofEvents,resetRow.SnapshotEvent));
+                                  Set(varPlannerReceipt,"Reset undone; meetings restored.");
+                                  Clear(colPlannerUndo);
+                                  Set(varPlannerContextMode,"Empty")
+                                )
                               Text: ="Undo"
-                              Visible: =CountRows(colPlannerUndo)>0
+                              Visible: =CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset"
                               Width: =Parent.Width
                         - conPlannerEditor_1:
                             Control: GroupContainer
@@ -1442,7 +1546,7 @@ Screens:
                                         varPlannerContextMode="Add",
                                         With(
                                           {newId:"MAN-" & Text(GUID())},
-                                          ClearCollect(colPlannerUndo,{Action:"Add",SubjectId:newId,EventName:varPlannerDraftName,PreviousDate:varPlannerDraftDate,PreviousStart:varPlannerDraftStart,PreviousEnd:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),PreviousStatus:"",PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:First(colCalProofClosures)});
+                                          Clear(colPlannerUndo);
                                           Collect(colCalProofEvents,{EventId:newId,EventName:varPlannerDraftName,EventType:varPlannerDraftCategory,EventDate:varPlannerDraftDate,GeneratedDate:varPlannerDraftDate,OriginalGeneratedDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:If(varPlannerWarningAcknowledged,"NeedsReview","Ready"),StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),ChipText:Upper(Left(varPlannerDraftName,7)),SchedulingSource:If(varPlannerAddKind="Existing meeting type","Manual occurrence of "&varPlannerDraftName,"One-time meeting"),SourceRuleId:If(varPlannerAddKind="Existing meeting type",varPlannerDraftRuleId,""),IsManualOverride:true,PlanYear:varPlannerYear,PlanningLayer:varPlannerDraftLayer,SourceType:"Manual",Category:varPlannerDraftCategory,DurationMinutes:varPlannerDraftDuration,IsDeleted:false,WarningAcknowledged:varPlannerWarningAcknowledged});
                                           With(
                                             {changedState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer)},
@@ -1458,7 +1562,7 @@ Screens:
                                           {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
                                           With(
                                             {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,originalGeneratedDate:selectedEvent.OriginalGeneratedDate,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
-                                            ClearCollect(colPlannerUndo,{Action:"Move",SubjectId:eventId,EventName:eventName,PreviousDate:previousDate,PreviousStart:previousStart,PreviousEnd:previousEnd,PreviousStatus:previousStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
+                                            Clear(colPlannerUndo);
                                             Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:"Approved",WarningAcknowledged:true});
                                             With(
                                               {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
@@ -1562,19 +1666,61 @@ Screens:
                                     OnSelect: |-
                                       =With(
                                         {newBlockId:"BLOCK-" & Text(GUID()),impactCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate)},
+                                        ClearCollect(colPlannerMonthBlockAffectedEvents,Filter(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate));
                                         Collect(colCalProofClosures,{ClosureId:newBlockId,ClosureName:varPlannerOverrideReason,ClosureLabel:"Blocked",ClosureDate:varPlannerDraftDate,PlanYear:varPlannerYear,ClosureType:"User block",IsActive:true,Source:"User",OverrideReason:varPlannerOverrideReason,ChangedAt:Now()});
-                                        ClearCollect(colPlannerUndo,{Action:"Block",SubjectId:newBlockId,EventName:varPlannerOverrideReason,PreviousDate:varPlannerDraftDate,PreviousStart:Time(0,0,0),PreviousEnd:Time(0,0,0),PreviousStatus:"",PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:LookUp(colCalProofClosures,ClosureId=newBlockId)});
+                                        Clear(colPlannerUndo);
+                                        Clear(colPlannerMutationReceipt);
                                         With(
                                           {nextBusinessDate:GetNextPlannerBusinessDate(DateAdd(varPlannerDraftDate,1,TimeUnit.Days),varPlannerYear)},
                                           UpdateIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate,{EventDate:nextBusinessDate,CurrentDate:nextBusinessDate,AutoAdjusted:true,AdjustmentReason:"Proposed next business day after blocked date",AdjustmentSourceName:varPlannerOverrideReason,DecisionStatus:"NeedsReview",WarningAcknowledged:false})
                                         );
-                                        Set(varPlannerReceipt,"Blocked " & Text(varPlannerDraftDate,"mmm d, yyyy") & ". " & Text(impactCount) & " affected meeting" & If(impactCount=1," was","s were") & " proposed on the next valid business date for human review.");
+                                        Set(varPlannerSelectedClosureId,newBlockId);
+                                        Set(varPlannerSelectedEventId,Blank());
+                                        Set(varPlannerFocusedDate,varPlannerDraftDate);
+                                        Set(varPlannerPersistenceStatus,"Saving blocked day");
+                                        Clear(colPlannerPersistenceErrors);
+                                        With(
+                                          {plannerClosure:LookUp(colCalProofClosures,ClosureId=newBlockId),yearPrefix:"LSSPLN1|"&Text(varPlannerYear)&"|"},
+                                          With(
+                                            {closureKey:yearPrefix&"C|"&plannerClosure.ClosureId,closurePayload:JSON({ClosureId:plannerClosure.ClosureId,ClosureLabel:plannerClosure.ClosureLabel,ClosureType:plannerClosure.ClosureType,Source:plannerClosure.Source,OverrideReason:plannerClosure.OverrideReason})},
+                                            With(
+                                              {savedClosure:LookUp(colPlannerStoredRows,Code=closureKey)},
+                                              IfError(
+                                                With(
+                                                  {writtenClosure:Patch('LSS Test Planned Calendar 20260921',If(IsBlank(savedClosure.ID),Defaults('LSS Test Planned Calendar 20260921'),savedClosure),{Title:plannerClosure.ClosureName,Code:closureKey,EventDate:plannerClosure.ClosureDate,Category:"PLNR_CLOSURE",Status:"Active",ReadyforOutlook:false,PlanningNotes:closurePayload})},
+                                                  If(IsBlank(savedClosure.ID),Collect(colPlannerStoredRows,writtenClosure),Patch(colPlannerStoredRows,savedClosure,writtenClosure))
+                                                ),
+                                                Collect(colPlannerPersistenceErrors,{Key:closureKey,Message:FirstError.Message});Blank()
+                                              )
+                                            )
+                                          );
+                                          ForAll(
+                                            colPlannerMonthBlockAffectedEvents As affectedEvent,
+                                            With(
+                                              {plannerEvent:LookUp(colCalProofEvents,EventId=affectedEvent.EventId && PlanYear=varPlannerYear)},
+                                              With(
+                                                {eventKey:yearPrefix&"E|"&plannerEvent.EventId,eventPayload:JSON({EventId:plannerEvent.EventId,RuleSlotId:plannerEvent.RuleSlotId,RuleFingerprint:plannerEvent.RuleFingerprint,EventType:plannerEvent.EventType,GeneratedDate:Text(plannerEvent.GeneratedDate,"yyyy-mm-dd"),OriginalGeneratedDate:Text(plannerEvent.OriginalGeneratedDate,"yyyy-mm-dd"),AutoAdjusted:plannerEvent.AutoAdjusted,AdjustmentReason:plannerEvent.AdjustmentReason,AdjustmentSourceName:plannerEvent.AdjustmentSourceName,ChipText:plannerEvent.ChipText,SchedulingSource:plannerEvent.SchedulingSource,IsManualOverride:plannerEvent.IsManualOverride,PlanningLayer:plannerEvent.PlanningLayer,SourceType:plannerEvent.SourceType,Category:plannerEvent.Category,WarningAcknowledged:plannerEvent.WarningAcknowledged})},
+                                                With(
+                                                  {savedEvent:LookUp(colPlannerStoredRows,Code=eventKey)},
+                                                  IfError(
+                                                    With(
+                                                      {writtenEvent:Patch('LSS Test Planned Calendar 20260921',If(IsBlank(savedEvent.ID),Defaults('LSS Test Planned Calendar 20260921'),savedEvent),{Title:plannerEvent.EventName,Code:eventKey,EventDate:plannerEvent.EventDate,StartTime:Text(plannerEvent.StartTime,"h:mm AM/PM"),Duration:Text(plannerEvent.DurationMinutes),Category:"PLNR_EVENT",SourceRule:plannerEvent.SourceRuleId,Status:plannerEvent.DecisionStatus,ReadyforOutlook:false,PlanningNotes:eventPayload})},
+                                                      If(IsBlank(savedEvent.ID),Collect(colPlannerStoredRows,writtenEvent),Patch(colPlannerStoredRows,savedEvent,writtenEvent))
+                                                    ),
+                                                    Collect(colPlannerPersistenceErrors,{Key:eventKey,Message:FirstError.Message});Blank()
+                                                  )
+                                                )
+                                              )
+                                            )
+                                          )
+                                        );
+                                        Set(varPlannerPersistenceStatus,If(CountRows(colPlannerPersistenceErrors)=0,"Saved to shared planner","Save incomplete — "&Text(CountRows(colPlannerPersistenceErrors))&" record(s) failed"));
+                                        Set(varPlannerReceipt,"Blocked " & Text(varPlannerDraftDate,"mmm d, yyyy") & ". " & Text(impactCount) & " meeting" & If(impactCount=1," was","s were") & " proposed for review.");
                                         Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Block",SubjectId:newBlockId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                       );
                                       Set(varPlannerDraftDirty,false);
-                                      Set(varPlannerContextMode,"Empty");
-                                      Set(varPlannerEditorFromView,"");
-                                      Select(btnPlannerMonthPersistSelected)
+                                      Set(varPlannerContextMode,"Closure");
+                                      Set(varPlannerEditorFromView,"")
                                     Text: ="Block date"
                                     Width: =Parent.Width
                               - btnPlannerMonthCancelBlock:

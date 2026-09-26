@@ -210,6 +210,13 @@ sync byte-for-byte, but browser click-through testing was unavailable in this
 pass and the revision was **not published**. A fresh Studio/player test is still
 required before claiming a runtime speed improvement or release readiness.
 
+On 2026-09-26, a further unpublished Canvas source edit kept Month/Week
+blocked-day creation, selection, and deletion in the right context panel and
+removed Undo from block and meeting actions (Reset alone retains Undo). It
+compiled and the six source files match a fresh coauthoring sync, but the
+interaction has not yet been click-through tested. Holiday Rule Book grouping
+was deferred at the user's request; see the clone handoff for exact status.
+
 The read-only Outlook Phase 1 source audit, proposed Canvas edit plan, and
 acceptance matrix are in
 [`docs/power-apps-milestones/outlook-read-only-phase-1-prep.md`](docs/power-apps-milestones/outlook-read-only-phase-1-prep.md).

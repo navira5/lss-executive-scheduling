@@ -838,13 +838,7 @@ Screens:
                                                 CountIf(colPlannerAddAllMissing,PlanningLayer="General")>0 && IsBlank(LookUp(colPlannerLayerState,PlanningLayer="General").PlanningLayer),
                                                 Collect(colPlannerLayerState,{StepNumber:5,PlanningLayer:"General",ShortName:"Other recurring",Status:"Not started",ConfirmedAt:Now(),LastGeneratedAt:Now(),NeedsRegeneration:false})
                                               );
-                                              ClearCollect(
-                                                colPlannerUndo,
-                                                ForAll(
-                                                  colPlannerAddAllMissing As addedEvent,
-                                                  {Action:"Add",SubjectId:addedEvent.EventId,EventName:addedEvent.EventName,PreviousDate:addedEvent.EventDate,PreviousStart:addedEvent.StartTime,PreviousEnd:addedEvent.EndTime,PreviousStatus:addedEvent.DecisionStatus,PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:First(colCalProofClosures)}
-                                                )
-                                              );
+                                              Clear(colPlannerUndo);
                                               Collect(colCalProofEvents,colPlannerAddAllMissing);
                                               Collect(colPlannerLayerRuleEvents,colPlannerAddAllMissing);
                                               ForAll(
@@ -1977,7 +1971,7 @@ Screens:
                                         varPlannerContextMode="Add",
                                         With(
                                           {newId:"MAN-" & Text(GUID())},
-                                          ClearCollect(colPlannerUndo,{Action:"Add",SubjectId:newId,EventName:varPlannerDraftName,PreviousDate:varPlannerDraftDate,PreviousStart:varPlannerDraftStart,PreviousEnd:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),PreviousStatus:"",PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:First(colCalProofClosures)});
+                                          Clear(colPlannerUndo);
                                           Collect(colCalProofEvents,{EventId:newId,EventName:varPlannerDraftName,EventType:varPlannerDraftCategory,EventDate:varPlannerDraftDate,GeneratedDate:varPlannerDraftDate,OriginalGeneratedDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,AutoAdjusted:false,AdjustmentReason:"",AdjustmentSourceName:"",DecisionStatus:If(varPlannerWarningAcknowledged,"NeedsReview","Ready"),StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),ChipText:Upper(Left(varPlannerDraftName,7)),SchedulingSource:If(varPlannerAddKind="Existing meeting type","Manual occurrence of "&varPlannerDraftName,"One-time meeting"),SourceRuleId:If(varPlannerAddKind="Existing meeting type",varPlannerDraftRuleId,""),IsManualOverride:true,PlanYear:varPlannerYear,PlanningLayer:varPlannerDraftLayer,SourceType:"Manual",Category:varPlannerDraftCategory,DurationMinutes:varPlannerDraftDuration,IsDeleted:false,WarningAcknowledged:varPlannerWarningAcknowledged});
                                           With(
                                             {changedState:LookUp(colPlannerLayerState,PlanningLayer=varPlannerDraftLayer)},
@@ -1993,7 +1987,7 @@ Screens:
                                           {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
                                           With(
                                             {previousDate:selectedEvent.EventDate,previousStart:selectedEvent.StartTime,previousEnd:selectedEvent.EndTime,previousStatus:selectedEvent.DecisionStatus,originalGeneratedDate:selectedEvent.OriginalGeneratedDate,eventName:selectedEvent.EventName,eventId:selectedEvent.EventId},
-                                            ClearCollect(colPlannerUndo,{Action:"Move",SubjectId:eventId,EventName:eventName,PreviousDate:previousDate,PreviousStart:previousStart,PreviousEnd:previousEnd,PreviousStatus:previousStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
+                                            Clear(colPlannerUndo);
                                             Patch(colCalProofEvents,selectedEvent,{EventDate:varPlannerDraftDate,CurrentDate:varPlannerDraftDate,StartTime:varPlannerDraftStart,EndTime:DateAdd(varPlannerDraftStart,varPlannerDraftDuration,TimeUnit.Minutes),DurationMinutes:varPlannerDraftDuration,IsManualOverride:true,DecisionStatus:"Approved",WarningAcknowledged:true});
                                             With(
                                               {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
@@ -2066,7 +2060,7 @@ Screens:
                                     PaddingRight: =0
                                     PaddingTop: =0
                                     Size: =13
-                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated","This generated occurrence will be excluded so regeneration does not recreate it.","This manual meeting will be removed. You can undo immediately afterward.")
+                                    Text: =If(LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId,SourceType)="Generated","This generated occurrence will be excluded so regeneration does not recreate it.","This manual meeting will be removed.")
                               - btnPlannerConfirmDelete:
                                   Control: ModernButton
                                   Properties:
@@ -2076,14 +2070,14 @@ Screens:
                                     OnSelect: |-
                                       =With(
                                         {selectedEvent:LookUp(colCalProofEvents,EventId=varPlannerSelectedEventId)},
-                                        ClearCollect(colPlannerUndo,{Action:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,PreviousDate:selectedEvent.EventDate,PreviousStart:selectedEvent.StartTime,PreviousEnd:selectedEvent.EndTime,PreviousStatus:selectedEvent.DecisionStatus,PreviousActive:false,SnapshotEvent:selectedEvent,SnapshotClosure:First(colCalProofClosures)});
+                                        Clear(colPlannerUndo);
                                         If(selectedEvent.SourceType="Generated",Collect(colPlannerExclusions,{ExclusionId:"EXC-" & selectedEvent.EventId,EventId:selectedEvent.EventId,RuleSlotId:Coalesce(selectedEvent.RuleSlotId,selectedEvent.EventId),SourceRuleId:selectedEvent.SourceRuleId,EventName:selectedEvent.EventName,OriginalGeneratedDate:selectedEvent.OriginalGeneratedDate,MappingDecision:"",PlanYear:selectedEvent.PlanYear,Reason:"Deleted by user",CreatedAt:Now()}));
                                         RemoveIf(colCalProofEvents,EventId=selectedEvent.EventId);
                                         With(
                                           {changedState:LookUp(colPlannerLayerState,PlanningLayer=selectedEvent.PlanningLayer)},
                                           UpdateIf(colPlannerLayerState,StepNumber>changedState.StepNumber && Status<>"Not started",{Status:"Needs revalidation",NeedsRegeneration:true})
                                         );
-                                        Set(varPlannerReceipt,selectedEvent.EventName & " deleted. Undo is available.");
+                                        Set(varPlannerReceipt,selectedEvent.EventName & " deleted.");
                                         ClearCollect(colPlannerMutationReceipt,{ReceiptType:"Delete",SubjectId:selectedEvent.EventId,EventName:selectedEvent.EventName,SourceType:selectedEvent.SourceType,SourceRuleId:selectedEvent.SourceRuleId,PlanningLayer:selectedEvent.PlanningLayer,Category:selectedEvent.Category,EventDate:selectedEvent.EventDate,StartTime:selectedEvent.StartTime,DurationMinutes:selectedEvent.DurationMinutes,DecisionStatus:"Deleted",Summary:varPlannerReceipt,OccurredAt:Now()});
                                         Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:"Delete",SubjectId:selectedEvent.EventId,Summary:varPlannerReceipt,ChangedAt:Now()})
                                       );
@@ -2179,7 +2173,7 @@ Screens:
                                       =With(
                                         {newBlockId:"BLOCK-" & Text(GUID()),impactCount:CountIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate)},
                                         Collect(colCalProofClosures,{ClosureId:newBlockId,ClosureName:varPlannerOverrideReason,ClosureLabel:"Blocked",ClosureDate:varPlannerDraftDate,PlanYear:varPlannerYear,ClosureType:"User block",IsActive:true,Source:"User",OverrideReason:varPlannerOverrideReason,ChangedAt:Now()});
-                                        ClearCollect(colPlannerUndo,{Action:"Block",SubjectId:newBlockId,EventName:varPlannerOverrideReason,PreviousDate:varPlannerDraftDate,PreviousStart:Time(0,0,0),PreviousEnd:Time(0,0,0),PreviousStatus:"",PreviousActive:false,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:LookUp(colCalProofClosures,ClosureId=newBlockId)});
+                                        Clear(colPlannerUndo);
                                         With(
                                           {nextBusinessDate:GetNextPlannerBusinessDate(DateAdd(varPlannerDraftDate,1,TimeUnit.Days),varPlannerYear)},
                                           UpdateIf(colCalProofEvents,PlanYear=varPlannerYear && EventDate=varPlannerDraftDate,{EventDate:nextBusinessDate,CurrentDate:nextBusinessDate,AutoAdjusted:true,AdjustmentReason:"Proposed next business day after blocked date",AdjustmentSourceName:varPlannerOverrideReason,DecisionStatus:"NeedsReview",WarningAcknowledged:false})
@@ -2294,7 +2288,7 @@ Screens:
                                     OnSelect: |-
                                       =With(
                                         {selectedClosure:LookUp(colCalProofClosures,ClosureId=varPlannerSelectedClosureId)},
-                                        ClearCollect(colPlannerUndo,{Action:"Deactivate closure",SubjectId:selectedClosure.ClosureId,EventName:selectedClosure.ClosureName,PreviousDate:selectedClosure.ClosureDate,PreviousStart:Time(0,0,0),PreviousEnd:Time(0,0,0),PreviousStatus:"",PreviousActive:selectedClosure.IsActive,SnapshotEvent:First(colCalProofEvents),SnapshotClosure:selectedClosure});
+                                        Clear(colPlannerUndo);
                                         Patch(colCalProofClosures,selectedClosure,{IsActive:false,OverrideReason:If(selectedClosure.ClosureType="User block",selectedClosure.OverrideReason,varPlannerOverrideReason),ChangedAt:Now()});
                                         Set(varPlannerReceipt,If(selectedClosure.ClosureType="User block","Block removed. Adjusted meetings were not moved back; review or regenerate as needed.",selectedClosure.ClosureName & " marked open for " & Text(varPlannerYear) & ". Reason recorded. Review or regenerate affected meetings."));
                                         Collect(colPlannerHistory,{ChangeId:"CHG-" & Text(Now(),"yyyymmddhhmmss"),Action:If(selectedClosure.ClosureType="User block","Remove block","Holiday override"),SubjectId:selectedClosure.ClosureId,Summary:varPlannerReceipt,ChangedAt:Now()})
@@ -2378,29 +2372,19 @@ Screens:
                                     AccessibleLabel: ="Undo last change"
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(62,93,138,1)
-                                    DisplayMode: =If(CountRows(colPlannerUndo)=0,DisplayMode.Disabled,DisplayMode.Edit)
-                                    Height: =40
+                                    DisplayMode: =If(CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset",DisplayMode.Edit,DisplayMode.Disabled)
+                                    Height: =44
                                     OnSelect: |-
-                                      =With(
-                                        {undoRow:First(colPlannerUndo)},
-                                        If(
-                                          undoRow.Action="Add",
-                                          RemoveIf(colCalProofEvents,EventId=undoRow.SubjectId);Set(varPlannerReceipt,"Added meeting removed."),
-                                          undoRow.Action="Reset",
-                                          ForAll(Filter(colPlannerUndo,Action="Reset") As resetRow,Collect(colCalProofEvents,resetRow.SnapshotEvent));Set(varPlannerReceipt,"Reset undone; meetings restored."),
-                                          undoRow.Action="Move",
-                                          If(IsPlannerHardStop(undoRow.PreviousDate),Set(varPlannerReceipt,"Undo needs confirmation because the previous date is now a hard stop."),Patch(colCalProofEvents,LookUp(colCalProofEvents,EventId=undoRow.SubjectId),{EventDate:undoRow.PreviousDate,CurrentDate:undoRow.PreviousDate,StartTime:undoRow.PreviousStart,EndTime:undoRow.PreviousEnd,DecisionStatus:undoRow.PreviousStatus});Set(varPlannerReceipt,"Move undone; previous placement restored.")),
-                                          undoRow.Action="Delete",
-                                          If(IsPlannerHardStop(undoRow.PreviousDate),Set(varPlannerReceipt,"Undo needs confirmation because the deleted meeting's previous date is now a hard stop."),Collect(colCalProofEvents,undoRow.SnapshotEvent);RemoveIf(colPlannerExclusions,EventId=undoRow.SubjectId);Set(varPlannerReceipt,"Deleted meeting restored.")),
-                                          undoRow.Action="Block",
-                                          Patch(colCalProofClosures,LookUp(colCalProofClosures,ClosureId=undoRow.SubjectId),{IsActive:false,ChangedAt:Now()});Set(varPlannerReceipt,"Block removed. Adjusted meetings remain in their proposed positions for review."),
-                                          undoRow.Action="Deactivate closure",
-                                          Patch(colCalProofClosures,LookUp(colCalProofClosures,ClosureId=undoRow.SubjectId),{IsActive:true,OverrideReason:undoRow.SnapshotClosure.OverrideReason,ChangedAt:Now()});Set(varPlannerReceipt,"Hard-stop date restored. Adjusted meetings remain unchanged.")
-                                        )
-                                      );
-                                      Clear(colPlannerUndo);
-                                      Select(btnPlannerPersistYear)
+                                      =If(
+                                        CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset",
+                                        ForAll(Filter(colPlannerUndo,Action="Reset") As resetRow,Collect(colCalProofEvents,resetRow.SnapshotEvent));
+                                        Clear(colPlannerMutationReceipt);
+                                        Set(varPlannerReceipt,"Reset undone; meetings restored.");
+                                        Clear(colPlannerUndo);
+                                        Select(btnPlannerPersistYear)
+                                      )
                                     Text: ="Undo"
+                                    Visible: =CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset"
                                     Width: =Parent.Width
                         - conPlannerTopReceipt:
                             Control: GroupContainer
@@ -2457,10 +2441,19 @@ Screens:
                                     AccessibleLabel: ="Undo last change"
                                     Appearance: =ButtonAppearance.Outline
                                     BasePaletteColor: =RGBA(62,93,138,1)
-                                    DisplayMode: =If(CountRows(colPlannerUndo)=0,DisplayMode.Disabled,DisplayMode.Edit)
-                                    Height: =40
-                                    OnSelect: =Select(btnPlannerUndo)
+                                    DisplayMode: =If(CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset",DisplayMode.Edit,DisplayMode.Disabled)
+                                    Height: =44
+                                    OnSelect: |-
+                                      =If(
+                                        CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset",
+                                        ForAll(Filter(colPlannerUndo,Action="Reset") As resetRow,Collect(colCalProofEvents,resetRow.SnapshotEvent));
+                                        Clear(colPlannerMutationReceipt);
+                                        Set(varPlannerReceipt,"Reset undone; meetings restored.");
+                                        Clear(colPlannerUndo);
+                                        Select(btnPlannerPersistYear)
+                                      )
                                     Text: ="Undo"
+                                    Visible: =CountRows(colPlannerUndo)>0 && First(colPlannerUndo).Action="Reset"
                                     Width: =Parent.Width
       - btnPlannerHydrateYear:
           Control: ModernButton

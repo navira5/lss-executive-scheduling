@@ -4,7 +4,7 @@ This directory contains the current server-synchronized source for the live
 Power Apps Canvas app. It is the app now being treated as the main calendar
 planner, even though its display name still includes “Test.”
 
-## Current status — 2026-09-25
+## Current status — 2026-09-26
 
 - Canvas app: **LSS Calendar Month-first Test**
 - App ID: `6022cba8-0bb4-45f8-9147-307dad49c2c5`
@@ -15,13 +15,21 @@ planner, even though its display name still includes “Test.”
   subsequent Publish action is verified. **Do not publish during the current
   stabilization pass.**
 - `compile_canvas`: passed for all six Canvas files.
-- Coauthoring round trip: passed. On 2026-09-25 the six repository YAML files
-  were compared against a fresh live-server sync; they now match byte-for-byte.
+- Coauthoring round trip: passed. On 2026-09-26 the three edited screen YAML
+  files were copied from a fresh live-server sync. All six repository YAML
+  files match that sync byte-for-byte.
 - Accessibility checker: no errors.
-- App Checker: **22** medium performance findings remain after the approved
-  14-hidden-control Year cleanup. The Year control-count warning is gone; its
-  pre-edit estimate was 313 (earlier 363). The checker did not provide a new
-  below-threshold number. This is not measured runtime speed.
+- App Checker: **25** medium performance findings remain after the blocked-day
+  context pass. No formula or accessibility errors were reported. The prior
+  Year control-count warning was cleared; this is not measured runtime speed.
+- Current unpublished edit: Month and Week blocked-day selection, creation,
+  and deletion stay in the existing context panel. After creation the selected
+  block offers Delete block, with no Undo. Meeting addition likewise offers
+  normal meeting actions without Undo. Undo remains only for Reset. No holiday
+  Rule Book group was added; the user deferred it to avoid complexity.
+- This edit compiled and round-tripped through the live coauthoring session,
+  but browser automation timed out, so the exact click-through behavior is
+  **not yet runtime-verified**. It has **not** been published.
 - The 14-control edit removed 324 lines and changed no retained-control
   properties. All six files compiled, and the edited Year YAML matched a fresh
   live coauthoring sync byte-for-byte. The separate browser-control connection
@@ -214,8 +222,9 @@ saved test data during the final unattended pass.
    Snapshot event IDs, exclusions, layer states, and closures; run
    Reset→Undo→reopen from Month and Week; compare the durable post-state with
    the snapshot before applying a fix to the shared app.
-2. If Add from rules actually adds missing rows, verify Undo removes only those
-   newly added rows and preserves pre-existing/manual meetings.
+2. Verify Add from rules adds only missing rows, preserves pre-existing/manual
+   meetings, and returns to the initiating calendar view. Undo is intentionally
+   not offered for this action.
 3. Exercise Approve/Move/Delete on a multi-item Needs attention queue and verify
    the count decrements and advances after every action.
 4. The bounded Year-screen source cleanup is implemented, but its live
