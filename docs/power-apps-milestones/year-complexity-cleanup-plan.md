@@ -88,6 +88,28 @@ not the proposed 14-control removal or a performance improvement. Week
 navigation was attempted but not verified because Chrome's active tab changed
 while the check was running. No meeting mutation, Reset, or Publish occurred.
 
+### Follow-up live checks — 2026-09-25
+
+With Studio preview back on the Power Apps tab, Month → Week opened
+`CalendarPlannerWeek`. Advancing to January 4–10 and selecting the January 4
+Executive Team Meeting displayed its 1:00–3:00 PM details and Move, Delete,
+and Edit source rule actions in the Week context panel. Week → Month returned
+to January with the same meeting selected in the Month context panel.
+
+In **both Month and Week**, the toolbar's Add meeting action opened the Add
+meeting form inside the right context panel while the calendar remained
+visible. Cancel discarded the draft. Block day likewise opened its date and
+reason fields in the right context panel, and Cancel returned without saving.
+The Week Needs attention action navigated to the June 1 generated Executive
+Team Meeting, showed **Needs approval**, the Memorial Day shift explanation,
+and the available actions. This proves that one flagged-meeting focus path;
+it does not prove that every flag or resolution works.
+
+These were navigation and form-opening checks only. No meeting was added,
+blocked, moved, deleted, approved, reset, or published. Reset → Undo, full
+flag-resolution coverage, responsiveness measurements, and the proposed
+14-control Year cleanup remain unverified/pending.
+
 Await user approval before editing the Canvas app. A separate user decision is
 also needed for a disposable app plus isolated SharePoint test data to repair
 and test Reset/Undo; this Year cleanup does not authorize that work.
