@@ -1,12 +1,12 @@
 # Year-view complexity cleanup candidate — 2026-09-25
 
-This is an approval-ready edit plan, **not** an implemented change. The live
-coauthoring session was freshly synced on 2026-09-25; all six YAML files still
-matched `powerapps/lss-calendar-month-first-test-clone/` byte-for-byte. The
-most recently observed App Checker estimate for `CalendarPlanner` (Year) was
-**313**, down from **363** after two obsolete Month-only gallery buttons were
-removed. The score was not remeasured in this audit, and neither number is a
-measured interaction time or a guarantee of responsiveness.
+This plan was approved and its exact 14-control source edit was implemented
+on 2026-09-25. Before editing, a fresh live sync matched all six checked-in
+YAML files byte-for-byte. App Checker confirmed Year complexity **313** (down
+from an earlier 363) and 24 medium performance findings. After the edit,
+App Checker reported 22 medium findings and no Year control-count warning.
+It did not report a new below-threshold numeric estimate. None of these
+checker results is a measured runtime interaction time.
 
 ## Canvas Edit Plan
 
@@ -110,6 +110,31 @@ blocked, moved, deleted, approved, reset, or published. Reset → Undo, full
 flag-resolution coverage, responsiveness measurements, and the proposed
 14-control Year cleanup remain unverified/pending.
 
-Await user approval before editing the Canvas app. A separate user decision is
-also needed for a disposable app plus isolated SharePoint test data to repair
-and test Reset/Undo; this Year cleanup does not authorize that work.
+### Implementation receipt — 2026-09-25
+
+The user approved this specific removal. The synced `CalendarPlanner.pa.yaml`
+changed by **324 deletions, zero additions**; parsed controls dropped from 147
+to 133. The diff removed exactly the 14 named controls and changed no property
+of a retained control. Exact-name search found no leftover references to the
+removed nodes; the explicit keep-list workers and visible Year/Month/Week
+routes remain in source. `compile_canvas` passed all six files. A new empty
+verification directory was synced from the live coauthoring session, and its
+Year YAML matched the edited working copy byte-for-byte. App Checker dropped
+from 24 to 22 medium findings and no longer reported `ScreenHasManyControls`
+for Year.
+
+The browser-control connection timed out twice, so post-edit Studio/player
+click-through tests, actual interaction timing, and 2027/2028 hydration counts
+were **not** reverified. The previously observed runtime checks above were
+pre-edit and must not be represented as post-edit evidence. The Canvas skill's
+packaged acceptance validator script was absent from the installed plugin, so
+the formal acceptance-artifact validator could not run; compilation and server
+round-trip are the confirmed technical checks. No Reset, Delete, Outlook
+connection, or Publish was performed. The prior published version may still be
+older than this coauthoring source.
+
+Next: run the non-destructive live regression checks listed in “Approach and
+acceptance” and compare Year opening/selection/filter responsiveness on the
+same browser and dataset. Do not publish based solely on App Checker. A
+separate user decision remains necessary for a disposable app plus isolated
+SharePoint test data to repair/test Reset→Undo; this approval did not cover it.

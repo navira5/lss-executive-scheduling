@@ -185,10 +185,10 @@ Current saved-source verification:
 - Coauthoring round trip: passed; all six clone YAML files now match a fresh
   live-server sync, including `_EditorState.pa.yaml`.
 - Accessibility check: no errors.
-- App Checker: 24 medium performance findings remain, primarily legacy
-  collection/`ForAll` patterns and Year-screen control count. The Year
-  complexity estimate fell from 363 to 313 after two obsolete Month-only
-  controls were removed; this does not prove a runtime speed gain.
+- App Checker: **22** medium performance findings remain, primarily legacy
+  collection/`ForAll` patterns. The Year-screen control-count warning is gone
+  after the approved 14-hidden-control removal; the pre-edit estimate was 313.
+  This is not a measured runtime speed gain.
 - Runtime preview verified Month/Week Add, Block, Needs attention, in-panel
   Reset confirmation, Year read-only navigation, valid move enablement/save,
   and return-view behavior.
@@ -203,9 +203,12 @@ must sync the live Canvas session before editing and must not restart from the
 older `powerapps/lss-calendar-app/` snapshot or the Next.js comparison UI.
 The [Reset/Undo repair and isolated test plan](docs/power-apps-milestones/reset-undo-repair-test-plan.md)
 records the exact source gaps and the safety gate before a destructive test.
-The [Year-view complexity cleanup plan](docs/power-apps-milestones/year-complexity-cleanup-plan.md)
-lists 14 additional hidden-control candidates and the required regression
-checks; that removal still awaits approval and has not been made.
+The [Year-view complexity cleanup record](docs/power-apps-milestones/year-complexity-cleanup-plan.md)
+lists the 14 controls removed with user approval and the remaining runtime
+regression checks. The revised source compiled and matched a fresh live-server
+sync byte-for-byte, but browser click-through testing was unavailable in this
+pass and the revision was **not published**. A fresh Studio/player test is still
+required before claiming a runtime speed improvement or release readiness.
 
 The read-only Outlook Phase 1 source audit, proposed Canvas edit plan, and
 acceptance matrix are in

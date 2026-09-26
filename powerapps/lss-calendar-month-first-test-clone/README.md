@@ -18,9 +18,15 @@ planner, even though its display name still includes “Test.”
 - Coauthoring round trip: passed. On 2026-09-25 the six repository YAML files
   were compared against a fresh live-server sync; they now match byte-for-byte.
 - Accessibility checker: no errors.
-- App Checker: **24** medium performance findings remain; the Year screen's
-  estimated complexity is **313**, down from 363. This is a checker estimate,
-  not measured runtime speed. See **Known follow-up work**.
+- App Checker: **22** medium performance findings remain after the approved
+  14-hidden-control Year cleanup. The Year control-count warning is gone; its
+  pre-edit estimate was 313 (earlier 363). The checker did not provide a new
+  below-threshold number. This is not measured runtime speed.
+- The 14-control edit removed 324 lines and changed no retained-control
+  properties. All six files compiled, and the edited Year YAML matched a fresh
+  live coauthoring sync byte-for-byte. The separate browser-control connection
+  timed out, so fresh post-edit click-through/runtime performance tests are
+  still pending. No Reset, Delete, Outlook connection, or Publish was run.
 - The full repository `npm test` command was attempted, but the host is on
   Node 20 and the script stalled while `npx` tried to obtain Node 22.13.1, so
   it was interrupted. That web-prototype test harness is separate from the
@@ -212,13 +218,13 @@ saved test data during the final unattended pass.
    newly added rows and preserves pre-existing/manual meetings.
 3. Exercise Approve/Move/Delete on a multi-item Needs attention queue and verify
    the count decrements and advances after every action.
-4. Continue the bounded Year-screen cleanup without changing scheduling
-   semantics. Two obsolete Month-only gallery controls were removed, reducing
-   the checker estimate from 363 to 313. Fourteen more permanently hidden,
-   apparently unreachable controls have been identified, but removal awaits
-   plan approval and regression testing. Retain hidden handlers called with
-   `Select`, especially persistence, hydration, Add-all, and Undo.
-   The exact candidate list and safe test plan are in
+4. The bounded Year-screen source cleanup is implemented, but its live
+   regression test is pending. Two obsolete Month-only gallery controls first
+   reduced the checker estimate from 363 to 313. Fourteen permanently hidden,
+   statically unreachable controls were then removed with approval; the Year
+   control-count warning cleared. Retained hidden handlers called with
+   `Select` include persistence, hydration, Add-all, recomputation, and Undo.
+   The exact removals and remaining test plan are in
    [Year-view complexity cleanup](../../docs/power-apps-milestones/year-complexity-cleanup-plan.md).
 5. The Canvas Outlook demo is **one source only: Navira's calendar, read-only**.
    Office 365 Outlook is not connected yet. Do not add Outlook create, update,
