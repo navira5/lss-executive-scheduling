@@ -1,5 +1,7 @@
 # LSS Calendar Month-first Test — live Canvas app handoff
 
+> **Historical checkpoint (September 26, 2026).** This directory was synchronized at that time but is **not verified against the current published app**. The app has since been renamed `LSS Annual Planner_V1` and changed further. See [the October 1 handoff](../../docs/LSS-ANNUAL-PLANNER-START-HERE.md) before making changes. If a fresh Canvas Authoring sync returns no files, stop rather than treating this snapshot as current.
+
 This directory contains the current server-synchronized source for the live
 Power Apps Canvas app. It is the app now being treated as the main calendar
 planner, even though its display name still includes “Test.”

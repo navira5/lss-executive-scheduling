@@ -1,5 +1,7 @@
 # LSS 2027 Plan Year
 
+> **October 1, 2026 handoff:** This repository contains the hosted POC and historical Canvas `.pa.yaml` snapshots, **not a verified export of the currently published Power App**. The live app is now named `LSS Annual Planner_V1`. Start with [the current Codex handoff](docs/LSS-ANNUAL-PLANNER-START-HERE.md), [source authority](docs/SOURCE_AUTHORITY.md), and [2027 Rule Book reconciliation](docs/LSS-2027-RULE-BOOK-RECONCILIATION.md). The older Canvas status and test results below are dated historical records. Do not deploy or edit a snapshot as if it were the live app; open Studio and obtain a fresh successful Canvas Authoring sync first.
+
 A rules-first proof of concept for Lutheran Social Services of Central Ohio's 2027 annual governance and organizational calendar planning session.
 
 ## What the prototype does
