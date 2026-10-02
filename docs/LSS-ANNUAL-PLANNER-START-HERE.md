@@ -90,6 +90,12 @@ For destructive testing, first record before/after active rows in the connected 
 
 This app currently belongs to the **abbasi demo environment**, not LSS's Microsoft tenant. The Rule Book content is real LSS business data even though its current SharePoint list name contains “Test.” A Canvas app package or `.pa.yaml` export does not migrate SharePoint list schema/data, connection permissions, Outlook consent, or published status. For LSS handoff, their IT team must create or map approved lists, migrate the complete active Rule Book and approved planner records, import the app through their Power Platform process, reconnect SharePoint and Outlook, test with LSS accounts, and publish the reviewed LSS release. Keep credentials out of handoff files.
 
+## Future blank department template - not built
+
+After the accepted handoff, Navira identified a possible future use: a separate blank planner for another LSS department, such as philanthropy and fundraising. The recommended approach is a clone of the accepted app connected to two new empty SharePoint lists with the same schemas. The clone would remove the existing LSS executive/board Rule Book data and 2027-specific startup assumptions while retaining the working Month, Year, Week, Rule Book, generation, blocked-day, persistence, and Outlook workflows.
+
+Use a separate app and separate lists for each department to keep its data isolated. Do not blank, repurpose, or modify the accepted `LSS Annual Planner_V1` for this idea. No blank template has been built or authorized. A tested department-specific clone is estimated at approximately 2-4 focused working days; a single multi-department app would require a larger workspace and permissions redesign.
+
 ## Prompt to start the new Codex task
 
 > Read `LSS-ANNUAL-PLANNER-START-HERE.md`, the final handoff guide, and the linked business-authority files. Do not edit old YAML snapshots. Open the live LSS Annual Planner_V1 Power App in the abbasi default environment, connect Canvas Authoring, and sync into a new empty YAML-only directory. Report the actual live data sources and saved/published status before making changes. Preserve the complete business Rule Book, manual meetings, closures, and Outlook safety.
