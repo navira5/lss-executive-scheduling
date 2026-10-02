@@ -1,8 +1,8 @@
 # LSS Annual Planner — Codex project handoff
 
-Prepared October 1, 2026 for a new Codex task on another computer. This Git copy includes the handoff notes, but not the original Excel/PDF source files or the portable ZIP; request those privately from Navira if source-level verification is needed. This document is a **starting map, not a claim that the local YAML equals the published app**. Read it before changing the Power App. The immediate objective is to resume the LSS Annual Planner Canvas app without replaying the old conversation or accidentally editing an obsolete snapshot.
+Updated October 2, 2026 after the final focused regression pass. This Git copy includes the operating and technical handoff materials, but not the original Excel/PDF source files or the private transfer package; request those privately from Navira if source-level verification is needed. This document is a **starting map, not a claim that the repository YAML equals the published app**. Read it before changing the Power App.
 
-On the new laptop, clone the private repository with GitHub access: `git clone https://github.com/navira5/lss-executive-scheduling.git`. Open the cloned folder in Codex and begin with this file. GitHub access alone does not grant access to the Microsoft test tenant or its live Power App.
+Clone the public repository with `git clone https://github.com/navira5/lss-executive-scheduling.git`. Open the cloned folder in Codex and begin with this file. GitHub access alone does not grant access to Navira's Microsoft environment or its live Power App.
 
 The portable bundle intentionally contains **no Canvas app code**. The app must be opened and freshly synced from Power Apps before code changes; the bundle supplies the business sources, decisions, tests, and exact starting procedure. It contains no live SharePoint records or Outlook connection.
 
@@ -12,7 +12,7 @@ The portable bundle intentionally contains **no Canvas app code**. The app must 
 2. Open the [Power Apps Studio editor](https://make.powerapps.com/e/Default-f656b17f-7f78-425e-b239-c96571057ba9/canvas/?action=edit&app-id=%2Fproviders%2FMicrosoft.PowerApps%2Fapps%2F6022cba8-0bb4-45f8-9147-307dad49c2c5). Confirm the environment is **abbasi (default)** and the app is **LSS Annual Planner_V1**. The in-app heading is **LSS Annual Planner**. Wait until Studio finishes loading; note whether it says Saved, Saving, or Unpublished.
 3. In Codex, connect the Canvas Authoring plugin to environment `Default-f656b17f-7f78-425e-b239-c96571057ba9` and app `6022cba8-0bb4-45f8-9147-307dad49c2c5`. Sync the *live coauthoring session* into a **new empty directory dedicated to `.pa.yaml` files**. Do not sync into this workspace root or over a historical snapshot. If `sync_canvas` returns no files, stop: re-open or reload Studio and reconnect; do not edit an old local copy as if it were live.
 4. Inspect the freshly synced files and Studio's Data pane. Record the exact connected SharePoint list names, Outlook connector, screen names, App Checker findings, and current published/saved status. The copied workspace contains conflicting historical snapshots, so this live check is mandatory.
-5. Preview the app without mutating data. Check Month launch, Year/Week/Rule Book navigation, the Month action labels, and whether Year has ICS/PDF controls. Then agree on a *single* next change and its acceptance test with the user.
+5. Preview the app without mutating data. Check Month launch, Year/Week/Rule Book navigation, the Month action labels, and the current published status. Then agree on a *single* next change and its acceptance test with the user.
 
 The [hosted POC website](https://lss-2027-calendar-planner.navira-ali.chatgpt.site/) and, in the full workspace, the nested `lss-executive-scheduling/` web project are **not** the Canvas app's runtime or authoritative Power Fx source. The portable bundle does not include that web project. Do not run `npm` to start the Power App. Work on the Canvas app in Power Apps Studio and its freshly synced `.pa.yaml` files.
 
@@ -20,7 +20,7 @@ The [hosted POC website](https://lss-2027-calendar-planner.navira-ali.chatgpt.si
 
 LSS Annual Planner is a 2027 annual meeting-planning Canvas app. Its four main destinations are **Month**, **Year**, **Week**, and **Rule Book**. Month is the intended startup/default view and main planning workspace. Year is the twelve-month overview; Week shows more precise scheduling detail. The Rule Book stores recurring meeting definitions, including recurrence, time, format, and invitee emails. Meeting layers/themes include Board, Committees, Executive, Operations, Other recurring, and One-time; the visible checkboxes both filter the planner and are intended to scope outbound Outlook sync to selected layers.
 
-Users can generate meetings from saved rules, add manual one-off meetings, block days, move/review meetings, and view Outlook items from the signed-in user's authorized calendar. Outbound Outlook sync has a review step and is intended to create or update selected planner meetings on the signed-in user's owned calendar, with rule invitees as attendees. A same-title, same-local-date-and-time Outlook event should not be created twice. The user has personally observed successful Outlook transfers, but do not treat that as proof that every edge case is solved. ICS download and print/save-as-PDF belong on Year view; verify their actual runtime behavior before a demo claim.
+Users can generate meetings from saved rules, add manual one-off meetings, block days, move/review meetings, and view Outlook items from the signed-in user's authorized calendar. Outbound Outlook sync has a review step and can create or update selected planner meetings on the signed-in user's owned calendar. A same-title, same-local-date-and-time event should not be created twice. The final smoke test confirmed controlled Outlook transfer and repeat-sync duplicate prevention.
 
 Do not assume a saved rule automatically sends invitations. Planner changes, rule generation, and Outlook sync are separate actions. The Power App and its SharePoint records live in Navira's Microsoft test tenant for the demo; LSS's own environment is a later deployment step.
 
@@ -33,7 +33,8 @@ Do not assume a saved rule automatically sends invitations. Planner changes, rul
 | Approved 2027 source precedence and holiday decisions | `SOURCE_AUTHORITY.md` | First for business-rule interpretation |
 | September 29 rule-by-rule reconciliation and unresolved conflicts | `LSS-2027-RULE-BOOK-RECONCILIATION.md` | Latest documented business-state check, not proof of today's live data |
 | Functional scenarios and prior test findings | `LSS-Annual-Planner-Acceptance-Criteria-and-Test-Report.md` | Historical September 27 baseline; re-test changed items |
-| Deployment considerations | `LSS-Annual-Planner-Deployment-Handoff-DRAFT-2026-09-27.md` | Draft only; its early status and source-list claims are stale |
+| Final operating and technical handoff | `LSS-Annual-Planner-Team-Handoff-Guide.pdf` or `.docx` | Current delivery, deployment, list-schema, and ownership guide |
+| Earlier deployment considerations | `LSS-Annual-Planner-Deployment-Handoff-DRAFT-2026-09-27.md` | Historical draft only; its early status and source-list claims are stale |
 | Local Canvas YAML copies, if the full workspace was copied | `lss-annual-planner-fix-20260927/` and many dated backup folders | Historical or candidate code only; never assume published |
 
 The original later Excel workbook (`2027 Leadership Team Meeting Calendar- Draft1 (2).xlsx`) and in-office PDF (`LSS-2027-Annual-Calendar-Plan (1).pdf`) came from the previous computer's `Downloads` folder. They are **not committed to this Git repository**; ask Navira for the private portable handoff bundle if the originals are needed. The September 29 reconciliation documents what was reviewed. No full Codex conversation transcript is included in either place.
@@ -46,13 +47,20 @@ The original later Excel workbook (`2027 Leadership Team Meeting Calendar- Draft
 - Several Excel entries conflict with their written recurrence rules or fall on Sundays. The September 29 reconciliation lists them; do not silently “correct,” auto-generate, or send those disputed dates to Outlook. In particular, clarify the October Leadership date, September Leadership retreat, Executive retreat pattern, Executive Team virtual/in-person sequence, and BVR/program mappings with LSS.
 - The Rule Book was reconciled in the live demo data on September 29, but meeting instances were **not** regenerated or sent to Outlook then. At that check, the visible 2027 planner had zero active meeting instances. Re-check current rows before assuming that remains true.
 
-## Current uncertainty and first regression target
+## Verified release status — October 2, 2026
 
-The user reported on September 29 that **“Reset calendar” removed a manually added One-time meeting** and returned them to Year view. Their intended action is **“Delete meetings from rules”**: remove only rule-generated meetings, preserve manual one-offs and blocked days, and remain on Month when initiated there. A fix plan and a labeled delete test were authorized, but this handoff preparation could not verify that the final change was saved and published. Treat this as **unverified, high priority**—not as fixed.
+- The published player cold-launched into Month with the saved plan.
+- Month, Year, Week, and Rule Book navigation retained the selected year and shared plan.
+- Rule Book create, save, and delete persisted to SharePoint and refreshed after reload.
+- Deleting a single meeting in Month and Week remained deleted after a cold reload.
+- **Delete meetings from rules** removed generated meetings while preserving the labeled manual meeting and blocked days and returned to the initiating Month view.
+- A disposable confirmed weekly Executive rule generated 52 meetings. **Delete future meetings** removed the rule immediately, kept Undo unavailable while cleanup ran, reduced Executive meetings from 114 to 62, and remained correct after a cold reload. On the current demo lists, a large cleanup can take roughly 60–75 seconds; progress should advance rather than remain stuck at `0 of N`.
+- Controlled Outlook review and sync completed, and repeating the sync did not create a duplicate.
+- The accepted roughly 301-control count is a known implementation characteristic, not a release blocker.
 
-There is a genuine local-source conflict. `lss-annual-planner-fix-20260927/CalendarPlanner.pa.yaml` contains candidate generated-only reset logic and Year export controls; `lss-annual-planner-fix-20260927/main-delete-refresh-20260928/` still contains “Reset calendar” and test-list references. The latest user-visible report also showed the old behavior. **Do not choose a file by its folder name or modification time.** On October 1, connecting Canvas Authoring succeeded, but `sync_canvas` returned **no files**, and its data-source listing returned zero. That is an unavailable live-source read, not evidence of an empty app. Open Studio and obtain a successful fresh sync before code work.
+The connected lists are `LSS Test Meeting Types 20260921` and `LSS Test Planned Calendar 20260921`. Despite the historical word “Test” in their technical names, the first list contains the actual completed LSS business Rule Book. Do not call the Rule Book test data. The final LSS deployment must migrate the complete active Rule Book and the planner records approved by LSS.
 
-Other items to verify rather than assert: whether the Year ICS/PDF controls are in the published app and produce usable files; whether the connected lists have test-prefixed or non-test names; whether rule deletion refreshes immediately; and whether App Checker still reports the previously accepted roughly 301 Year controls. The September 27 acceptance report predates several later edits.
+The repository YAML remains a reference snapshot unless a fresh Canvas Authoring sync proves otherwise. Do not choose a source file by folder name or modification time. Open Studio and obtain a successful fresh sync before code work.
 
 ## How to navigate and change the Canvas app safely
 
@@ -67,7 +75,7 @@ From the Power Apps editor, use **Tree view** for `CalendarPlannerMonth`, `Calen
 3. Run `compile_canvas` on that directory and resolve errors. Then inspect the relevant screen in Studio/preview and execute a targeted regression test. A clean compile does **not** prove that buttons work, SharePoint saved a row, or Outlook delivered an invitation.
 4. Check Studio's save status. Publish only after the user requests publication or approves the release, and verify the published player separately. Record the app/version and test result in this handoff or a new dated note. Do not silently publish an unverified candidate.
 
-For destructive testing, first record before/after active rows in the demo SharePoint list. Use uniquely labeled test meetings and remove only those records afterward. The user authorized clearly labeled test records in the existing demo lists, but that does not authorize bulk deletion, mass Outlook invitations, or unreviewed rule regeneration. Outlook sync can affect a real mailbox even though this is a test account; check the destination calendar and invitees at the review step.
+For destructive testing, first record before/after active rows in the connected SharePoint lists. Use uniquely labeled disposable records and remove only those records afterward. The existing lists contain the real business Rule Book, so do not bulk-delete, mass-send Outlook invitations, or regenerate disputed 2027 rules. Outlook sync can affect a real mailbox; check the destination calendar and invitees at the review step.
 
 ### Minimum acceptance pass after a change
 
@@ -76,13 +84,12 @@ For destructive testing, first record before/after active rows in the demo Share
 3. Create one labeled manual One-time meeting; verify its title/date/time and persistence after reload.
 4. With that meeting present, invoke **Delete meetings from rules** on a year containing at least one generated meeting. Confirm generated meetings are removed, the manual meeting and blocked days remain after a cold reload, and the app stays on Month if launched from Month. Test Undo only if shown, then verify its persistence.
 5. Save/edit/delete a labeled test rule; verify the selected-rule panel refreshes immediately and persists after reload. Do not regenerate disputed 2027 rules.
-6. In Year, test ICS with a calendar client and print/save PDF for all twelve months; check local dates/times and closures. If no controls exist, record the gap rather than claiming export works.
-7. If testing Outlook, select only one intended layer and a disposable event. Review title, local date/time, target calendar, and invitees before confirmation. Verify no duplicate on repeat sync and inspect Outlook itself—not just the app's success count.
+6. If testing Outlook, select only one intended layer and a disposable event. Review title, local date/time, target calendar, and invitees before confirmation. Verify no duplicate on repeat sync and inspect Outlook itself—not just the app's success count.
 
 ## Deployment boundary
 
-This app currently belongs to the **abbasi demo environment**, not LSS's Microsoft tenant. Even a list named `LSS Meeting Types` in that environment is not automatically an LSS production list. A Canvas app package or `.pa.yaml` export does not migrate SharePoint list schema/data, connection permissions, Outlook consent, or published status. For LSS handoff, their IT team must provision or map approved lists, migrate approved rule and planner records, import the app through their Power Platform process, reconnect the SharePoint/Outlook data sources, test with LSS accounts, and publish a reviewed release. Keep credentials out of handoff files.
+This app currently belongs to the **abbasi demo environment**, not LSS's Microsoft tenant. The Rule Book content is real LSS business data even though its current SharePoint list name contains “Test.” A Canvas app package or `.pa.yaml` export does not migrate SharePoint list schema/data, connection permissions, Outlook consent, or published status. For LSS handoff, their IT team must create or map approved lists, migrate the complete active Rule Book and approved planner records, import the app through their Power Platform process, reconnect SharePoint and Outlook, test with LSS accounts, and publish the reviewed LSS release. Keep credentials out of handoff files.
 
 ## Prompt to start the new Codex task
 
-> Read `LSS-ANNUAL-PLANNER-START-HERE.md` and the two linked business-authority files. Do not edit old YAML snapshots. Open the live LSS Annual Planner_V1 Power App in the abbasi default environment, connect Canvas Authoring, and sync into a new empty YAML-only directory. Report the actual live data sources, saved/published status, current Month reset behavior, and Year export controls before making changes. Then propose the smallest next verified fix, preserving manual one-off meetings, closures, and Outlook safety.
+> Read `LSS-ANNUAL-PLANNER-START-HERE.md`, the final handoff guide, and the linked business-authority files. Do not edit old YAML snapshots. Open the live LSS Annual Planner_V1 Power App in the abbasi default environment, connect Canvas Authoring, and sync into a new empty YAML-only directory. Report the actual live data sources and saved/published status before making changes. Preserve the complete business Rule Book, manual meetings, closures, and Outlook safety.

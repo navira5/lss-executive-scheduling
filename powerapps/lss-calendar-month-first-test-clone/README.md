@@ -1,12 +1,13 @@
 # LSS Calendar Month-first Test — live Canvas app handoff
 
-> **Historical checkpoint (September 26, 2026).** This directory was synchronized at that time but is **not verified against the current published app**. The app has since been renamed `LSS Annual Planner_V1` and changed further. See [the October 1 handoff](../../docs/LSS-ANNUAL-PLANNER-START-HERE.md) before making changes. If a fresh Canvas Authoring sync returns no files, stop rather than treating this snapshot as current.
+> **Historical Canvas source checkpoint.** This directory is **not verified against the final October 2 published app**. The app is now named `LSS Annual Planner_V1` and changed after this snapshot. See [Start Here](../../docs/LSS-ANNUAL-PLANNER-START-HERE.md) and the [final handoff guide](../../docs/LSS-Annual-Planner-Team-Handoff-Guide.pdf) before making changes. If a fresh Canvas Authoring sync returns no files, stop rather than treating this snapshot as current.
 
-This directory contains the current server-synchronized source for the live
-Power Apps Canvas app. It is the app now being treated as the main calendar
-planner, even though its display name still includes “Test.”
+This directory contains a September 2026 server-synchronized source snapshot
+of the Power Apps Canvas app. It identifies the correct app lineage, but the
+live Studio app and a fresh Canvas Authoring sync are authoritative for current
+formulas.
 
-## Current status — 2026-09-26
+## Historical status — 2026-09-26
 
 - Canvas app: **LSS Calendar Month-first Test**
 - App ID: `6022cba8-0bb4-45f8-9147-307dad49c2c5`
@@ -75,14 +76,15 @@ implementations, not the live Power Apps product.
 
 ## Data and safety boundary
 
-The app is connected to these test SharePoint lists:
+The snapshot refers to these currently connected SharePoint lists:
 
-- `LSS Test Meeting Types 20260921` — scheduling rules/source data
+- `LSS Test Meeting Types 20260921` — the complete active LSS business Rule Book; “Test” is only part of the historical technical name
 - `LSS Test Planned Calendar 20260921` — saved meetings, exclusions,
   closures, layer state, and mutation receipts
 
-No credentials or tokens belong in this directory. Keep changes scoped to the
-test lists until the production migration is explicitly approved.
+No credentials or tokens belong in this directory. The LSS deployment must
+migrate the complete Rule Book and approved planner records into LSS-controlled
+lists; do not dismiss or delete the Rule Book as test data.
 
 ## Product contract
 
